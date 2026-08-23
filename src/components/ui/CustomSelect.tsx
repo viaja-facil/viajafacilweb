@@ -1,7 +1,10 @@
 "use client";
 
 import { KeyboardEvent, ReactNode, useEffect, useId, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Check, ChevronDown } from "lucide-react";
+import { useMediaQuery } from "@/lib/use-media-query";
+import BottomSheet from "./BottomSheet";
 
 export type SelectOption = {
   value: string;
@@ -38,11 +41,18 @@ export default function CustomSelect({
   const [internalValue, setInternalValue] = useState(defaultValue ?? options[0]?.value ?? "");
   const rootRef = useRef<HTMLDivElement>(null);
   const listboxId = useId();
+  const isMobile = useMediaQuery("(max-width: 767px)");
+  const isMobileRef = useRef(isMobile);
+
+  useEffect(() => {
+    isMobileRef.current = isMobile;
+  }, [isMobile]);
   const selectedValue = value ?? internalValue;
   const selectedOption = options.find((option) => option.value === selectedValue);
 
   useEffect(() => {
     const closeOnOutsidePointer = (event: PointerEvent) => {
+      if (isMobileRef.current) return;
       if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
@@ -57,6 +67,36 @@ export default function CustomSelect({
     onChange?.(nextValue);
     setIsOpen(false);
   };
+
+  const renderOptions = (optionPadding = "py-2.5") =>
+    options.map((option) => {
+      const isSelected = option.value === selectedValue;
+
+      return (
+        <button
+          key={option.value}
+          type="button"
+          role="option"
+          aria-selected={isSelected}
+          onClick={() => selectOption(option.value)}
+          className={`flex w-full min-h-[44px] items-center gap-3 rounded-lg px-3 ${optionPadding} text-left text-sm transition-colors active:bg-orange-100 ${
+            isSelected
+              ? "bg-orange-50 font-semibold text-[#ea580c]"
+              : "text-gray-700 hover:bg-gray-50"
+          }`}
+        >
+          <span className="min-w-0 flex-1">
+            <span className="block truncate">{option.label}</span>
+            {option.description && (
+              <span className="mt-0.5 block truncate text-xs font-normal text-gray-400">
+                {option.description}
+              </span>
+            )}
+          </span>
+          {isSelected && <Check aria-hidden="true" className="h-4 w-4 shrink-0" />}
+        </button>
+      );
+    });
 
   const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
     if (disabled) return;
@@ -113,43 +153,35 @@ export default function CustomSelect({
         />
       </button>
 
-      {isOpen && (
-        <div
-          id={listboxId}
-          role="listbox"
-          aria-label={ariaLabel ?? placeholder}
-          className="absolute z-50 mt-2 max-h-64 w-full overflow-y-auto rounded-xl border border-gray-100 bg-white p-1.5 shadow-xl shadow-slate-900/10 animate-fade-in"
-        >
-          {options.map((option) => {
-            const isSelected = option.value === selectedValue;
-
-            return (
-              <button
-                key={option.value}
-                type="button"
-                role="option"
-                aria-selected={isSelected}
-                onClick={() => selectOption(option.value)}
-                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${
-                  isSelected
-                    ? "bg-orange-50 font-semibold text-[#ea580c]"
-                    : "text-gray-700 hover:bg-gray-50"
-                }`}
+      {isOpen &&
+        (isMobile ? (
+          createPortal(
+            <BottomSheet
+              open={isOpen}
+              onClose={() => setIsOpen(false)}
+              title={ariaLabel ?? placeholder}
+            >
+              <div
+                id={listboxId}
+                role="listbox"
+                aria-label={ariaLabel ?? placeholder}
+                className="space-y-1"
               >
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate">{option.label}</span>
-                  {option.description && (
-                    <span className="mt-0.5 block truncate text-xs font-normal text-gray-400">
-                      {option.description}
-                    </span>
-                  )}
-                </span>
-                {isSelected && <Check aria-hidden="true" className="h-4 w-4 shrink-0" />}
-              </button>
-            );
-          })}
-        </div>
-      )}
+                {renderOptions("py-3")}
+              </div>
+            </BottomSheet>,
+            document.body
+          )
+        ) : (
+          <div
+            id={listboxId}
+            role="listbox"
+            aria-label={ariaLabel ?? placeholder}
+            className="absolute z-50 mt-2 max-h-64 w-full overflow-y-auto rounded-xl border border-gray-100 bg-white p-1.5 shadow-xl shadow-slate-900/10 animate-fade-in"
+          >
+            {renderOptions()}
+          </div>
+        ))}
     </div>
   );
 }

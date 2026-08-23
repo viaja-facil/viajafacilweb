@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useMemo, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { flights, generateSeats, formatCurrency, getAirlineById, getAirportByCode, Seat } from "@/lib/mock-data";
 import { useBooking } from "@/lib/booking-context";
@@ -41,14 +41,11 @@ function SeatsContent() {
   const originAirport = flight ? getAirportByCode(flight.origin) : null;
   const destAirport = flight ? getAirportByCode(flight.destination) : null;
 
-  const [seats, setSeatsData] = useState<Seat[]>([]);
+  const seats = useMemo(
+    () => (flight ? generateSeats(flight.id, flight.class) : []),
+    [flight]
+  );
   const [selectedSeats, setSelectedSeats] = useState<Seat[]>([]);
-
-  useEffect(() => {
-    if (flight) {
-      setSeatsData(generateSeats(flight.id, flight.class));
-    }
-  }, [flight]);
 
   if (!flight) {
     return (
@@ -179,65 +176,70 @@ function SeatsContent() {
               </div>
 
               {/* Aircraft body */}
-              <div className="relative mx-auto max-w-md">
+              <div className="relative mx-auto max-w-md overflow-x-auto scrollbar-hide">
                 {/* Nose */}
                 <div className="mx-auto w-32 h-12 bg-gray-100 rounded-t-full border border-b-0 border-gray-200 flex items-center justify-center">
                   <span className="text-xs font-semibold text-gray-400">FRENTE</span>
                 </div>
 
-                {/* Column headers */}
-                <div className="flex items-center justify-center gap-1 mb-2 px-2">
-                  <div className="w-8" />
-                  {columns.map((col) => (
-                    <div key={col} className="w-10 text-center">
-                      <span className="text-xs font-bold text-gray-500">{col}</span>
-                    </div>
-                  ))}
-                  <div className="w-8" />
-                </div>
-
-                {/* Seats grid */}
-                <div className="bg-gray-100 border border-gray-200 rounded-xl p-3 space-y-1">
-                  {Object.entries(rows).map(([rowNum, rowSeats]) => {
-                    const isExtraLegroom = rowSeats[0]?.isExtraLegroom;
-                    return (
-                      <div key={rowNum} className="flex items-center justify-center gap-1">
-                        <span className="w-8 text-center text-xs font-bold text-gray-400">
-                          {rowNum}
-                        </span>
-                        {columns.map((col) => {
-                          const seat = rowSeats.find((s) => s.column === col);
-                          if (!seat) return <div key={col} className="w-10" />;
-
-                          const isSelected = selectedSeats.some((s) => s.id === seat.id);
-                          const isOccupied = !seat.isAvailable;
-
-                          return (
-                            <button
-                              key={col}
-                              onClick={() => handleSeatClick(seat)}
-                              disabled={isOccupied}
-                              title={`${seat.number} ${isOccupied ? "(Ocupado)" : seat.isExtraLegroom ? "(Espaço Extra)" : ""} ${!isOccupied && seat.price > 0 ? `+ ${formatCurrency(seat.price)}` : ""}`}
-                              className={`w-10 h-10 rounded-lg text-xs font-bold transition-all flex items-center justify-center ${
-                                isOccupied
-                                  ? "bg-gray-200 text-gray-400 cursor-not-allowed border border-gray-300"
-                                  : isSelected
-                                  ? "bg-blue-500 text-white border-2 border-blue-600 shadow-lg shadow-blue-500/30 scale-110"
-                                  : isExtraLegroom
-                                  ? "bg-yellow-50 border-2 border-yellow-400 text-yellow-700 hover:bg-yellow-100 hover:border-yellow-500 cursor-pointer"
-                                  : "bg-green-100 border-2 border-green-500 text-green-700 hover:bg-green-200 hover:border-green-600 cursor-pointer"
-                              }`}
-                            >
-                              {seat.number}
-                            </button>
-                          );
-                        })}
-                        <span className="w-8 text-center text-xs font-bold text-gray-400">
-                          {rowNum}
-                        </span>
+                {/* Seat map: sticky row labels + sticky column headers on mobile */}
+                <div className="min-w-[380px]">
+                  {/* Column headers - sticky top on scroll */}
+                  <div className="flex items-center sticky top-0 z-10 bg-white/95 backdrop-blur mb-2 px-1 pt-1">
+                    <div className="w-8 shrink-0" />
+                    {columns.map((col) => (
+                      <div key={col} className="w-10 text-center shrink-0">
+                        <span className="text-xs font-bold text-gray-500">{col}</span>
                       </div>
-                    );
-                  })}
+                    ))}
+                    <div className="w-8 shrink-0" />
+                  </div>
+
+                  {/* Seats grid */}
+                  <div className="bg-gray-100 border border-gray-200 rounded-xl p-3 space-y-1">
+                    {Object.entries(rows).map(([rowNum, rowSeats]) => {
+                      const isExtraLegroom = rowSeats[0]?.isExtraLegroom;
+                      return (
+                        <div key={rowNum} className="flex items-center gap-1">
+                          {/* Row number - sticky left */}
+                          <span className="w-8 shrink-0 text-center text-xs font-bold text-gray-400 sticky left-0 bg-gray-100 rounded z-10">
+                            {rowNum}
+                          </span>
+                          {columns.map((col) => {
+                            const seat = rowSeats.find((s) => s.column === col);
+                            if (!seat) return <div key={col} className="w-10 shrink-0" />;
+
+                            const isSelected = selectedSeats.some((s) => s.id === seat.id);
+                            const isOccupied = !seat.isAvailable;
+
+                            return (
+                              <button
+                                key={col}
+                                onClick={() => handleSeatClick(seat)}
+                                disabled={isOccupied}
+                                title={`${seat.number} ${isOccupied ? "(Ocupado)" : seat.isExtraLegroom ? "(Espaço Extra)" : ""} ${!isOccupied && seat.price > 0 ? `+ ${formatCurrency(seat.price)}` : ""}`}
+                                className={`w-10 h-10 shrink-0 rounded-lg text-xs font-bold transition-all flex items-center justify-center ${
+                                  isOccupied
+                                    ? "bg-gray-200 text-gray-400 cursor-not-allowed border border-gray-300"
+                                    : isSelected
+                                    ? "bg-blue-500 text-white border-2 border-blue-600 shadow-lg shadow-blue-500/30 scale-110"
+                                    : isExtraLegroom
+                                    ? "bg-yellow-50 border-2 border-yellow-400 text-yellow-700 hover:bg-yellow-100 hover:border-yellow-500 cursor-pointer"
+                                    : "bg-green-100 border-2 border-green-500 text-green-700 hover:bg-green-200 hover:border-green-600 cursor-pointer"
+                                }`}
+                              >
+                                {seat.number}
+                              </button>
+                            );
+                          })}
+                          {/* Row number right - sticky left (mirrors left for symmetry) */}
+                          <span className="w-8 shrink-0 text-center text-xs font-bold text-gray-400">
+                            {rowNum}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 {/* Tail */}
@@ -339,7 +341,7 @@ function SeatsContent() {
               <button
                 onClick={handleContinue}
                 disabled={selectedSeats.length === 0}
-                className="w-full mt-6 py-3.5 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#dc2626] disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all shadow-lg shadow-orange-500/20 disabled:shadow-none flex items-center justify-center gap-2"
+                className="w-full min-h-[48px] mt-6 py-3.5 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#dc2626] disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all shadow-lg shadow-orange-500/20 disabled:shadow-none flex items-center justify-center gap-2"
               >
                 Continuar
                 <ArrowRight className="w-5 h-5" />
@@ -351,6 +353,26 @@ function SeatsContent() {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Mobile sticky price bar */}
+      <div className="lg:hidden fixed bottom-14 left-0 right-0 z-40 bg-white border-t border-gray-200 px-4 py-3 shadow-[0_-2px_10px_rgba(0,0,0,0.06)]">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-xs text-gray-500">
+              {selectedSeats.length > 0 ? `${selectedSeats.length} assento${selectedSeats.length > 1 ? "s" : ""}` : "Nenhum assento"}
+            </p>
+            <p className="text-xl font-bold text-[#f97316]">{formatCurrency(grandTotal)}</p>
+          </div>
+          <button
+            onClick={handleContinue}
+            disabled={selectedSeats.length === 0}
+            className="min-h-[44px] px-6 py-2.5 bg-gradient-to-r from-[#f97316] to-[#ea580c] disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all shadow-lg shadow-orange-500/20 disabled:shadow-none flex items-center justify-center gap-2"
+          >
+            Continuar
+            <ArrowRight className="w-4 h-4" />
+          </button>
         </div>
       </div>
     </div>

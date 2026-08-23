@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { formatCurrency, getAirlineById, getAirportByCode } from "@/lib/mock-data";
 import { useBooking } from "@/lib/booking-context";
@@ -23,17 +23,11 @@ import {
 export default function ConfirmationPage() {
   const router = useRouter();
   const { booking, resetBooking } = useBooking();
-  const [bookingId, setBookingId] = useState("");
 
   const flight = booking.flight;
   const airline = flight ? getAirlineById(flight.airlineId) : null;
   const originAirport = flight ? getAirportByCode(flight.origin) : null;
   const destAirport = flight ? getAirportByCode(flight.destination) : null;
-
-  useEffect(() => {
-    // Generate a mock booking ID
-    setBookingId(`VJ${Date.now().toString(36).toUpperCase()}`);
-  }, []);
 
   useEffect(() => {
     if (!flight) {
@@ -42,6 +36,8 @@ export default function ConfirmationPage() {
   }, [flight, router]);
 
   if (!flight) return null;
+
+  const bookingId = `VJ${flight.id.replace(/[^a-z0-9]/gi, "").toUpperCase().slice(-6)}${String(booking.seats.length).padStart(2, "0")}`;
 
   const totalSeatPrice = booking.seats.reduce((sum, s) => sum + s.price, 0);
   const totalBasePrice = flight.price * booking.seats.length;

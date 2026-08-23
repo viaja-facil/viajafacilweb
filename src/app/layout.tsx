@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ClientLayout from "@/components/layout/ClientLayout";
@@ -16,6 +16,13 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "ViajaFácil - Passagens Aéreas Angola",
   description: "A plataforma mais fácil para comprar passagens aéreas em Angola. Encontre os melhores preços e reserve seu voo.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#0a1628",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

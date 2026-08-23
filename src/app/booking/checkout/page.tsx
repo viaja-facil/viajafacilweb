@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense, useMemo } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { formatCurrency, getAirlineById, getAirportByCode } from "@/lib/mock-data";
 import { useBooking, PaymentMethod } from "@/lib/booking-context";
@@ -54,15 +54,15 @@ function CheckoutContent() {
   const [reference, setReference] = useState("");
   const [copied, setCopied] = useState(false);
 
-  // Generate mock reference
-  const generatedReference = useMemo(() => {
+  // Generate mock reference (called from event handlers only)
+  const makeReference = () => {
     const now = new Date();
     const datePart = now.getFullYear().toString().slice(-2) +
       String(now.getMonth() + 1).padStart(2, "0") +
       String(now.getDate()).padStart(2, "0");
     const rand = Math.floor(Math.random() * 900000 + 100000);
     return `VJ${datePart}${rand}`;
-  }, []);
+  };
 
   if (!flight || booking.seats.length === 0) {
     return (
@@ -113,13 +113,14 @@ function CheckoutContent() {
 
     // Simulate API call
     setTimeout(() => {
+      const ref = makeReference();
       if (paymentMethod === "referencia") {
-        setReference(generatedReference);
+        setReference(ref);
       }
       setPaymentGenerated(true);
       setPaymentMethod(paymentMethod);
       ctxSetPaymentMethod(paymentMethod!);
-      setPaymentReference(paymentMethod === "referencia" ? generatedReference : phoneNumber);
+      setPaymentReference(paymentMethod === "referencia" ? ref : phoneNumber);
       setIsProcessing(false);
     }, 1500);
   };
@@ -537,7 +538,7 @@ function CheckoutContent() {
                   <p className="text-sm font-semibold text-blue-800 mb-2">Como pagar:</p>
                   <ol className="text-xs text-blue-700 space-y-1 list-decimal list-inside">
                     <li>Vá a qualquer ATM Multicaixa ou abra a aplicação bancária</li>
-                    <li>Selecione "Pagamento de Serviços" ou "Referência"</li>
+                    <li>Selecione &quot;Pagamento de Serviços&quot; ou &quot;Referência&quot;</li>
                     <li>Digite a referência: <span className="font-bold">{reference}</span></li>
                     <li>Confirme o pagamento de <span className="font-bold">{formatCurrency(grandTotal)}</span></li>
                   </ol>

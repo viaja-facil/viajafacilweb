@@ -63,8 +63,10 @@ export default function CalendarGrid({
       {/* Month header */}
       <div className="flex items-center justify-between mb-2">
         <button
+          type="button"
+          aria-label="Mês anterior"
           onClick={() => navigateMonth(-1)}
-          className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+          className="tap-target flex items-center justify-center -m-1 p-1 hover:bg-gray-100 rounded-lg transition-colors"
         >
           <ChevronLeft className="w-4 h-4 text-gray-500" />
         </button>
@@ -75,8 +77,10 @@ export default function CalendarGrid({
           {headerExtra}
         </div>
         <button
+          type="button"
+          aria-label="Próximo mês"
           onClick={() => navigateMonth(1)}
-          className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+          className="tap-target flex items-center justify-center -m-1 p-1 hover:bg-gray-100 rounded-lg transition-colors"
         >
           <ChevronRight className="w-4 h-4 text-gray-500" />
         </button>

@@ -162,7 +162,7 @@ export default function DateRangePicker({
 
       {/* Calendars */}
       <div className="px-3 py-2">
-        <div className="flex gap-2">
+        <div className="flex flex-col md:flex-row gap-2">
           <CalendarGrid
             initialMonth={new Date(2026, 7, 1)}
             renderDay={renderDay}
@@ -206,7 +206,7 @@ export default function DateRangePicker({
           </div>
           <button
             onClick={onClose}
-            className="px-4 py-1.5 bg-[#f97316] hover:bg-[#ea580c] text-white font-semibold text-xs rounded-lg transition-colors"
+            className="min-h-[44px] px-5 bg-[#f97316] hover:bg-[#ea580c] active:bg-[#dc2626] text-white font-semibold text-sm rounded-xl transition-colors flex items-center"
           >
             Confirmar
           </button>

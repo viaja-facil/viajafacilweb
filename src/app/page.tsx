@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { airports, airlines, getAvailabilityForRoute, formatCurrency } from "@/lib/mock-data";
@@ -8,6 +8,7 @@ import { useBooking } from "@/lib/booking-context";
 import AvailabilityCalendar from "@/components/ui/AvailabilityCalendar";
 import DateRangePicker from "@/components/ui/DateRangePicker";
 import CustomSelect from "@/components/ui/CustomSelect";
+import BottomSheet from "@/components/ui/BottomSheet";
 import {
   Plane,
   Calendar,
@@ -263,15 +264,16 @@ export default function HomePage() {
   const [tripType, setTripType] = useState<"oneway" | "roundtrip" | "multicity">("oneway");
   const [showCalendar, setShowCalendar] = useState(false);
   const [showDateRange, setShowDateRange] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
   const dateButtonRef = useRef<HTMLButtonElement>(null);
   const dateRangeButtonRef = useRef<HTMLButtonElement>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
   const dateRangeCalendarRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const touchStartX = useRef<number | null>(null);
 
   // Slider state
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -375,7 +377,24 @@ export default function HomePage() {
   return (
     <div className="min-h-screen">
       {/* Hero Section with Slider */}
-      <section className="relative">
+      <section
+        className="relative"
+        onTouchStart={(e) => {
+          touchStartX.current = e.touches[0].clientX;
+        }}
+        onTouchEnd={(e) => {
+          if (touchStartX.current === null) return;
+          const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+          touchStartX.current = null;
+          if (Math.abs(deltaX) < 50) return;
+          setIsAutoPlaying(false);
+          setCurrentSlide((prev) =>
+            deltaX < 0
+              ? (prev + 1) % featuredDestinations.length
+              : (prev - 1 + featuredDestinations.length) % featuredDestinations.length
+          );
+        }}
+      >
         {/* Slider Background */}
         <div className="absolute inset-0 overflow-hidden">
           {featuredDestinations.map((dest, i) => (
@@ -400,9 +419,9 @@ export default function HomePage() {
           <div className="absolute bottom-10 right-20 w-96 h-96 bg-[#f97316] rounded-full blur-3xl" />
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-16 pb-24 md:pt-20 md:pb-28">
-          {/* Slider Info Bar */}
-          <div className="flex items-center gap-3 mb-8">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-5 pb-8 md:pt-20 md:pb-28">
+          {/* Slider Info Bar - desktop only (mobile uses dots below) */}
+          <div className="hidden md:flex items-center gap-3 mb-8">
             {featuredDestinations.map((dest, i) => (
               <button
                 key={i}
@@ -422,28 +441,27 @@ export default function HomePage() {
           </div>
 
           {/* Featured City Info - LEFT ALIGNED */}
-          <div className="text-left mb-10">
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/10 rounded-full px-4 py-1.5 mb-4">
+          <div className="text-left mb-5 md:mb-10">
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/10 rounded-full px-3 py-1 mb-2 md:mb-4">
               <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
               <span className="text-xs text-gray-300 font-medium">
                 Destaque: {featuredDestinations[currentSlide].city}
               </span>
             </div>
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-3 tracking-tight">
+            <h1 className="text-xl sm:text-3xl md:text-6xl font-bold text-white mb-1.5 md:mb-3 tracking-tight">
               {featuredDestinations[currentSlide].description}
             </h1>
-            <div className="flex items-center flex-wrap gap-4 text-gray-300">
-              <span className="flex items-center gap-1.5 text-sm">
+            <div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-gray-300">
+              <span className="flex items-center gap-1.5 text-xs md:text-sm">
                 <MapPin className="w-4 h-4 text-[#f97316]" />
                 {featuredDestinations[currentSlide].city}, {featuredDestinations[currentSlide].country}
               </span>
-              <span className="text-gray-500">•</span>
-              <span className="flex items-center gap-1.5 text-sm">
+              <span className="text-gray-500 hidden md:inline">•</span>
+              <span className="flex items-center gap-1.5 text-xs md:text-sm">
                 <Ticket className="w-4 h-4 text-[#f97316]" />
                 A partir de <span className="font-bold text-[#f97316]">{formatCurrency(featuredDestinations[currentSlide].price)}</span>
               </span>
-              <span className="text-gray-500">•</span>
-              <span className="px-2.5 py-0.5 bg-white/10 rounded-full text-xs font-semibold">
+              <span className="px-2 py-0.5 bg-white/10 rounded-full text-[10px] md:text-xs font-semibold">
                 {featuredDestinations[currentSlide].tripType}
               </span>
             </div>
@@ -451,7 +469,7 @@ export default function HomePage() {
             {/* Quick book button */}
             <button
               onClick={() => handleBookDestination(featuredDestinations[currentSlide])}
-              className="mt-5 inline-flex items-center gap-2 bg-[#f97316] hover:bg-[#ea580c] text-white font-bold px-6 py-3 rounded-xl transition-all shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50"
+              className="mt-3 md:mt-5 inline-flex items-center gap-2 bg-[#f97316] hover:bg-[#ea580c] active:bg-[#dc2626] text-white font-bold px-5 py-2.5 min-h-[44px] rounded-xl transition-all shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50"
             >
               <Plane className="w-5 h-5" />
               Reservar Agora
@@ -459,94 +477,107 @@ export default function HomePage() {
             </button>
           </div>
 
-          {/* Slider Navigation - LEFT ALIGNED */}
-          <div className="flex items-center gap-3 mb-10">
+          {/* Slider Navigation - LEFT ALIGNED (arrows desktop only, dots on mobile) */}
+          <div className="flex items-center gap-3 mb-5 md:mb-10">
             <button
               onClick={() => {
                 setCurrentSlide((prev) => (prev - 1 + featuredDestinations.length) % featuredDestinations.length);
                 setIsAutoPlaying(false);
               }}
-              className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors"
+              className="hidden md:flex w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full items-center justify-center text-white transition-colors"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <div className="flex gap-2">
-              {featuredDestinations.map((_, i) => (
-                <div
-                  key={i}
-                  className={`h-1.5 rounded-full transition-all ${
-                    i === currentSlide ? "w-8 bg-[#f97316]" : "w-3 bg-white/30"
-                  }`}
-                />
-              ))}
-            </div>
             <button
               onClick={() => {
                 setCurrentSlide((prev) => (prev + 1) % featuredDestinations.length);
                 setIsAutoPlaying(false);
               }}
-              className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors"
+              className="hidden md:flex w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full items-center justify-center text-white transition-colors"
             >
               <ChevronRight className="w-5 h-5" />
             </button>
+            <div className="flex gap-2">
+              {featuredDestinations.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    setCurrentSlide(i);
+                    setIsAutoPlaying(false);
+                  }}
+                  aria-label={`Ir para ${featuredDestinations[i].city}`}
+                  className={`tap-target flex items-center px-0 bg-transparent ${
+                    i === currentSlide ? "w-8" : "w-3"
+                  }`}
+                >
+                  <span
+                    className={`block h-1.5 w-full rounded-full transition-all ${
+                      i === currentSlide ? "bg-[#f97316]" : "bg-white/30"
+                    }`}
+                  />
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Search Card */}
           <div className="w-full relative">
             <div className="bg-white rounded-2xl shadow-2xl shadow-black/20 p-4">
-              {/* Trip type - Radio buttons */}
-              <div className="flex gap-5 p-5 pb-2">
-                {[
-                  { value: "oneway" as const, label: "Só Ida", icon: Plane },
-                  { value: "roundtrip" as const, label: "Ida e Volta", icon: ArrowRight },
-                  { value: "multicity" as const, label: "Multi-Cidade", icon: MapPin },
-                ].map((option) => (
-                  <label
-                    key={option.value}
-                    className="flex items-center gap-2 cursor-pointer group select-none"
-                  >
-                    <input
-                      type="radio"
-                      name="tripType"
-                      value={option.value}
-                      checked={tripType === option.value}
-                      onChange={() => {
-                        setTripType(option.value);
-                        if (option.value !== "roundtrip") {
-                          setDepartureDate(null);
-                          setReturnDate(null);
-                          setShowDateRange(false);
-                        }
-                        if (option.value !== "oneway") {
-                          setDate(null);
-                          setShowCalendar(false);
-                        }
-                      }}
-                      className="sr-only"
-                    />
-                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${
-                      tripType === option.value
-                        ? "border-[#f97316] bg-[#f97316]"
-                        : "border-gray-300 group-hover:border-gray-400"
-                    }`}>
-                      {tripType === option.value && (
-                        <div className="w-1.5 h-1.5 bg-white rounded-full" />
-                      )}
-                    </div>
-                    <option.icon className={`w-4 h-4 ${
-                      tripType === option.value ? "text-[#f97316]" : "text-gray-400"
-                    }`} />
-                    <span className={`text-sm font-semibold ${
-                      tripType === option.value ? "text-gray-900" : "text-gray-500"
-                    }`}>
-                      {option.label}
-                    </span>
-                  </label>
-                ))}
+              {/* Trip type - Segmented control */}
+              <div className="p-3 pt-3 md:p-5 md:pb-2">
+                <div
+                  role="radiogroup"
+                  aria-label="Tipo de viagem"
+                  className="grid grid-cols-3 gap-1 bg-gray-100 rounded-xl p-1 md:inline-flex md:gap-0"
+                >
+                  {[
+                    { value: "oneway" as const, label: "Só Ida", icon: Plane },
+                    { value: "roundtrip" as const, label: "Ida e Volta", icon: ArrowRight },
+                    { value: "multicity" as const, label: "Multi-Cidade", icon: MapPin },
+                  ].map((option) => {
+                    const selected = tripType === option.value;
+                    return (
+                      <label
+                        key={option.value}
+                        className={`flex items-center justify-center gap-1.5 cursor-pointer select-none min-h-[44px] rounded-lg px-1 transition-all active:scale-[0.97] ${
+                          selected
+                            ? "bg-[#f97316] text-white shadow-md shadow-orange-500/25"
+                            : "text-gray-500 hover:text-gray-700"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="tripType"
+                          value={option.value}
+                          checked={selected}
+                          onChange={() => {
+                            setTripType(option.value);
+                            if (option.value !== "roundtrip") {
+                              setDepartureDate(null);
+                              setReturnDate(null);
+                              setShowDateRange(false);
+                            }
+                            if (option.value !== "oneway") {
+                              setDate(null);
+                              setShowCalendar(false);
+                            }
+                          }}
+                          className="sr-only"
+                        />
+                        <option.icon className={`w-4 h-4 shrink-0 ${
+                          selected ? "text-white" : "text-gray-400"
+                        }`} />
+                        <span className={`text-xs md:text-sm font-semibold whitespace-nowrap`}>
+                          {option.label}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
 
-              <form onSubmit={handleSearch} className="p-5 pt-3">
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+              <form onSubmit={handleSearch} className="px-4 pb-4 pt-1 md:p-5 md:pt-3">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4 items-end">
                   {/* Origin */}
                   <div className="md:col-span-3 relative">
                     <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block px-1">
@@ -634,40 +665,61 @@ export default function HomePage() {
                             : "Selecionar datas"}
                         </span>
                         {(departureDate || returnDate) && (
-                          <X
-                            className="w-4 h-4 ml-auto shrink-0 hover:text-red-500"
+                          <span
+                            role="button"
+                            tabIndex={0}
+                            aria-label="Limpar datas"
+                            className="p-2 -m-2 shrink-0 cursor-pointer"
                             onClick={(e) => {
                               e.stopPropagation();
                               setDepartureDate(null);
                               setReturnDate(null);
                             }}
-                          />
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.stopPropagation();
+                                setDepartureDate(null);
+                                setReturnDate(null);
+                              }
+                            }}
+                          >
+                            <X className="w-4 h-4" />
+                          </span>
                         )}
                       </button>
 
-                      {/* Date Range Picker Dropdown */}
+                      {/* Date Range: popover (desktop) / bottom sheet (mobile) */}
                       {showDateRange && hasRouteSelected && mounted && createPortal(
-                        <div
-                          ref={dateRangeCalendarRef}
-                          className="fixed animate-slide-up z-50"
-                          style={{
-                            bottom: dateRangeButtonRef.current
-                              ? `${window.innerHeight - dateRangeButtonRef.current.getBoundingClientRect().top + 8}px`
-                              : "100%",
-                            left: dateRangeButtonRef.current
-                              ? `${dateRangeButtonRef.current.getBoundingClientRect().left}px`
-                              : "0",
-                          }}
-                        >
-                          <DateRangePicker
-                            availability={availability}
-                            departureDate={departureDate}
-                            returnDate={returnDate}
-                            onDepartureSelect={handleDepartureSelect}
-                            onReturnSelect={handleReturnSelect}
+                        <>
+                          <div
+                            ref={dateRangeCalendarRef}
+                            className="hidden md:block fixed inset-x-4 bottom-20 md:inset-auto md:bottom-auto md:left-0 md:w-[640px] md:animate-slide-up z-50"
+                          >
+                            <DateRangePicker
+                              availability={availability}
+                              departureDate={departureDate}
+                              returnDate={returnDate}
+                              onDepartureSelect={handleDepartureSelect}
+                              onReturnSelect={handleReturnSelect}
+                              onClose={() => setShowDateRange(false)}
+                            />
+                          </div>
+                          <BottomSheet
+                            open={showDateRange}
                             onClose={() => setShowDateRange(false)}
-                          />
-                        </div>,
+                            title="Selecionar datas"
+                            subtitle="Escolha a ida e a volta"
+                          >
+                            <DateRangePicker
+                              availability={availability}
+                              departureDate={departureDate}
+                              returnDate={returnDate}
+                              onDepartureSelect={handleDepartureSelect}
+                              onReturnSelect={handleReturnSelect}
+                              onClose={() => setShowDateRange(false)}
+                            />
+                          </BottomSheet>
+                        </>,
                         document.body
                       )}
                     </div>
@@ -699,36 +751,53 @@ export default function HomePage() {
                           {date ? formatDateDisplay(date) : "Selecionar"}
                         </span>
                         {date && (
-                          <X
-                            className="w-4 h-4 ml-auto shrink-0 hover:text-red-500"
+                          <span
+                            role="button"
+                            tabIndex={0}
+                            aria-label="Limpar data"
+                            className="ml-auto p-2 -m-2 shrink-0 cursor-pointer"
                             onClick={(e) => {
                               e.stopPropagation();
                               setDate(null);
                             }}
-                          />
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.stopPropagation();
+                                setDate(null);
+                              }
+                            }}
+                          >
+                            <X className="w-4 h-4" />
+                          </span>
                         )}
                       </button>
 
-                      {/* Calendar Dropdown - Single Date */}
+                      {/* Calendar: popover (desktop) / bottom sheet (mobile) */}
                       {showCalendar && hasRouteSelected && mounted && createPortal(
-                        <div
-                          ref={calendarRef}
-                          className="fixed animate-slide-up z-50"
-                          style={{
-                            bottom: dateButtonRef.current
-                              ? `${window.innerHeight - dateButtonRef.current.getBoundingClientRect().top + 8}px`
-                              : "100%",
-                            left: dateButtonRef.current
-                              ? `${dateButtonRef.current.getBoundingClientRect().left}px`
-                              : "0",
-                          }}
-                        >
-                          <AvailabilityCalendar
-                            availability={availability}
-                            selectedDate={date}
-                            onDateSelect={handleDateSelect}
-                          />
-                        </div>,
+                        <>
+                          <div
+                            ref={calendarRef}
+                            className="hidden md:block fixed inset-x-4 bottom-20 md:inset-auto md:bottom-auto md:left-0 md:w-[320px] md:animate-slide-up z-50"
+                          >
+                            <AvailabilityCalendar
+                              availability={availability}
+                              selectedDate={date}
+                              onDateSelect={handleDateSelect}
+                            />
+                          </div>
+                          <BottomSheet
+                            open={showCalendar}
+                            onClose={() => setShowCalendar(false)}
+                            title="Selecionar data"
+                            subtitle="Toque num dia para ver os melhores preços"
+                          >
+                            <AvailabilityCalendar
+                              availability={availability}
+                              selectedDate={date}
+                              onDateSelect={handleDateSelect}
+                            />
+                          </BottomSheet>
+                        </>,
                         document.body
                       )}
                     </div>
@@ -754,12 +823,12 @@ export default function HomePage() {
 
                   {/* Search Button */}
                   <div className="md:col-span-2">
-                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block px-1 invisible">
+                    <span className="hidden md:block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 px-1 invisible">
                       &nbsp;
                     </span>
                     <button
                       type="submit"
-                      className="w-full py-[1.1rem] bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#dc2626] text-white font-bold rounded-xl transition-all shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 flex items-center justify-center gap-2 text-sm h-[3.1rem]"
+                      className="w-full min-h-[48px] py-[1.1rem] bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#dc2626] text-white font-bold rounded-xl transition-all shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 flex items-center justify-center gap-2 text-sm active:from-[#dc2626] active:to-[#dc2626] active:scale-[0.98]"
                     >
                       <Search className="w-5 h-5" />
                       Buscar
@@ -775,22 +844,22 @@ export default function HomePage() {
       {/* Quick stats */}
       <section className="bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-          <div className="flex flex-wrap justify-center gap-8 md:gap-16 text-center">
+          <div className="grid grid-cols-2 gap-y-6 sm:flex sm:flex-wrap sm:justify-center sm:gap-8 md:gap-16 text-center">
             <div>
               <div className="text-3xl font-bold text-gray-900">12+</div>
               <div className="text-sm text-gray-500">Destinos</div>
             </div>
-            <div className="w-px bg-gray-200" />
+            <div className="hidden sm:block w-px bg-gray-200" />
             <div>
               <div className="text-3xl font-bold text-gray-900">4</div>
               <div className="text-sm text-gray-500">Companhias</div>
             </div>
-            <div className="w-px bg-gray-200" />
+            <div className="hidden sm:block w-px bg-gray-200" />
             <div>
               <div className="text-3xl font-bold text-gray-900">50k+</div>
               <div className="text-sm text-gray-500">Viajantes</div>
             </div>
-            <div className="w-px bg-gray-200" />
+            <div className="hidden sm:block w-px bg-gray-200" />
             <div>
               <div className="text-3xl font-bold text-gray-900 flex items-center gap-1 justify-center">
                 4.8
@@ -810,12 +879,12 @@ export default function HomePage() {
           </h2>
           <p className="text-gray-500">As rotas mais procuradas pelos nossos viajantes</p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="-mx-4 px-4 sm:mx-0 sm:px-0 flex gap-4 sm:gap-5 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-px-4 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:snap-none sm:overflow-visible">
           {popularRoutes.map((dest, i) => (
             <button
               key={i}
               onClick={() => handleBookDestination(dest)}
-              className="group bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-[#f97316] hover:shadow-xl hover:shadow-orange-500/10 hover:-translate-y-1 transition-all duration-300 text-left"
+              className="group w-[264px] shrink-0 snap-start bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-[#f97316] hover:shadow-xl hover:shadow-orange-500/10 hover:-translate-y-1 transition-all duration-300 text-left active:scale-[0.98]"
             >
               {/* Image */}
               <div className="relative h-44 overflow-hidden">
