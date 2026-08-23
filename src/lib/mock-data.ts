@@ -95,6 +95,9 @@ export const airlines: Airline[] = [
 ];
 
 // Generate flights across multiple dates for calendar availability
+const toLocalDateStr = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
 function generateFlights(): Flight[] {
   const baseFlights: Omit<Flight, "id" | "departureTime" | "arrivalTime">[] = [
     // LAD → CAB (Luanda → Benguela) - múltiplos voos diários
@@ -142,7 +145,7 @@ function generateFlights(): Flight[] {
   for (let dayOffset = 0; dayOffset < 30; dayOffset++) {
     const date = new Date(now);
     date.setDate(date.getDate() + dayOffset);
-    const dateStr = date.toISOString().split("T")[0];
+    const dateStr = toLocalDateStr(date);
 
     // Not all routes fly every day - use deterministic pattern
     baseFlights.forEach((base, idx) => {
@@ -165,7 +168,7 @@ function generateFlights(): Flight[] {
       const durMins = durationMatch ? parseInt(durationMatch[2]) : 0;
       const arrDate = new Date(date);
       arrDate.setHours(depHour + durHours, depMin + durMins);
-      const arrTime = arrDate.toISOString().replace("Z", "").split(".")[0];
+      const arrTime = `${toLocalDateStr(arrDate)}T${String(arrDate.getHours()).padStart(2, "0")}:${String(arrDate.getMinutes()).padStart(2, "0")}:00`;
 
       // Vary price +/- 10%
       const priceVariation = 1 + ((dayOffset * 7 + idx * 13) % 20 - 10) / 100;
@@ -299,7 +302,7 @@ export function getAvailabilityForRoute(origin: string, destination: string): Da
   for (let i = 0; i < 60; i++) {
     const date = new Date(now);
     date.setDate(date.getDate() + i);
-    const dateStr = date.toISOString().split("T")[0];
+    const dateStr = toLocalDateStr(date);
 
     const dayFlights = flights.filter(
       (f) =>

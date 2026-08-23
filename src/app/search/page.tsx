@@ -41,17 +41,21 @@ type SortBy = "price" | "duration" | "departure";
 function SearchContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { setFlight } = useBooking();
+  const { setFlight, setPassengerCount } = useBooking();
 
   const initialOrigin = searchParams.get("origin") || "";
   const initialDestination = searchParams.get("destination") || "";
   const initialDate = searchParams.get("date") || "";
   const initialPassengers = parseInt(searchParams.get("passengers") || "1");
+  const initialAdults = parseInt(searchParams.get("adults") || "");
+  const initialChildren = parseInt(searchParams.get("children") || "");
 
   const [origin, setOrigin] = useState(initialOrigin);
   const [destination, setDestination] = useState(initialDestination);
   const [selectedDate, setSelectedDate] = useState<string | null>(initialDate || null);
   const [passengers, setPassengers] = useState(initialPassengers);
+  const adults = Number.isNaN(initialAdults) ? initialPassengers : initialAdults;
+  const children = Number.isNaN(initialChildren) ? 0 : initialChildren;
   const [sortBy, setSortBy] = useState<SortBy>("price");
   const [showCalendar, setShowCalendar] = useState(false);
   const [maxPrice, setMaxPrice] = useState(200000);
@@ -111,6 +115,7 @@ function SearchContent() {
   }, [origin, destination, selectedDate, sortBy, maxPrice, selectedClass, selectedAirlines, selectedTimeOfDay]);
 
   const handleSelectFlight = (flight: Flight) => {
+    setPassengerCount(passengers);
     setFlight(flight);
     router.push(`/booking/seats?flightId=${flight.id}`);
   };
@@ -354,7 +359,11 @@ function SearchContent() {
             )}
             <div className="flex items-center gap-2 bg-white/10 rounded-lg px-4 py-2">
               <Users className="w-4 h-4 text-[#f97316]" />
-              <span>{passengers} {passengers === 1 ? "passageiro" : "passageiros"}</span>
+              <span>
+                {children > 0
+                  ? `${adults} ${adults === 1 ? "adulto" : "adultos"} • ${children} ${children === 1 ? "criança" : "crianças"}`
+                  : `${passengers} ${passengers === 1 ? "passageiro" : "passageiros"}`}
+              </span>
             </div>
             <span className="text-gray-400 ml-auto">
               {filteredFlights.length} voos encontrados

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { formatCurrency, getAirlineById, getAirportByCode } from "@/lib/mock-data";
 import { useBooking, PaymentMethod } from "@/lib/booking-context";
 import BookingStepper from "@/components/ui/BookingStepper";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import {
   ArrowLeft,
   ArrowRight,
@@ -685,7 +686,9 @@ export default function CheckoutPage() {
         </div>
       }
     >
-      <CheckoutContent />
+      <ProtectedRoute>
+        <CheckoutContent />
+      </ProtectedRoute>
     </Suspense>
   );
 }

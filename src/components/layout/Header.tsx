@@ -73,7 +73,7 @@ export default function Header() {
                         <p className="text-xs text-gray-500">{user.email}</p>
                       </div>
                       <Link
-                        href="/admin"
+                        href="/perfil"
                         onClick={() => setUserMenuOpen(false)}
                         className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                       >

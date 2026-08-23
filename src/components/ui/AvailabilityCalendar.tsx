@@ -94,7 +94,7 @@ export default function AvailabilityCalendar({
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden w-full" style={{ maxWidth: "90vw" }}>
+    <div data-calendar-root className="bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden w-full" style={{ maxWidth: "90vw" }}>
       {isLoading ? (
         <div className="p-6 text-center">
           <div className="w-6 h-6 border-2 border-gray-200 border-t-[#f97316] rounded-full animate-spin mx-auto mb-2" />

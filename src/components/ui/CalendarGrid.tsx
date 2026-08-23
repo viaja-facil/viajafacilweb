@@ -10,7 +10,9 @@ const MONTH_NAMES = [
 ];
 
 const TODAY = new Date(2026, 7, 21);
-const TODAY_STR = TODAY.toISOString().split("T")[0];
+const toLocalDateStr = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const TODAY_STR = toLocalDateStr(TODAY);
 
 export interface CalendarDay {
   day: number;
@@ -47,9 +49,9 @@ export default function CalendarGrid({
   }, [currentMonth]);
 
   const getDateStr = (day: number) => {
-    return new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day)
-      .toISOString()
-      .split("T")[0];
+    return toLocalDateStr(
+      new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day)
+    );
   };
 
   const navigateMonth = (direction: -1 | 1) => {

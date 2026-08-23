@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { flights, generateSeats, formatCurrency, getAirlineById, getAirportByCode, Seat } from "@/lib/mock-data";
 import { useBooking } from "@/lib/booking-context";
 import BookingStepper from "@/components/ui/BookingStepper";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import {
   ArrowLeft,
   ArrowRight,
@@ -25,7 +26,9 @@ export default function SeatsPage() {
         </div>
       }
     >
-      <SeatsContent />
+      <ProtectedRoute>
+        <SeatsContent />
+      </ProtectedRoute>
     </Suspense>
   );
 }
@@ -46,6 +49,11 @@ function SeatsContent() {
     [flight]
   );
   const [selectedSeats, setSelectedSeats] = useState<Seat[]>([]);
+
+  // Number of passengers declared in the search drives how many seats can be picked
+  const passengerCount = booking.passengerCount > 0 ? booking.passengerCount : 1;
+  const remainingSeats = passengerCount - selectedSeats.length;
+  const allSeatsSelected = selectedSeats.length === passengerCount;
 
   if (!flight) {
     return (
@@ -73,13 +81,13 @@ function SeatsContent() {
       if (exists) {
         return prev.filter((s) => s.id !== seat.id);
       }
-      if (prev.length >= 9) return prev;
+      if (prev.length >= passengerCount) return prev;
       return [...prev, seat];
     });
   };
 
   const handleContinue = () => {
-    if (selectedSeats.length === 0) return;
+    if (!allSeatsSelected) return;
     setSeats(selectedSeats);
     router.push(`/booking/checkout?flightId=${flight.id}`);
   };
@@ -118,7 +126,8 @@ function SeatsContent() {
             <div>
               <h1 className="text-2xl font-bold">Selecione seus assentos</h1>
               <p className="text-gray-400 text-sm mt-1">
-                {flight.flightNumber} • {airline?.name}
+                {flight.flightNumber} • {airline?.name} • {passengerCount}{" "}
+                {passengerCount === 1 ? "passageiro" : "passageiros"}
               </p>
             </div>
             <div className="flex items-center gap-4">
@@ -152,6 +161,28 @@ function SeatsContent() {
                 <div className="text-center">
                   <p className="text-lg font-bold text-gray-900">{flight.destination}</p>
                   <p className="text-xs text-gray-500">{destAirport?.city}</p>
+                </div>
+              </div>
+
+              {/* Seat selection progress */}
+              <div className="mb-6">
+                <div className="flex items-center justify-between text-xs font-semibold mb-2">
+                  <span className={allSeatsSelected ? "text-green-600" : "text-gray-700"}>
+                    {allSeatsSelected
+                      ? `Todos os ${passengerCount} ${passengerCount === 1 ? "lugar selecionado" : "lugares selecionados"}`
+                      : `Faltam ${remainingSeats} ${remainingSeats === 1 ? "lugar" : "lugares"}`}
+                  </span>
+                  <span className="text-gray-400">
+                    {selectedSeats.length} de {passengerCount}
+                  </span>
+                </div>
+                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-300 ${
+                      allSeatsSelected ? "bg-green-500" : "bg-[#f97316]"
+                    }`}
+                    style={{ width: `${(selectedSeats.length / passengerCount) * 100}%` }}
+                  />
                 </div>
               </div>
 
@@ -293,7 +324,7 @@ function SeatsContent() {
               {selectedSeats.length > 0 && (
                 <div className="mb-6">
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                    Assentos Selecionados ({selectedSeats.length})
+                    Assentos Selecionados ({selectedSeats.length}/{passengerCount})
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {selectedSeats.map((seat) => (
@@ -340,10 +371,12 @@ function SeatsContent() {
 
               <button
                 onClick={handleContinue}
-                disabled={selectedSeats.length === 0}
+                disabled={!allSeatsSelected}
                 className="w-full min-h-[48px] mt-6 py-3.5 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#dc2626] disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all shadow-lg shadow-orange-500/20 disabled:shadow-none flex items-center justify-center gap-2"
               >
-                Continuar
+                {allSeatsSelected
+                  ? "Continuar"
+                  : `Selecione mais ${remainingSeats} ${remainingSeats === 1 ? "lugar" : "lugares"}`}
                 <ArrowRight className="w-5 h-5" />
               </button>
 
@@ -361,13 +394,17 @@ function SeatsContent() {
         <div className="flex items-center justify-between gap-4">
           <div>
             <p className="text-xs text-gray-500">
-              {selectedSeats.length > 0 ? `${selectedSeats.length} assento${selectedSeats.length > 1 ? "s" : ""}` : "Nenhum assento"}
+              {allSeatsSelected
+                ? `${selectedSeats.length} assento${selectedSeats.length > 1 ? "s" : ""}`
+                : remainingSeats === passengerCount
+                ? "Nenhum assento"
+                : `Faltam ${remainingSeats} lugar${remainingSeats > 1 ? "es" : ""}`}
             </p>
             <p className="text-xl font-bold text-[#f97316]">{formatCurrency(grandTotal)}</p>
           </div>
           <button
             onClick={handleContinue}
-            disabled={selectedSeats.length === 0}
+            disabled={!allSeatsSelected}
             className="min-h-[44px] px-6 py-2.5 bg-gradient-to-r from-[#f97316] to-[#ea580c] disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all shadow-lg shadow-orange-500/20 disabled:shadow-none flex items-center justify-center gap-2"
           >
             Continuar

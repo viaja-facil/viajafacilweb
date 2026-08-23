@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { formatCurrency, getAirlineById, getAirportByCode } from "@/lib/mock-data";
 import { useBooking } from "@/lib/booking-context";
 import BookingStepper from "@/components/ui/BookingStepper";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import {
   Check,
   Download,
@@ -21,6 +22,14 @@ import {
 } from "lucide-react";
 
 export default function ConfirmationPage() {
+  return (
+    <ProtectedRoute>
+      <ConfirmationContent />
+    </ProtectedRoute>
+  );
+}
+
+function ConfirmationContent() {
   const router = useRouter();
   const { booking, resetBooking } = useBooking();
 

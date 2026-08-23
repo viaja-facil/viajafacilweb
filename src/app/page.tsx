@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { airports, airlines, getAvailabilityForRoute, formatCurrency } from "@/lib/mock-data";
 import { useBooking } from "@/lib/booking-context";
 import AvailabilityCalendar from "@/components/ui/AvailabilityCalendar";
+import PassengerSelect from "@/components/ui/PassengerSelect";
 import DateRangePicker from "@/components/ui/DateRangePicker";
 import CustomSelect from "@/components/ui/CustomSelect";
 import BottomSheet from "@/components/ui/BottomSheet";
@@ -260,7 +261,9 @@ export default function HomePage() {
   const [date, setDate] = useState<string | null>(null);
   const [departureDate, setDepartureDate] = useState<string | null>(null);
   const [returnDate, setReturnDate] = useState<string | null>(null);
-  const [passengers, setPassengers] = useState(1);
+  const [adults, setAdults] = useState(1);
+  const [children, setChildren] = useState(0);
+  const passengers = adults + children;
   const [tripType, setTripType] = useState<"oneway" | "roundtrip" | "multicity">("oneway");
   const [showCalendar, setShowCalendar] = useState(false);
   const [showDateRange, setShowDateRange] = useState(false);
@@ -271,8 +274,6 @@ export default function HomePage() {
   );
   const dateButtonRef = useRef<HTMLButtonElement>(null);
   const dateRangeButtonRef = useRef<HTMLButtonElement>(null);
-  const calendarRef = useRef<HTMLDivElement>(null);
-  const dateRangeCalendarRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef<number | null>(null);
 
   // Slider state
@@ -308,32 +309,26 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, [isAutoPlaying]);
 
-  // Close calendar on click outside
+  // Close calendar on click/touch outside (works for both the desktop popover
+  // and the mobile bottom sheet, which live in separate portals)
   useEffect(() => {
     if (!showCalendar && !showDateRange) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as Node;
-      if (
-        showCalendar &&
-        calendarRef.current &&
-        !calendarRef.current.contains(target) &&
-        dateButtonRef.current &&
-        !dateButtonRef.current.contains(target)
-      ) {
+    const handlePointerDown = (e: Event) => {
+      const target = e.target;
+      if (!(target instanceof Element)) return;
+      const inCalendar = !!target.closest("[data-calendar-root]");
+      const inDateRange = !!target.closest("[data-daterange-root]");
+      const inDateButton = !!dateButtonRef.current?.contains(target);
+      const inDateRangeButton = !!dateRangeButtonRef.current?.contains(target);
+      if (showCalendar && !inCalendar && !inDateButton) {
         setShowCalendar(false);
       }
-      if (
-        showDateRange &&
-        dateRangeCalendarRef.current &&
-        !dateRangeCalendarRef.current.contains(target) &&
-        dateRangeButtonRef.current &&
-        !dateRangeButtonRef.current.contains(target)
-      ) {
+      if (showDateRange && !inDateRange && !inDateRangeButton) {
         setShowDateRange(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("pointerdown", handlePointerDown, true);
+    return () => document.removeEventListener("pointerdown", handlePointerDown, true);
   }, [showCalendar, showDateRange]);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -351,6 +346,8 @@ export default function HomePage() {
     }
 
     params.set("passengers", passengers.toString());
+    params.set("adults", adults.toString());
+    params.set("children", children.toString());
     params.set("tripType", tripType);
     router.push(`/search?${params.toString()}`);
   };
@@ -692,7 +689,7 @@ export default function HomePage() {
                       {showDateRange && hasRouteSelected && mounted && createPortal(
                         <>
                           <div
-                            ref={dateRangeCalendarRef}
+                            data-daterange-root
                             className="hidden md:block fixed inset-x-4 bottom-20 md:inset-auto md:bottom-auto md:left-0 md:w-[640px] md:animate-slide-up z-50"
                           >
                             <DateRangePicker
@@ -776,7 +773,7 @@ export default function HomePage() {
                       {showCalendar && hasRouteSelected && mounted && createPortal(
                         <>
                           <div
-                            ref={calendarRef}
+                            data-calendar-root
                             className="hidden md:block fixed inset-x-4 bottom-20 md:inset-auto md:bottom-auto md:left-0 md:w-[320px] md:animate-slide-up z-50"
                           >
                             <AvailabilityCalendar
@@ -803,21 +800,18 @@ export default function HomePage() {
                     </div>
                   )}
 
-                  {/* Passengers */}
+                  {/* Passengers: adults + children */}
                   <div className="md:col-span-2">
                     <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block px-1">
                       Passageiros
                     </label>
-                    <CustomSelect
-                      value={String(passengers)}
-                      onChange={(nextPassengers) => setPassengers(Number(nextPassengers))}
-                      ariaLabel="Número de passageiros"
-                      leadingIcon={<Users className="h-5 w-5" />}
-                      buttonClassName="py-[1.1rem]"
-                      options={[1, 2, 3, 4, 5, 6, 7, 8, 9].map((number) => ({
-                        value: String(number),
-                        label: `${number} ${number === 1 ? "passageiro" : "passageiros"}`,
-                      }))}
+                    <PassengerSelect
+                      adults={adults}
+                      childrenCount={children}
+                      onChange={(next) => {
+                        setAdults(next.adults);
+                        setChildren(next.childrenCount);
+                      }}
                     />
                   </div>
 

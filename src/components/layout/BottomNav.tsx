@@ -7,8 +7,8 @@ import { Home, Search, Plane, User } from "lucide-react";
 const navItems = [
   { href: "/", icon: Home, label: "Início" },
   { href: "/search", icon: Search, label: "Buscar" },
-  { href: "/booking/confirmation", icon: Plane, label: "Viagens" },
-  { href: "/auth/login", icon: User, label: "Perfil" },
+  { href: "/reservas", icon: Plane, label: "Viagens" },
+  { href: "/perfil", icon: User, label: "Perfil" },
 ];
 
 export default function BottomNav() {

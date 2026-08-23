@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
+import SocialLoginButtons from "@/components/auth/SocialLoginButtons";
 import { Plane, Mail, Lock, User, Phone, AlertCircle, ArrowRight } from "lucide-react";
 
 export default function RegisterPage() {
@@ -49,6 +50,14 @@ export default function RegisterPage() {
             </Link>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Criar sua conta</h1>
             <p className="text-gray-500">Comece a viajar com a ViajaFácil</p>
+          </div>
+
+          <SocialLoginButtons onSuccess={() => router.push("/")} />
+
+          <div className="flex items-center gap-3 my-6">
+            <div className="flex-1 h-px bg-gray-200" />
+            <span className="text-xs text-gray-400 uppercase tracking-wider">ou com e-mail</span>
+            <div className="flex-1 h-px bg-gray-200" />
           </div>
 
           {error && (

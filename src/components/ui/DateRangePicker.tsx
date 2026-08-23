@@ -118,7 +118,7 @@ export default function DateRangePicker({
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden w-full" style={{ maxWidth: "95vw" }}>
+    <div data-daterange-root className="bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden w-full" style={{ maxWidth: "95vw" }}>
       {/* Header */}
       <div className="bg-white px-4 py-3 border-b border-gray-100">
         <div className="flex items-center justify-between">
