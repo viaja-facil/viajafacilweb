@@ -16,6 +16,7 @@ import { useBooking } from "@/lib/booking-context";
 import AvailabilityCalendar from "@/components/ui/AvailabilityCalendar";
 import { SkeletonFlight } from "@/components/ui/Skeleton";
 import CollapsibleFilter from "@/components/ui/CollapsibleFilter";
+import CustomSelect from "@/components/ui/CustomSelect";
 import {
   Plane,
   ArrowRight,
@@ -230,15 +231,16 @@ function SearchContent() {
               </div>
 
               <CollapsibleFilter title="Ordenar por" defaultOpen={true}>
-                <select
+                <CustomSelect
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as SortBy)}
-                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#f97316]"
-                >
-                  <option value="price">Menor Preço</option>
-                  <option value="duration">Mais Rápido</option>
-                  <option value="departure">Partida</option>
-                </select>
+                  onChange={(nextSort) => setSortBy(nextSort as SortBy)}
+                  ariaLabel="Ordenar voos por"
+                  options={[
+                    { value: "price", label: "Menor Preço" },
+                    { value: "duration", label: "Mais Rápido" },
+                    { value: "departure", label: "Partida" },
+                  ]}
+                />
               </CollapsibleFilter>
 
               <CollapsibleFilter

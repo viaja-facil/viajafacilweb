@@ -12,6 +12,7 @@ import {
   Clock,
 } from "lucide-react";
 import { useState } from "react";
+import CustomSelect from "@/components/ui/CustomSelect";
 
 export default function AdminBookingsPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -45,16 +46,18 @@ export default function AdminBookingsPage() {
             className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#f97316]"
           />
         </div>
-        <select
+        <CustomSelect
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#f97316]"
-        >
-          <option value="all">Todos os status</option>
-          <option value="confirmed">Confirmadas</option>
-          <option value="pending">Pendentes</option>
-          <option value="cancelled">Canceladas</option>
-        </select>
+          onChange={setStatusFilter}
+          ariaLabel="Filtrar reservas por status"
+          className="min-w-48"
+          options={[
+            { value: "all", label: "Todos os status" },
+            { value: "confirmed", label: "Confirmadas" },
+            { value: "pending", label: "Pendentes" },
+            { value: "cancelled", label: "Canceladas" },
+          ]}
+        />
       </div>
 
       {/* Bookings list */}

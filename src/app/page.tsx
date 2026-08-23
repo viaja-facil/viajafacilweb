@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { airports, airlines, getAvailabilityForRoute, formatCurrency } from "@/lib/mock-data";
 import { useBooking } from "@/lib/booking-context";
 import AvailabilityCalendar from "@/components/ui/AvailabilityCalendar";
 import DateRangePicker from "@/components/ui/DateRangePicker";
+import CustomSelect from "@/components/ui/CustomSelect";
 import {
   Plane,
   Calendar,
@@ -261,6 +263,15 @@ export default function HomePage() {
   const [tripType, setTripType] = useState<"oneway" | "roundtrip" | "multicity">("oneway");
   const [showCalendar, setShowCalendar] = useState(false);
   const [showDateRange, setShowDateRange] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const dateButtonRef = useRef<HTMLButtonElement>(null);
+  const dateRangeButtonRef = useRef<HTMLButtonElement>(null);
+  const calendarRef = useRef<HTMLDivElement>(null);
+  const dateRangeCalendarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Slider state
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -294,6 +305,34 @@ export default function HomePage() {
     }, 5000);
     return () => clearInterval(interval);
   }, [isAutoPlaying]);
+
+  // Close calendar on click outside
+  useEffect(() => {
+    if (!showCalendar && !showDateRange) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (
+        showCalendar &&
+        calendarRef.current &&
+        !calendarRef.current.contains(target) &&
+        dateButtonRef.current &&
+        !dateButtonRef.current.contains(target)
+      ) {
+        setShowCalendar(false);
+      }
+      if (
+        showDateRange &&
+        dateRangeCalendarRef.current &&
+        !dateRangeCalendarRef.current.contains(target) &&
+        dateRangeButtonRef.current &&
+        !dateRangeButtonRef.current.contains(target)
+      ) {
+        setShowDateRange(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showCalendar, showDateRange]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -336,9 +375,9 @@ export default function HomePage() {
   return (
     <div className="min-h-screen">
       {/* Hero Section with Slider */}
-      <section className="relative overflow-hidden">
+      <section className="relative">
         {/* Slider Background */}
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 overflow-hidden">
           {featuredDestinations.map((dest, i) => (
             <div
               key={i}
@@ -453,7 +492,7 @@ export default function HomePage() {
           </div>
 
           {/* Search Card */}
-          <div className="w-full">
+          <div className="w-full relative">
             <div className="bg-white rounded-2xl shadow-2xl shadow-black/20 p-4">
               {/* Trip type - Radio buttons */}
               <div className="flex gap-5 p-5 pb-2">
@@ -513,26 +552,26 @@ export default function HomePage() {
                     <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block px-1">
                       De onde?
                     </label>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <select
+                    <CustomSelect
                         value={origin}
-                        onChange={(e) => {
-                          setOrigin(e.target.value);
+                        onChange={(nextOrigin) => {
+                          setOrigin(nextOrigin);
                           setDate(null);
                           setDepartureDate(null);
                           setReturnDate(null);
                         }}
-                        className="w-full pl-10 pr-4 py-[1.1rem] bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#f97316] focus:border-transparent appearance-none cursor-pointer"
-                      >
-                        <option value="">Selecionar aeroporto</option>
-                        {airports.map((a) => (
-                          <option key={a.code} value={a.code}>
-                            {a.city} ({a.code})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                        placeholder="Selecionar aeroporto"
+                        ariaLabel="Aeroporto de origem"
+                        leadingIcon={<MapPin className="h-5 w-5" />}
+                        buttonClassName="py-[1.1rem]"
+                        options={[
+                          { value: "", label: "Selecionar aeroporto" },
+                          ...airports.map((airport) => ({
+                            value: airport.code,
+                            label: `${airport.city} (${airport.code})`,
+                          })),
+                        ]}
+                      />
                   </div>
 
                   {/* Destination */}
@@ -540,26 +579,26 @@ export default function HomePage() {
                     <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block px-1">
                       Para onde?
                     </label>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#f97316]" />
-                      <select
+                    <CustomSelect
                         value={destination}
-                        onChange={(e) => {
-                          setDestination(e.target.value);
+                        onChange={(nextDestination) => {
+                          setDestination(nextDestination);
                           setDate(null);
                           setDepartureDate(null);
                           setReturnDate(null);
                         }}
-                        className="w-full pl-10 pr-4 py-[1.1rem] bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#f97316] focus:border-transparent appearance-none cursor-pointer"
-                      >
-                        <option value="">Selecionar aeroporto</option>
-                        {airports.map((a) => (
-                          <option key={a.code} value={a.code}>
-                            {a.city} ({a.code})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                        placeholder="Selecionar aeroporto"
+                        ariaLabel="Aeroporto de destino"
+                        leadingIcon={<MapPin className="h-5 w-5 text-[#f97316]" />}
+                        buttonClassName="py-[1.1rem]"
+                        options={[
+                          { value: "", label: "Selecionar aeroporto" },
+                          ...airports.map((airport) => ({
+                            value: airport.code,
+                            label: `${airport.city} (${airport.code})`,
+                          })),
+                        ]}
+                      />
                   </div>
 
                   {/* Date with Calendar */}
@@ -569,6 +608,7 @@ export default function HomePage() {
                         Datas
                       </label>
                       <button
+                        ref={dateRangeButtonRef}
                         type="button"
                         onClick={() => {
                           if (hasRouteSelected) {
@@ -605,6 +645,31 @@ export default function HomePage() {
                         )}
                       </button>
 
+                      {/* Date Range Picker Dropdown */}
+                      {showDateRange && hasRouteSelected && mounted && createPortal(
+                        <div
+                          ref={dateRangeCalendarRef}
+                          className="fixed animate-slide-up z-50"
+                          style={{
+                            bottom: dateRangeButtonRef.current
+                              ? `${window.innerHeight - dateRangeButtonRef.current.getBoundingClientRect().top + 8}px`
+                              : "100%",
+                            left: dateRangeButtonRef.current
+                              ? `${dateRangeButtonRef.current.getBoundingClientRect().left}px`
+                              : "0",
+                          }}
+                        >
+                          <DateRangePicker
+                            availability={availability}
+                            departureDate={departureDate}
+                            returnDate={returnDate}
+                            onDepartureSelect={handleDepartureSelect}
+                            onReturnSelect={handleReturnSelect}
+                            onClose={() => setShowDateRange(false)}
+                          />
+                        </div>,
+                        document.body
+                      )}
                     </div>
                   ) : (
                     <div className="md:col-span-2 relative">
@@ -612,6 +677,7 @@ export default function HomePage() {
                         Data
                       </label>
                       <button
+                        ref={dateButtonRef}
                         type="button"
                         onClick={() => {
                           if (hasRouteSelected) {
@@ -643,6 +709,28 @@ export default function HomePage() {
                         )}
                       </button>
 
+                      {/* Calendar Dropdown - Single Date */}
+                      {showCalendar && hasRouteSelected && mounted && createPortal(
+                        <div
+                          ref={calendarRef}
+                          className="fixed animate-slide-up z-50"
+                          style={{
+                            bottom: dateButtonRef.current
+                              ? `${window.innerHeight - dateButtonRef.current.getBoundingClientRect().top + 8}px`
+                              : "100%",
+                            left: dateButtonRef.current
+                              ? `${dateButtonRef.current.getBoundingClientRect().left}px`
+                              : "0",
+                          }}
+                        >
+                          <AvailabilityCalendar
+                            availability={availability}
+                            selectedDate={date}
+                            onDateSelect={handleDateSelect}
+                          />
+                        </div>,
+                        document.body
+                      )}
                     </div>
                   )}
 
@@ -651,20 +739,17 @@ export default function HomePage() {
                     <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block px-1">
                       Passageiros
                     </label>
-                    <div className="relative">
-                      <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <select
-                        value={passengers}
-                        onChange={(e) => setPassengers(Number(e.target.value))}
-                        className="w-full pl-10 pr-4 py-[1.1rem] bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#f97316] focus:border-transparent appearance-none cursor-pointer"
-                      >
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
-                          <option key={n} value={n}>
-                            {n} {n === 1 ? "passageiro" : "passageiros"}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                    <CustomSelect
+                      value={String(passengers)}
+                      onChange={(nextPassengers) => setPassengers(Number(nextPassengers))}
+                      ariaLabel="Número de passageiros"
+                      leadingIcon={<Users className="h-5 w-5" />}
+                      buttonClassName="py-[1.1rem]"
+                      options={[1, 2, 3, 4, 5, 6, 7, 8, 9].map((number) => ({
+                        value: String(number),
+                        label: `${number} ${number === 1 ? "passageiro" : "passageiros"}`,
+                      }))}
+                    />
                   </div>
 
                   {/* Search Button */}
@@ -683,31 +768,6 @@ export default function HomePage() {
                 </div>
               </form>
             </div>
-
-            {/* Calendar Dropdown - Single Date */}
-            {showCalendar && hasRouteSelected && tripType !== "roundtrip" && (
-              <div className="mt-3 animate-slide-up">
-                <AvailabilityCalendar
-                  availability={availability}
-                  selectedDate={date}
-                  onDateSelect={handleDateSelect}
-                />
-              </div>
-            )}
-
-            {/* Date Range Picker Dropdown */}
-            {showDateRange && hasRouteSelected && tripType === "roundtrip" && (
-              <div className="mt-3 animate-slide-up">
-                <DateRangePicker
-                  availability={availability}
-                  departureDate={departureDate}
-                  returnDate={returnDate}
-                  onDepartureSelect={handleDepartureSelect}
-                  onReturnSelect={handleReturnSelect}
-                  onClose={() => setShowDateRange(false)}
-                />
-              </div>
-            )}
           </div>
         </div>
       </section>

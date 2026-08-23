@@ -12,6 +12,7 @@ import {
   Eye,
   ArrowUpDown,
 } from "lucide-react";
+import CustomSelect from "@/components/ui/CustomSelect";
 
 export default function AdminFlightsPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -52,18 +53,16 @@ export default function AdminFlightsPage() {
             className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#f97316]"
           />
         </div>
-        <select
+        <CustomSelect
           value={selectedAirline}
-          onChange={(e) => setSelectedAirline(e.target.value)}
-          className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#f97316]"
-        >
-          <option value="all">Todas as companhias</option>
-          {airlines.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.name}
-            </option>
-          ))}
-        </select>
+          onChange={setSelectedAirline}
+          ariaLabel="Filtrar voos por companhia"
+          className="min-w-56"
+          options={[
+            { value: "all", label: "Todas as companhias" },
+            ...airlines.map((airline) => ({ value: airline.id, label: airline.name })),
+          ]}
+        />
       </div>
 
       {/* Flights table */}
@@ -222,23 +221,23 @@ export default function AdminFlightsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-semibold text-gray-700 mb-1 block">Origem</label>
-                  <select className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#f97316]">
-                    {airports.map((a) => (
-                      <option key={a.code} value={a.code}>
-                        {a.city} ({a.code})
-                      </option>
-                    ))}
-                  </select>
+                  <CustomSelect
+                    ariaLabel="Aeroporto de origem"
+                    options={airports.map((airport) => ({
+                      value: airport.code,
+                      label: `${airport.city} (${airport.code})`,
+                    }))}
+                  />
                 </div>
                 <div>
                   <label className="text-sm font-semibold text-gray-700 mb-1 block">Destino</label>
-                  <select className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#f97316]">
-                    {airports.map((a) => (
-                      <option key={a.code} value={a.code}>
-                        {a.city} ({a.code})
-                      </option>
-                    ))}
-                  </select>
+                  <CustomSelect
+                    ariaLabel="Aeroporto de destino"
+                    options={airports.map((airport) => ({
+                      value: airport.code,
+                      label: `${airport.city} (${airport.code})`,
+                    }))}
+                  />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -278,13 +277,13 @@ export default function AdminFlightsPage() {
               </div>
               <div>
                 <label className="text-sm font-semibold text-gray-700 mb-1 block">Companhia</label>
-                <select className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#f97316]">
-                  {airlines.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.name}
-                    </option>
-                  ))}
-                </select>
+                <CustomSelect
+                  ariaLabel="Companhia aérea"
+                  options={airlines.map((airline) => ({
+                    value: airline.id,
+                    label: airline.name,
+                  }))}
+                />
               </div>
               <div className="flex gap-3 pt-4">
                 <button
