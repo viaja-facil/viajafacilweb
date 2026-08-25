@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { User, mockUsers } from "@/lib/mock-data";
 
 export type SocialProvider = "google" | "facebook";
@@ -35,19 +35,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Restoring the session from localStorage only after the first paint prevents
   // the React #418 (hydration mismatch) error.
   const [user, setUser] = useState<User | null>(null);
-  const hasRestored = useRef(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    if (hasRestored.current) return;
-    hasRestored.current = true;
     const frame = requestAnimationFrame(() => {
       const saved = localStorage.getItem("viajafacil_user");
-      if (!saved) return;
-      try {
-        setUser(JSON.parse(saved));
-      } catch {
-        localStorage.removeItem("viajafacil_user");
+      if (saved) {
+        try {
+          setUser(JSON.parse(saved));
+        } catch {
+          localStorage.removeItem("viajafacil_user");
+        }
       }
+      setIsLoaded(true);
     });
     return () => cancelAnimationFrame(frame);
   }, []);
@@ -78,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider value={{ user, login, loginSocial, logout, isAdmin: user?.role === "admin" }}>
-      {children}
+      {isLoaded ? children : null}
     </AuthContext.Provider>
   );
 }

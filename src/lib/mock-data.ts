@@ -28,6 +28,7 @@ export interface Flight {
   aircraft: string;
   stops: number;
   class: "economy" | "business" | "first";
+  hasCheckedBaggage: boolean;
 }
 
 export interface Seat {
@@ -101,40 +102,40 @@ const toLocalDateStr = (d: Date) =>
 function generateFlights(): Flight[] {
   const baseFlights: Omit<Flight, "id" | "departureTime" | "arrivalTime">[] = [
     // LAD → CAB (Luanda → Benguela) - múltiplos voos diários
-    { airlineId: "taa", flightNumber: "DT 302", origin: "LAD", destination: "CAB", duration: "1h 30min", price: 48000, currency: "AOA", availableSeats: 120, totalSeats: 180, aircraft: "Boeing 737-700", stops: 0, class: "economy" },
-    { airlineId: "taa", flightNumber: "DT 304", origin: "LAD", destination: "CAB", duration: "1h 45min", price: 55000, currency: "AOA", availableSeats: 85, totalSeats: 180, aircraft: "Boeing 737-800", stops: 0, class: "economy" },
-    { airlineId: "taa", flightNumber: "DT 500", origin: "LAD", destination: "CAB", duration: "2h 00min", price: 95000, currency: "AOA", availableSeats: 20, totalSeats: 50, aircraft: "Boeing 767-300", stops: 0, class: "business" },
-    { airlineId: "taa", flightNumber: "DT 150", origin: "LAD", destination: "CAB", duration: "1h 30min", price: 150000, currency: "AOA", availableSeats: 8, totalSeats: 16, aircraft: "Bombardier CRJ-900", stops: 0, class: "first" },
+    { airlineId: "taa", flightNumber: "DT 302", origin: "LAD", destination: "CAB", duration: "1h 30min", price: 48000, currency: "AOA", availableSeats: 120, totalSeats: 180, aircraft: "Boeing 737-700", stops: 0, class: "economy", hasCheckedBaggage: true },
+    { airlineId: "taa", flightNumber: "DT 304", origin: "LAD", destination: "CAB", duration: "1h 45min", price: 55000, currency: "AOA", availableSeats: 85, totalSeats: 180, aircraft: "Boeing 737-800", stops: 0, class: "economy", hasCheckedBaggage: false },
+    { airlineId: "taa", flightNumber: "DT 500", origin: "LAD", destination: "CAB", duration: "2h 00min", price: 95000, currency: "AOA", availableSeats: 20, totalSeats: 50, aircraft: "Boeing 767-300", stops: 0, class: "business", hasCheckedBaggage: true },
+    { airlineId: "taa", flightNumber: "DT 150", origin: "LAD", destination: "CAB", duration: "1h 30min", price: 150000, currency: "AOA", availableSeats: 8, totalSeats: 16, aircraft: "Bombardier CRJ-900", stops: 0, class: "first", hasCheckedBaggage: true },
     // CAB → LAD (Benguela → Luanda)
-    { airlineId: "lam", flightNumber: "TM 702", origin: "CAB", destination: "LAD", duration: "1h 30min", price: 50000, currency: "AOA", availableSeats: 110, totalSeats: 180, aircraft: "Boeing 737-700", stops: 0, class: "economy" },
+    { airlineId: "lam", flightNumber: "TM 702", origin: "CAB", destination: "LAD", duration: "1h 30min", price: 50000, currency: "AOA", availableSeats: 110, totalSeats: 180, aircraft: "Boeing 737-700", stops: 0, class: "economy", hasCheckedBaggage: true },
     // LAD → NOV (Luanda → Lubango)
-    { airlineId: "rhs", flightNumber: "RH 101", origin: "LAD", destination: "NOV", duration: "1h 30min", price: 135000, currency: "AOA", availableSeats: 45, totalSeats: 120, aircraft: "Airbus A320", stops: 0, class: "economy" },
-    { airlineId: "taa", flightNumber: "DT 320", origin: "LAD", destination: "NOV", duration: "1h 30min", price: 270000, currency: "AOA", availableSeats: 15, totalSeats: 30, aircraft: "Boeing 737-800", stops: 0, class: "business" },
+    { airlineId: "rhs", flightNumber: "RH 101", origin: "LAD", destination: "NOV", duration: "1h 30min", price: 135000, currency: "AOA", availableSeats: 45, totalSeats: 120, aircraft: "Airbus A320", stops: 0, class: "economy", hasCheckedBaggage: false },
+    { airlineId: "taa", flightNumber: "DT 320", origin: "LAD", destination: "NOV", duration: "1h 30min", price: 270000, currency: "AOA", availableSeats: 15, totalSeats: 30, aircraft: "Boeing 737-800", stops: 0, class: "business", hasCheckedBaggage: true },
     // LAD → SPP (Luanda → Menongue)
-    { airlineId: "dac", flightNumber: "DA 205", origin: "LAD", destination: "SPP", duration: "2h 30min", price: 142000, currency: "AOA", availableSeats: 60, totalSeats: 150, aircraft: "Boeing 737 MAX", stops: 0, class: "economy" },
+    { airlineId: "dac", flightNumber: "DA 205", origin: "LAD", destination: "SPP", duration: "2h 30min", price: 142000, currency: "AOA", availableSeats: 60, totalSeats: 150, aircraft: "Boeing 737 MAX", stops: 0, class: "economy", hasCheckedBaggage: false },
     // LAD → VHC (Luanda → Saurimo)
-    { airlineId: "taa", flightNumber: "DT 410", origin: "LAD", destination: "VHC", duration: "2h 00min", price: 120000, currency: "AOA", availableSeats: 90, totalSeats: 150, aircraft: "Embraer E190", stops: 0, class: "economy" },
+    { airlineId: "taa", flightNumber: "DT 410", origin: "LAD", destination: "VHC", duration: "2h 00min", price: 120000, currency: "AOA", availableSeats: 90, totalSeats: 150, aircraft: "Embraer E190", stops: 0, class: "economy", hasCheckedBaggage: true },
     // LAD → MEG (Luanda → Malanje)
-    { airlineId: "rhs", flightNumber: "RH 220", origin: "LAD", destination: "MEG", duration: "1h 15min", price: 52000, currency: "AOA", availableSeats: 70, totalSeats: 120, aircraft: "ATR 72-600", stops: 0, class: "economy" },
+    { airlineId: "rhs", flightNumber: "RH 220", origin: "LAD", destination: "MEG", duration: "1h 15min", price: 52000, currency: "AOA", availableSeats: 70, totalSeats: 120, aircraft: "ATR 72-600", stops: 0, class: "economy", hasCheckedBaggage: false },
     // LAD → UAL (Luanda → Uíge)
-    { airlineId: "dac", flightNumber: "DA 310", origin: "LAD", destination: "UAL", duration: "1h 45min", price: 65000, currency: "AOA", availableSeats: 55, totalSeats: 120, aircraft: "Airbus A319", stops: 0, class: "economy" },
+    { airlineId: "dac", flightNumber: "DA 310", origin: "LAD", destination: "UAL", duration: "1h 45min", price: 65000, currency: "AOA", availableSeats: 55, totalSeats: 120, aircraft: "Airbus A319", stops: 0, class: "economy", hasCheckedBaggage: false },
     // LAD → NRC (Luanda → Namibe)
-    { airlineId: "taa", flightNumber: "DT 600", origin: "LAD", destination: "NRC", duration: "1h 45min", price: 147500, currency: "AOA", availableSeats: 40, totalSeats: 120, aircraft: "Embraer E195", stops: 0, class: "economy" },
-    { airlineId: "taa", flightNumber: "DT 602", origin: "LAD", destination: "NRC", duration: "1h 45min", price: 295000, currency: "AOA", availableSeats: 12, totalSeats: 24, aircraft: "Boeing 737-800", stops: 0, class: "business" },
+    { airlineId: "taa", flightNumber: "DT 600", origin: "LAD", destination: "NRC", duration: "1h 45min", price: 147500, currency: "AOA", availableSeats: 40, totalSeats: 120, aircraft: "Embraer E195", stops: 0, class: "economy", hasCheckedBaggage: true },
+    { airlineId: "taa", flightNumber: "DT 602", origin: "LAD", destination: "NRC", duration: "1h 45min", price: 295000, currency: "AOA", availableSeats: 12, totalSeats: 24, aircraft: "Boeing 737-800", stops: 0, class: "business", hasCheckedBaggage: true },
     // LAD → LBZ (Luanda → Lucapa)
-    { airlineId: "rhs", flightNumber: "RH 350", origin: "LAD", destination: "LBZ", duration: "1h 30min", price: 58000, currency: "AOA", availableSeats: 65, totalSeats: 120, aircraft: "ATR 72-600", stops: 0, class: "economy" },
+    { airlineId: "rhs", flightNumber: "RH 350", origin: "LAD", destination: "LBZ", duration: "1h 30min", price: 58000, currency: "AOA", availableSeats: 65, totalSeats: 120, aircraft: "ATR 72-600", stops: 0, class: "economy", hasCheckedBaggage: false },
     // International flights - Lisboa
-    { airlineId: "tap", flightNumber: "TP 288", origin: "LAD", destination: "LIS", duration: "6h 30min", price: 750000, currency: "AOA", availableSeats: 80, totalSeats: 250, aircraft: "Airbus A330-900", stops: 0, class: "economy" },
-    { airlineId: "tap", flightNumber: "TP 286", origin: "LAD", destination: "LIS", duration: "6h 30min", price: 2400000, currency: "AOA", availableSeats: 24, totalSeats: 30, aircraft: "Airbus A330-900", stops: 0, class: "business" },
+    { airlineId: "tap", flightNumber: "TP 288", origin: "LAD", destination: "LIS", duration: "6h 30min", price: 750000, currency: "AOA", availableSeats: 80, totalSeats: 250, aircraft: "Airbus A330-900", stops: 0, class: "economy", hasCheckedBaggage: true },
+    { airlineId: "tap", flightNumber: "TP 286", origin: "LAD", destination: "LIS", duration: "6h 30min", price: 2400000, currency: "AOA", availableSeats: 24, totalSeats: 30, aircraft: "Airbus A330-900", stops: 0, class: "business", hasCheckedBaggage: true },
     // International flights - Dubai
-    { airlineId: "ema", flightNumber: "EK 794", origin: "LAD", destination: "DXB", duration: "7h 45min", price: 520000, currency: "AOA", availableSeats: 150, totalSeats: 400, aircraft: "Boeing 777-300ER", stops: 0, class: "economy" },
-    { airlineId: "ema", flightNumber: "EK 794", origin: "LAD", destination: "DXB", duration: "7h 45min", price: 1500000, currency: "AOA", availableSeats: 12, totalSeats: 14, aircraft: "Boeing 777-300ER", stops: 0, class: "business" },
+    { airlineId: "ema", flightNumber: "EK 794", origin: "LAD", destination: "DXB", duration: "7h 45min", price: 520000, currency: "AOA", availableSeats: 150, totalSeats: 400, aircraft: "Boeing 777-300ER", stops: 0, class: "economy", hasCheckedBaggage: true },
+    { airlineId: "ema", flightNumber: "EK 794", origin: "LAD", destination: "DXB", duration: "7h 45min", price: 1500000, currency: "AOA", availableSeats: 12, totalSeats: 14, aircraft: "Boeing 777-300ER", stops: 0, class: "business", hasCheckedBaggage: true },
     // International flights - Joanesburgo
-    { airlineId: "taa", flightNumber: "DT 790", origin: "LAD", destination: "JNB", duration: "4h 15min", price: 320000, currency: "AOA", availableSeats: 95, totalSeats: 180, aircraft: "Boeing 737-800", stops: 0, class: "economy" },
-    { airlineId: "taa", flightNumber: "DT 792", origin: "LAD", destination: "JNB", duration: "4h 15min", price: 680000, currency: "AOA", availableSeats: 20, totalSeats: 30, aircraft: "Boeing 737-800", stops: 0, class: "business" },
+    { airlineId: "taa", flightNumber: "DT 790", origin: "LAD", destination: "JNB", duration: "4h 15min", price: 320000, currency: "AOA", availableSeats: 95, totalSeats: 180, aircraft: "Boeing 737-800", stops: 0, class: "economy", hasCheckedBaggage: true },
+    { airlineId: "taa", flightNumber: "DT 792", origin: "LAD", destination: "JNB", duration: "4h 15min", price: 680000, currency: "AOA", availableSeats: 20, totalSeats: 30, aircraft: "Boeing 737-800", stops: 0, class: "business", hasCheckedBaggage: true },
     // International flights - São Paulo
-    { airlineId: "taa", flightNumber: "DT 792", origin: "LAD", destination: "GRU", duration: "8h 00min", price: 362000, currency: "AOA", availableSeats: 100, totalSeats: 220, aircraft: "Boeing 787-9", stops: 0, class: "economy" },
-    { airlineId: "taa", flightNumber: "DT 794", origin: "LAD", destination: "GRU", duration: "8h 00min", price: 821000, currency: "AOA", availableSeats: 16, totalSeats: 16, aircraft: "Boeing 787-9", stops: 0, class: "business" },
+    { airlineId: "taa", flightNumber: "DT 792", origin: "LAD", destination: "GRU", duration: "8h 00min", price: 362000, currency: "AOA", availableSeats: 100, totalSeats: 220, aircraft: "Boeing 787-9", stops: 0, class: "economy", hasCheckedBaggage: true },
+    { airlineId: "taa", flightNumber: "DT 794", origin: "LAD", destination: "GRU", duration: "8h 00min", price: 821000, currency: "AOA", availableSeats: 16, totalSeats: 16, aircraft: "Boeing 787-9", stops: 0, class: "business", hasCheckedBaggage: true },
   ];
 
   const flights: Flight[] = [];

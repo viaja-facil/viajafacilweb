@@ -19,6 +19,7 @@ interface BookingState {
 interface BookingContextType {
   booking: BookingState;
   setFlight: (flight: Flight) => void;
+  confirmFlight: () => void;
   setSeats: (seats: Seat[]) => void;
   setPassengers: (passengers: { name: string; document: string }[]) => void;
   setPassengerCount: (count: number) => void;
@@ -45,7 +46,11 @@ export function BookingProvider({ children }: { children: ReactNode }) {
   const [booking, setBooking] = useState<BookingState>(initialBooking);
 
   const setFlight = (flight: Flight) => {
-    setBooking((prev) => ({ ...prev, flight, step: "seats" }));
+    setBooking((prev) => ({ ...prev, flight, step: "select" }));
+  };
+
+  const confirmFlight = () => {
+    setBooking((prev) => ({ ...prev, step: "seats" }));
   };
 
   const setSeats = (seats: Seat[]) => {
@@ -63,7 +68,17 @@ export function BookingProvider({ children }: { children: ReactNode }) {
   };
 
   const setPassengerCount = (count: number) => {
-    setBooking((prev) => ({ ...prev, passengerCount: count }));
+    setBooking((prev) => {
+      const newSeats = prev.seats.slice(0, count);
+      const flightPrice = prev.flight?.price || 0;
+      const seatExtras = newSeats.reduce((sum, s) => sum + s.price, 0);
+      return {
+        ...prev,
+        passengerCount: count,
+        seats: newSeats,
+        totalPrice: flightPrice * newSeats.length + seatExtras,
+      };
+    });
   };
 
   const setPaymentMethod = (method: PaymentMethod) => {
@@ -87,6 +102,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
       value={{
         booking,
         setFlight,
+        confirmFlight,
         setSeats,
         setPassengers,
         setPassengerCount,
