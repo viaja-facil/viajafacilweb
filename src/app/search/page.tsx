@@ -57,7 +57,6 @@ function SearchContent() {
   const adults = Number.isNaN(initialAdults) ? initialPassengers : initialAdults;
   const children = Number.isNaN(initialChildren) ? 0 : initialChildren;
   const [sortBy, setSortBy] = useState<SortBy>("price");
-  const [showCalendar, setShowCalendar] = useState(false);
   const [maxPrice, setMaxPrice] = useState(200000);
   const [selectedClass, setSelectedClass] = useState<string>("all");
   const [selectedAirlines, setSelectedAirlines] = useState<string[]>([]);
@@ -388,7 +387,6 @@ function SearchContent() {
                   selectedDate={selectedDate}
                   onDateSelect={(date) => {
                     setSelectedDate(date);
-                    setShowCalendar(false);
                   }}
                 />
               </div>
