@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, ReactNode } from "react";
+import { useState, useMemo, useRef, ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -35,6 +35,9 @@ export default function CalendarGrid({
   headerExtra,
 }: CalendarGridProps) {
   const [currentMonth, setCurrentMonth] = useState(() => initialMonth ?? new Date(2026, 7, 1));
+  const touchStartX = useRef<number>(0);
+  const touchStartY = useRef<number>(0);
+  const isSwiping = useRef<boolean>(false);
 
   const days = useMemo(() => {
     const year = currentMonth.getFullYear();
@@ -60,8 +63,52 @@ export default function CalendarGrid({
     onMonthChange?.(next);
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    isSwiping.current = false;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartX.current) return;
+    
+    const deltaX = e.touches[0].clientX - touchStartX.current;
+    const deltaY = e.touches[0].clientY - touchStartY.current;
+    
+    // Only consider horizontal swipes (more horizontal than vertical)
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+      isSwiping.current = true;
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!isSwiping.current) return;
+    
+    const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+    const minSwipeDistance = 50;
+    
+    if (Math.abs(deltaX) >= minSwipeDistance) {
+      if (deltaX > 0) {
+        // Swipe right -> previous month
+        navigateMonth(-1);
+      } else {
+        // Swipe left -> next month
+        navigateMonth(1);
+      }
+    }
+    
+    touchStartX.current = 0;
+    touchStartY.current = 0;
+    isSwiping.current = false;
+  };
+
   return (
-    <div className="flex-1 min-w-0">
+    <div 
+      className="flex-1 min-w-0 touch-pan-y"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       {/* Month header */}
       <div className="flex items-center justify-between mb-2">
         <button

@@ -16,6 +16,7 @@ export default function BottomNav() {
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
+    if (href === "/reservas") return pathname === "/reservas";
     return pathname.startsWith(href);
   };
 

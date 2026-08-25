@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useSyncExternalStore } from "react";
 import { formatCurrency, DateAvailability } from "@/lib/mock-data";
 import CalendarGrid, { CalendarDay } from "./CalendarGrid";
 
@@ -13,6 +13,17 @@ interface DateRangePickerProps {
   onClose: () => void;
 }
 
+function useCurrentMonth(): Date {
+  return useSyncExternalStore(
+    () => () => {},
+    () => {
+      const now = new Date();
+      return new Date(now.getFullYear(), now.getMonth(), 1);
+    },
+    () => new Date(2026, 7, 1)
+  );
+}
+
 export default function DateRangePicker({
   availability,
   departureDate,
@@ -23,6 +34,11 @@ export default function DateRangePicker({
 }: DateRangePickerProps) {
   const [selectingReturn, setSelectingReturn] = useState(false);
   const [hoverDate, setHoverDate] = useState<string | null>(null);
+  const currentMonth = useCurrentMonth();
+  const nextMonth = useMemo(
+    () => new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1),
+    [currentMonth]
+  );
 
   const availabilityMap = useMemo(() => {
     const map: Record<string, DateAvailability> = {};
@@ -164,12 +180,12 @@ export default function DateRangePicker({
       <div className="px-3 py-2">
         <div className="flex flex-col md:flex-row gap-2">
           <CalendarGrid
-            initialMonth={new Date(2026, 7, 1)}
+            initialMonth={currentMonth}
             renderDay={renderDay}
           />
           <div className="w-px bg-gray-100" />
           <CalendarGrid
-            initialMonth={new Date(2026, 8, 1)}
+            initialMonth={nextMonth}
             renderDay={renderDay}
           />
         </div>
