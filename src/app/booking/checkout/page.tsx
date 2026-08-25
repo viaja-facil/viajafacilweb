@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { formatCurrency, getAirlineById, getAirportByCode } from "@/lib/mock-data";
 import { useBooking, PaymentMethod } from "@/lib/booking-context";
@@ -54,6 +54,12 @@ function CheckoutContent() {
   const [paymentGenerated, setPaymentGenerated] = useState(false);
   const [reference, setReference] = useState("");
   const [copied, setCopied] = useState(false);
+  const [biStatus, setBiStatus] = useState<
+    Record<number, { status: "loading" | "found" | "manual"; message?: string }>
+  >({});
+  // Tracks the last document requested per passenger so stale responses
+  // (e.g. after pasting a different BI over another) are discarded
+  const latestBIRequest = useRef<Record<number, string>>({});
 
   // Generate mock reference (called from event handlers only)
   const makeReference = () => {
@@ -91,6 +97,64 @@ function CheckoutContent() {
     setPassengerForms((prev) =>
       prev.map((p, i) => (i === index ? { ...p, [field]: value } : p))
     );
+  };
+
+  // BI lookup via internal proxy (/api/lookup-bi) — the upstream service
+  // is only contacted server-side and never exposed to the browser
+  const ANGOLAN_BI_REGEX = /^\d{9}[A-Z]{2}\d{3}$/;
+
+  const lookupBI = async (index: number, rawDoc: string) => {
+    const doc = rawDoc.trim().toUpperCase();
+    if (!ANGOLAN_BI_REGEX.test(doc)) return;
+
+    latestBIRequest.current[index] = doc;
+    setBiStatus((prev) => ({ ...prev, [index]: { status: "loading" } }));
+    try {
+      const res = await fetch(`/api/lookup-bi?bi=${encodeURIComponent(doc)}`);
+      // Ignore the response if the user already typed/pasted a different document
+      if (latestBIRequest.current[index] !== doc) return;
+
+      const data = await res.json();
+      if (data.found && data.name) {
+        updatePassenger(index, "name", data.name);
+        setBiStatus((prev) => ({
+          ...prev,
+          [index]: { status: "found", message: data.name },
+        }));
+      } else {
+        setBiStatus((prev) => ({
+          ...prev,
+          [index]: { status: "manual", message: data.error },
+        }));
+      }
+    } catch {
+      if (latestBIRequest.current[index] !== doc) return;
+      setBiStatus((prev) => ({
+        ...prev,
+        [index]: { status: "manual", message: "Não foi possível validar o BI. Preencha o nome manualmente." },
+      }));
+    }
+  };
+
+  const handleDocumentChange = (index: number, value: string) => {
+    // Sanitize paste input: strip spaces, dashes and anything non-alphanumeric
+    const cleaned = value.replace(/[^0-9A-Za-z]/g, "").toUpperCase();
+    updatePassenger(index, "document", cleaned);
+    // Clear previous lookup result when the document changes
+    setBiStatus((prev) => {
+      const next = { ...prev };
+      delete next[index];
+      return next;
+    });
+    if (ANGOLAN_BI_REGEX.test(cleaned)) {
+      lookupBI(index, cleaned);
+    } else if (cleaned.length >= 14) {
+      // Full-length document that isn't an Angolan BI (e.g. passport)
+      setBiStatus((prev) => ({
+        ...prev,
+        [index]: { status: "manual", message: "Documento não é um BI angolano. Preencha o nome manualmente." },
+      }));
+    }
   };
 
   const isPassengerFormValid = passengerForms.every(
@@ -201,7 +265,7 @@ function CheckoutContent() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-40 md:pb-6">
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-4">
@@ -221,50 +285,139 @@ function CheckoutContent() {
               </div>
 
               <div className="space-y-4">
-                {passengerForms.map((passenger, index) => (
-                  <div key={index} className="bg-gray-50 rounded-xl p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="w-7 h-7 bg-[#f97316] text-white rounded-lg flex items-center justify-center text-xs font-bold">
-                        {index + 1}
-                      </span>
-                      <h3 className="text-sm font-semibold text-gray-900">
-                        Passageiro {index + 1}
-                      </h3>
-                      <span className="ml-auto text-xs font-bold text-[#f97316] bg-orange-50 px-2.5 py-0.5 rounded-full">
-                        Assento {passenger.seat}
-                      </span>
-                    </div>
+                {passengerForms.map((passenger, index) => {
+                  const status = biStatus[index];
+                  const docFilled = passenger.document.trim().length > 0;
+                  const inputBorder =
+                    status?.status === "loading"
+                      ? "border-[#f97316] ring-2 ring-[#f97316]/20"
+                      : status?.status === "found"
+                      ? "border-green-500 bg-green-50/50"
+                      : status?.status === "manual"
+                      ? "border-amber-400 bg-amber-50/40"
+                      : docFilled
+                      ? "border-gray-300"
+                      : "border-gray-200";
+                  return (
+                    <div key={index} className="bg-gray-50 rounded-xl p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold transition-colors ${
+                          status?.status === "found"
+                            ? "bg-green-500 text-white"
+                            : "bg-[#f97316] text-white"
+                        }`}>
+                          {status?.status === "found" ? (
+                            <Check className="w-4 h-4" />
+                          ) : (
+                            index + 1
+                          )}
+                        </span>
+                        <h3 className="text-sm font-semibold text-gray-900">
+                          Passageiro {index + 1}
+                        </h3>
+                        <span className="ml-auto text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-2 py-0.5">
+                          Assento {passenger.seat}
+                        </span>
+                      </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="text-xs font-semibold text-gray-600 mb-1 block">
-                          Nome Completo
+                        <label className="text-xs font-semibold text-gray-600 mb-1 flex items-center gap-2">
+                          Nº do BI / Passaporte
+                          {status?.status === "loading" && (
+                            <span className="inline-flex items-center gap-1 font-normal text-[#f97316]">
+                              <span className="w-3 h-3 border-2 border-orange-200 border-t-[#f97316] rounded-full animate-spin" />
+                              a validar...
+                            </span>
+                          )}
                         </label>
-                        <input
-                          type="text"
-                          placeholder="Como no documento"
-                          value={passenger.name}
-                          onChange={(e) => updatePassenger(index, "name", e.target.value)}
-                          className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#f97316] focus:border-transparent"
-                        />
+                        <div className="relative">
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            placeholder="Ex.: 000217139NE013"
+                            value={passenger.document}
+                            onChange={(e) => handleDocumentChange(index, e.target.value)}
+                            maxLength={14}
+                            aria-invalid={status?.status === "manual"}
+                            aria-describedby={`bi-status-${index}`}
+                            className={`w-full pl-3 pr-10 py-2.5 bg-white border-2 rounded-xl text-sm uppercase tracking-wide focus:outline-none focus:ring-2 focus:ring-[#f97316]/30 focus:border-[#f97316] transition-all ${inputBorder}`}
+                          />
+                          {/* Interactive validation indicator */}
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2">
+                            {status?.status === "loading" && (
+                              <span className="block w-[18px] h-[18px] border-2 border-orange-200 border-t-[#f97316] rounded-full animate-spin" />
+                            )}
+                            {status?.status === "found" && (
+                              <CheckCircle2 className="w-5 h-5 text-green-600 animate-fade-in" />
+                            )}
+                            {status?.status === "manual" && (
+                              <AlertCircle className="w-5 h-5 text-amber-500 animate-fade-in" />
+                            )}
+                          </span>
+                        </div>
                       </div>
-                      <div>
-                        <label className="text-xs font-semibold text-gray-600 mb-1 block">
-                          Número do Documento
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="Bilhete de Identidade / Passaporte"
-                          value={passenger.document}
-                          onChange={(e) => updatePassenger(index, "document", e.target.value)}
-                          className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#f97316] focus:border-transparent"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+
+                      {/* Validated name confirmation panel */}
+                      {status?.status === "found" && (
+                        <div
+                          id={`bi-status-${index}`}
+                          aria-live="polite"
+                          className="mt-3 bg-green-50 border-2 border-green-200 rounded-xl p-4 animate-fade-in"
+                        >
+                          <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-green-600 mb-1">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            Nome validado via BI
+                          </p>
+                          <p className="text-base font-bold text-gray-900 leading-snug">
+                            {passenger.name}
+                          </p>
+                          <p className="text-xs text-green-700 mt-2">
+                            Confirme que o nome está correto antes de pagar. É este que vai no bilhete.
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Manual entry fallback */}
+                      {status?.status === "manual" && (
+                        <div
+                          id={`bi-status-${index}`}
+                          aria-live="polite"
+                          className="mt-3 animate-fade-in"
+                        >
+                          <label className="text-xs font-semibold text-gray-600 mb-1 block">
+                            Nome Completo
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Introduza o nome como está no documento"
+                            value={passenger.name}
+                            onChange={(e) => updatePassenger(index, "name", e.target.value)}
+                            className={`w-full px-3 py-2.5 bg-white border-2 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#f97316]/30 focus:border-[#f97316] transition-all ${
+                              passenger.name.trim().length > 2
+                                ? "border-green-400"
+                                : "border-amber-300"
+                            }`}
+                          />
+                          {passenger.name.trim().length > 2 ? (
+                            <p className="flex items-center gap-1.5 text-xs text-green-600 mt-1.5">
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              {passenger.name}
+                            </p>
+                          ) : (
+                            status.message && (
+                              <p className="flex items-start gap-1.5 text-xs text-amber-600 mt-1.5">
+                                <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-px" />
+                                {status.message}
+                              </p>
+                            )
+                          )}
+                        </div>
+                      )}
+                     </div>
+                   );
+                 })}
+               </div>
+             </div>
 
             {/* Payment Method Selection */}
             {!paymentGenerated && (
@@ -391,7 +544,7 @@ function CheckoutContent() {
                       (paymentMethod === "multicaixa_express" && phoneNumber.length < 9) ||
                       isProcessing
                     }
-                    className="w-full mt-6 py-3.5 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#dc2626] disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all shadow-lg shadow-orange-500/20 disabled:shadow-none flex items-center justify-center gap-2"
+                    className="w-full mt-6 py-3.5 hidden md:flex bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#dc2626] disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all shadow-lg shadow-orange-500/20 disabled:shadow-none items-center justify-center gap-2"
                   >
                     {isProcessing ? (
                       <>
