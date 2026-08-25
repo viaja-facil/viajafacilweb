@@ -11,10 +11,16 @@ import PassengerSelect from "@/components/ui/PassengerSelect";
 import DateRangePicker from "@/components/ui/DateRangePicker";
 import CustomSelect from "@/components/ui/CustomSelect";
 import BottomSheet from "@/components/ui/BottomSheet";
+import ScrollReveal from "@/components/ui/ScrollReveal";
+import AnimatedCounter from "@/components/ui/AnimatedCounter";
+import TiltCard from "@/components/ui/TiltCard";
+import GradientButton from "@/components/ui/GradientButton";
+import ParticleBackground from "@/components/ui/ParticleBackground";
+import PriceAlert from "@/components/ui/PriceAlert";
+import AppDownload from "@/components/ui/AppDownload";
 import {
   Plane,
   Calendar,
-  Users,
   ArrowRight,
   Search,
   Shield,
@@ -31,7 +37,8 @@ import {
   ChevronDown,
   Phone,
   CircleDot,
-  ImageIcon,
+  Sparkles,
+  Zap,
 } from "lucide-react";
 
 // Featured destinations for slider (domestic + international)
@@ -242,7 +249,7 @@ const faqItems = [
   },
   {
     question: "Quais formas de pagamento são aceitas?",
-    answer: "Aceitamos cartões de crédito (Visa, Mastercard), cartões de débito e transferência bancária. O pagamento é processado de forma 100% segura.",
+    answer: "Aceitamos Multicaixa Express (pagamento pelo telemóvel) e Referência Bancária (pagamento via ATM Multicaixa, aplicação bancária ou agência). O pagamento é processado de forma 100% segura.",
   },
   {
     question: "Recebo minha passagem por e-mail?",
@@ -377,7 +384,7 @@ export default function HomePage() {
     <div className="min-h-screen">
       {/* Hero Section with Slider */}
       <section
-        className="relative"
+        className="relative overflow-hidden"
         onTouchStart={(e) => {
           touchStartX.current = e.touches[0].clientX;
         }}
@@ -394,6 +401,7 @@ export default function HomePage() {
           );
         }}
       >
+        <ParticleBackground className="opacity-30" />
         {/* Slider Background */}
         <div className="absolute inset-0 overflow-hidden">
           {featuredDestinations.map((dest, i) => (
@@ -840,50 +848,67 @@ export default function HomePage() {
       </section>
 
       {/* Quick stats */}
-      <section className="bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-          <div className="grid grid-cols-2 gap-y-6 sm:flex sm:flex-wrap sm:justify-center sm:gap-8 md:gap-16 text-center">
-            <div>
-              <div className="text-3xl font-bold text-gray-900">12+</div>
-              <div className="text-sm text-gray-500">Destinos</div>
-            </div>
-            <div className="hidden sm:block w-px bg-gray-200" />
-            <div>
-              <div className="text-3xl font-bold text-gray-900">4</div>
-              <div className="text-sm text-gray-500">Companhias</div>
-            </div>
-            <div className="hidden sm:block w-px bg-gray-200" />
-            <div>
-              <div className="text-3xl font-bold text-gray-900">50k+</div>
-              <div className="text-sm text-gray-500">Viajantes</div>
-            </div>
-            <div className="hidden sm:block w-px bg-gray-200" />
-            <div>
-              <div className="text-3xl font-bold text-gray-900 flex items-center gap-1 justify-center">
-                4.8
-                <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+      <section className="bg-gradient-to-b from-white to-gray-50 border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+          <ScrollReveal>
+            <div className="grid grid-cols-2 gap-y-8 sm:flex sm:flex-wrap sm:justify-center sm:gap-8 md:gap-16 text-center">
+              <div className="group">
+                <div className="text-4xl font-bold text-gray-900 mb-1">
+                  <AnimatedCounter end={airports.length} suffix="+" />
+                </div>
+                <div className="text-sm text-gray-500 group-hover:text-[#f97316] transition-colors">Destinos</div>
               </div>
-              <div className="text-sm text-gray-500">Avaliação</div>
+              <div className="hidden sm:block w-px bg-gray-200" />
+              <div className="group">
+                <div className="text-4xl font-bold text-gray-900 mb-1">
+                  <AnimatedCounter end={airlines.length} />
+                </div>
+                <div className="text-sm text-gray-500 group-hover:text-[#f97316] transition-colors">Companhias</div>
+              </div>
+              <div className="hidden sm:block w-px bg-gray-200" />
+              <div className="group">
+                <div className="text-4xl font-bold text-gray-900 mb-1">
+                  <AnimatedCounter end={50} suffix="k+" />
+                </div>
+                <div className="text-sm text-gray-500 group-hover:text-[#f97316] transition-colors">Viajantes</div>
+              </div>
+              <div className="hidden sm:block w-px bg-gray-200" />
+              <div className="group">
+                <div className="text-4xl font-bold text-gray-900 flex items-center gap-1 justify-center mb-1">
+                  <AnimatedCounter end={4} />
+                  <span className="text-2xl">.</span>
+                  <AnimatedCounter end={8} />
+                  <Star className="w-6 h-6 fill-yellow-400 text-yellow-400 group-hover:scale-110 transition-transform" />
+                </div>
+                <div className="text-sm text-gray-500 group-hover:text-[#f97316] transition-colors">Avaliação</div>
+              </div>
             </div>
-          </div>
+          </ScrollReveal>
         </div>
       </section>
 
       {/* Popular Routes */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
-        <div className="text-center mb-10">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-            Rotas Populares
-          </h2>
-          <p className="text-gray-500">As rotas mais procuradas pelos nossos viajantes</p>
-        </div>
+        <ScrollReveal>
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 bg-[#f97316]/10 rounded-full px-4 py-2 mb-4">
+              <Sparkles className="w-4 h-4 text-[#f97316]" />
+              <span className="text-sm font-semibold text-[#f97316]">Mais procuradas</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+              Rotas Populares
+            </h2>
+            <p className="text-gray-500">As rotas mais procuradas pelos nossos viajantes</p>
+          </div>
+        </ScrollReveal>
         <div className="-mx-4 px-4 sm:mx-0 sm:px-0 flex gap-4 sm:gap-5 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-px-4 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:snap-none sm:overflow-visible">
           {popularRoutes.map((dest, i) => (
-            <button
-              key={i}
-              onClick={() => handleBookDestination(dest)}
-              className="group w-[264px] shrink-0 snap-start bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-[#f97316] hover:shadow-xl hover:shadow-orange-500/10 hover:-translate-y-1 transition-all duration-300 text-left active:scale-[0.98]"
-            >
+            <ScrollReveal key={i} delay={i * 100}>
+              <TiltCard maxTilt={10}>
+                <button
+                  onClick={() => handleBookDestination(dest)}
+                  className="group w-full bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-[#f97316] hover:shadow-xl hover:shadow-orange-500/10 transition-all duration-300 text-left active:scale-[0.98]"
+                >
               {/* Image */}
               <div className="relative h-44 overflow-hidden">
                 <RouteImage src={dest.image} city={dest.city} />
@@ -960,7 +985,9 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
-            </button>
+              </button>
+            </TiltCard>
+          </ScrollReveal>
           ))}
         </div>
       </section>
@@ -984,58 +1011,76 @@ export default function HomePage() {
 
       {/* Features */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-            Por que escolher a ViajaFácil?
-          </h2>
-          <p className="text-gray-500">A maneira mais inteligente de viajar</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="bg-white rounded-2xl p-8 border border-gray-100 hover:shadow-lg transition-shadow">
-            <div className="w-14 h-14 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl flex items-center justify-center mb-5 shadow-lg shadow-green-500/20">
-              <CreditCard className="w-7 h-7 text-white" />
+        <ScrollReveal>
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 bg-[#f97316]/10 rounded-full px-4 py-2 mb-4">
+              <Zap className="w-4 h-4 text-[#f97316]" />
+              <span className="text-sm font-semibold text-[#f97316]">Por que nós?</span>
             </div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Melhores Preços</h3>
-            <p className="text-sm text-gray-500 leading-relaxed">
-              Comparamos preços de todas as companhias para encontrar a melhor opção para o seu bolso.
-            </p>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+              Por que escolher a ViajaFácil?
+            </h2>
+            <p className="text-gray-500">A maneira mais inteligente de viajar</p>
           </div>
-          <div className="bg-white rounded-2xl p-8 border border-gray-100 hover:shadow-lg transition-shadow">
-            <div className="w-14 h-14 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center mb-5 shadow-lg shadow-blue-500/20">
-              <Shield className="w-7 h-7 text-white" />
+        </ScrollReveal>
+        <div className="-mx-4 px-4 sm:mx-0 sm:px-0 flex gap-4 sm:gap-8 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-px-4 sm:grid sm:grid-cols-3 sm:snap-none sm:overflow-visible">
+          <ScrollReveal delay={0}>
+            <div className="w-[280px] sm:w-auto shrink-0 snap-start bg-white rounded-2xl p-8 border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+              <div className="w-14 h-14 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl flex items-center justify-center mb-5 shadow-lg shadow-green-500/20 group-hover:scale-110 transition-transform">
+                <CreditCard className="w-7 h-7 text-white" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Melhores Preços</h3>
+              <p className="text-sm text-gray-500 leading-relaxed">
+                Comparamos preços de todas as companhias para encontrar a melhor opção para o seu bolso.
+              </p>
             </div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Compra Segura</h3>
-            <p className="text-sm text-gray-500 leading-relaxed">
-              Seus dados estão protegidos com criptografia de ponta. Compre com confiança total.
-            </p>
-          </div>
-          <div className="bg-white rounded-2xl p-8 border border-gray-100 hover:shadow-lg transition-shadow">
-            <div className="w-14 h-14 bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl flex items-center justify-center mb-5 shadow-lg shadow-purple-500/20">
-              <Clock className="w-7 h-7 text-white" />
+          </ScrollReveal>
+          <ScrollReveal delay={100}>
+            <div className="w-[280px] sm:w-auto shrink-0 snap-start bg-white rounded-2xl p-8 border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+              <div className="w-14 h-14 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center mb-5 shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform">
+                <Shield className="w-7 h-7 text-white" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Compra Segura</h3>
+              <p className="text-sm text-gray-500 leading-relaxed">
+                Seus dados estão protegidos com criptografia de ponta. Compre com confiança total.
+              </p>
             </div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Reserva Instantânea</h3>
-            <p className="text-sm text-gray-500 leading-relaxed">
-              Confirmação imediata do seu voo. Sem filas, sem burocracia, sem complicação.
-            </p>
-          </div>
+          </ScrollReveal>
+          <ScrollReveal delay={200}>
+            <div className="w-[280px] sm:w-auto shrink-0 snap-start bg-white rounded-2xl p-8 border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+              <div className="w-14 h-14 bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl flex items-center justify-center mb-5 shadow-lg shadow-purple-500/20 group-hover:scale-110 transition-transform">
+                <Clock className="w-7 h-7 text-white" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Reserva Instantânea</h3>
+              <p className="text-sm text-gray-500 leading-relaxed">
+                Confirmação imediata do seu voo. Sem filas, sem burocracia, sem complicação.
+              </p>
+            </div>
+          </ScrollReveal>
         </div>
       </section>
 
       {/* Testimonials */}
-      <section className="bg-gray-50 border-y border-gray-100">
+      <section className="bg-gradient-to-b from-gray-50 to-white border-y border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-              O que dizem os nossos viajantes
-            </h2>
-            <p className="text-gray-500">Milhares de pessoas já viajaram com a ViajaFácil</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <ScrollReveal>
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-2 bg-[#f97316]/10 rounded-full px-4 py-2 mb-4">
+                <Star className="w-4 h-4 text-[#f97316] fill-[#f97316]" />
+                <span className="text-sm font-semibold text-[#f97316]">Depoimentos</span>
+              </div>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+                O que dizem os nossos viajantes
+              </h2>
+              <p className="text-gray-500">Milhares de pessoas já viajaram com a ViajaFácil</p>
+            </div>
+          </ScrollReveal>
+          <div className="-mx-4 px-4 sm:mx-0 sm:px-0 flex gap-4 sm:gap-6 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-px-4 sm:grid sm:grid-cols-3 sm:snap-none sm:overflow-visible">
             {testimonials.map((t, i) => (
-              <div
-                key={i}
-                className="bg-white rounded-2xl p-6 border border-gray-100 hover:shadow-lg transition-shadow"
-              >
+              <ScrollReveal key={i} delay={i * 150}>
+                <div
+                  className="w-[280px] sm:w-auto shrink-0 snap-start bg-white rounded-2xl p-6 border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+                >
                 <Quote className="w-8 h-8 text-[#f97316]/20 mb-4" />
                 <p className="text-sm text-gray-600 leading-relaxed mb-6">
                   &ldquo;{t.text}&rdquo;
@@ -1057,62 +1102,84 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
+              </ScrollReveal>
             ))}
           </div>
         </div>
       </section>
 
+      {/* Price Alert Section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        <ScrollReveal>
+          <PriceAlert />
+        </ScrollReveal>
+      </section>
+
       {/* FAQ */}
       <section className="max-w-3xl mx-auto px-4 sm:px-6 py-16">
-        <div className="text-center mb-10">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-            Perguntas Frequentes
-          </h2>
-          <p className="text-gray-500">Tudo o que precisa de saber antes de viajar</p>
-        </div>
+        <ScrollReveal>
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 bg-[#f97316]/10 rounded-full px-4 py-2 mb-4">
+              <Sparkles className="w-4 h-4 text-[#f97316]" />
+              <span className="text-sm font-semibold text-[#f97316]">Dúvidas?</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+              Perguntas Frequentes
+            </h2>
+            <p className="text-gray-500">Tudo o que precisa de saber antes de viajar</p>
+          </div>
+        </ScrollReveal>
         <div className="space-y-3">
           {faqItems.map((item, i) => (
-            <FaqItem key={i} question={item.question} answer={item.answer} />
+            <ScrollReveal key={i} delay={i * 100}>
+              <FaqItem question={item.question} answer={item.answer} />
+            </ScrollReveal>
           ))}
         </div>
       </section>
 
+      {/* App Download Section */}
+      <AppDownload />
+
       {/* CTA Final */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-16">
-        <div className="bg-gradient-to-br from-[#0a1628] to-[#162544] rounded-3xl p-8 md:p-12 relative overflow-hidden">
-          <div className="absolute inset-0 opacity-20">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-[#f97316] rounded-full blur-3xl" />
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#f97316] rounded-full blur-3xl" />
-          </div>
-          <div className="relative flex flex-col md:flex-row items-center justify-between gap-8">
-            <div className="text-left">
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
-                Pronto para viajar?
-              </h2>
-              <p className="text-gray-400 max-w-md">
-                Comece agora a planear a sua próxima viagem. É rápido, fácil e seguro.
-              </p>
+        <ScrollReveal>
+          <div className="bg-gradient-to-br from-[#0a1628] to-[#162544] rounded-3xl p-8 md:p-12 relative overflow-hidden">
+            <ParticleBackground className="opacity-20" particleCount={30} />
+            <div className="absolute inset-0 opacity-20">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-[#f97316] rounded-full blur-3xl animate-float" />
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#f97316] rounded-full blur-3xl animate-float" style={{ animationDelay: "1s" }} />
             </div>
-            <div className="flex flex-col sm:flex-row items-center gap-4">
-              <button
-                onClick={() => router.push("/search")}
-                className="inline-flex items-center gap-2 bg-[#f97316] hover:bg-[#ea580c] text-white font-bold px-8 py-3.5 rounded-xl transition-all shadow-lg shadow-orange-500/30 whitespace-nowrap"
-              >
-                <Search className="w-5 h-5" />
-                Explorar Voos
-              </button>
-              <a
-                href="https://wa.me/244923456789"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold px-6 py-3.5 rounded-xl transition-all whitespace-nowrap"
-              >
-                <Phone className="w-5 h-5" />
-                Fale Connosco
-              </a>
+            <div className="relative flex flex-col md:flex-row items-center justify-between gap-8">
+              <div className="text-left">
+                <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
+                  Pronto para viajar?
+                </h2>
+                <p className="text-gray-400 max-w-md text-lg">
+                  Comece agora a planear a sua próxima viagem. É rápido, fácil e seguro.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <GradientButton
+                  onClick={() => router.push("/search")}
+                  icon={<Search className="w-5 h-5" />}
+                  size="lg"
+                >
+                  Explorar Voos
+                </GradientButton>
+                <a
+                  href="https://wa.me/244923456789"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold px-8 py-4 rounded-xl transition-all duration-300 hover:scale-105 whitespace-nowrap backdrop-blur-sm border border-white/10"
+                >
+                  <Phone className="w-5 h-5" />
+                  Fale Connosco
+                </a>
+              </div>
             </div>
           </div>
-        </div>
+        </ScrollReveal>
       </section>
     </div>
   );
@@ -1146,24 +1213,41 @@ function RouteImage({ src, city }: { src: string; city: string }) {
 // FAQ Accordion Item
 function FaqItem({ question, answer }: { question: string; answer: string }) {
   const [open, setOpen] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [contentHeight, setContentHeight] = useState(0);
+
+  useEffect(() => {
+    if (contentRef.current) {
+      setContentHeight(contentRef.current.scrollHeight);
+    }
+  }, [answer]);
+
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-gray-300 transition-colors">
+    <div className={`bg-white border rounded-xl overflow-hidden transition-all duration-300 ${
+      open ? "border-[#f97316]/30 shadow-lg shadow-orange-500/10" : "border-gray-200 hover:border-gray-300"
+    }`}>
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-5 py-4 text-left"
+        className="w-full flex items-center justify-between px-5 py-4 text-left group"
       >
-        <span className="text-sm font-semibold text-gray-900 pr-4">{question}</span>
+        <span className={`text-sm font-semibold pr-4 transition-colors ${
+          open ? "text-[#f97316]" : "text-gray-900 group-hover:text-[#f97316]"
+        }`}>{question}</span>
         <ChevronDown
-          className={`w-5 h-5 text-gray-400 shrink-0 transition-transform duration-200 ${
-            open ? "rotate-180" : ""
+          className={`w-5 h-5 shrink-0 transition-all duration-300 ${
+            open ? "rotate-180 text-[#f97316]" : "text-gray-400 group-hover:text-[#f97316]"
           }`}
         />
       </button>
-      {open && (
+      <div
+        ref={contentRef}
+        className="overflow-hidden transition-all duration-300"
+        style={{ maxHeight: open ? `${contentHeight}px` : "0" }}
+      >
         <div className="px-5 pb-4">
           <p className="text-sm text-gray-500 leading-relaxed">{answer}</p>
         </div>
-      )}
+      </div>
     </div>
   );
 }
