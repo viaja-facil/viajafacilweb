@@ -24,28 +24,24 @@ export default function AdminDashboard() {
       value: formatCurrency(totalRevenue),
       icon: DollarSign,
       color: "from-green-400 to-green-600",
-      change: "+12%",
     },
     {
       label: "Voos Ativos",
       value: flights.length.toString(),
       icon: Plane,
       color: "from-blue-400 to-blue-600",
-      change: "+3",
     },
     {
       label: "Reservas",
       value: `${confirmedBookings}/${mockBookings.length}`,
       icon: BookOpen,
       color: "from-purple-400 to-purple-600",
-      change: "+8%",
     },
     {
       label: "Usuários",
       value: mockUsers.length.toString(),
       icon: Users,
       color: "from-orange-400 to-orange-600",
-      change: "+24",
     },
   ];
 
@@ -66,9 +62,6 @@ export default function AdminDashboard() {
               >
                 <stat.icon className="w-6 h-6 text-white" />
               </div>
-              <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                {stat.change}
-              </span>
             </div>
             <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
             <p className="text-sm text-gray-500 mt-1">{stat.label}</p>
