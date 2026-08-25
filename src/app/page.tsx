@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { airports, airlines, getAvailabilityForRoute, formatCurrency } from "@/lib/mock-data";
 import { useBooking } from "@/lib/booking-context";
+import { useMediaQuery } from "@/lib/use-media-query";
 import AvailabilityCalendar from "@/components/ui/AvailabilityCalendar";
 import PassengerSelect from "@/components/ui/PassengerSelect";
 import DateRangePicker from "@/components/ui/DateRangePicker";
@@ -272,6 +273,7 @@ export default function HomePage() {
     () => true,
     () => false
   );
+  const isMobile = useMediaQuery("(max-width: 767px)");
   const dateButtonRef = useRef<HTMLButtonElement>(null);
   const dateRangeButtonRef = useRef<HTMLButtonElement>(null);
   const touchStartX = useRef<number | null>(null);
@@ -686,37 +688,38 @@ export default function HomePage() {
                       </button>
 
                       {/* Date Range: popover (desktop) / bottom sheet (mobile) */}
-                      {showDateRange && hasRouteSelected && mounted && createPortal(
-                        <>
-                          <div
-                            data-daterange-root
-                            className="hidden md:block fixed inset-x-4 bottom-20 md:inset-auto md:bottom-auto md:left-0 md:w-[640px] md:animate-slide-up z-50"
-                          >
-                            <DateRangePicker
-                              availability={availability}
-                              departureDate={departureDate}
-                              returnDate={returnDate}
-                              onDepartureSelect={handleDepartureSelect}
-                              onReturnSelect={handleReturnSelect}
-                              onClose={() => setShowDateRange(false)}
-                            />
-                          </div>
-                          <BottomSheet
-                            open={showDateRange}
+                      {showDateRange && hasRouteSelected && mounted && !isMobile && createPortal(
+                        <div
+                          data-daterange-root
+                          className="fixed left-0 w-[640px] animate-slide-up z-50"
+                        >
+                          <DateRangePicker
+                            availability={availability}
+                            departureDate={departureDate}
+                            returnDate={returnDate}
+                            onDepartureSelect={handleDepartureSelect}
+                            onReturnSelect={handleReturnSelect}
                             onClose={() => setShowDateRange(false)}
-                            title="Selecionar datas"
-                            subtitle="Escolha a ida e a volta"
-                          >
-                            <DateRangePicker
-                              availability={availability}
-                              departureDate={departureDate}
-                              returnDate={returnDate}
-                              onDepartureSelect={handleDepartureSelect}
-                              onReturnSelect={handleReturnSelect}
-                              onClose={() => setShowDateRange(false)}
-                            />
-                          </BottomSheet>
-                        </>,
+                          />
+                        </div>,
+                        document.body
+                      )}
+                      {showDateRange && hasRouteSelected && mounted && isMobile && createPortal(
+                        <BottomSheet
+                          open={showDateRange}
+                          onClose={() => setShowDateRange(false)}
+                          title="Selecionar datas"
+                          subtitle="Escolha a ida e a volta"
+                        >
+                          <DateRangePicker
+                            availability={availability}
+                            departureDate={departureDate}
+                            returnDate={returnDate}
+                            onDepartureSelect={handleDepartureSelect}
+                            onReturnSelect={handleReturnSelect}
+                            onClose={() => setShowDateRange(false)}
+                          />
+                        </BottomSheet>,
                         document.body
                       )}
                     </div>
@@ -770,31 +773,32 @@ export default function HomePage() {
                       </button>
 
                       {/* Calendar: popover (desktop) / bottom sheet (mobile) */}
-                      {showCalendar && hasRouteSelected && mounted && createPortal(
-                        <>
-                          <div
-                            data-calendar-root
-                            className="hidden md:block fixed inset-x-4 bottom-20 md:inset-auto md:bottom-auto md:left-0 md:w-[320px] md:animate-slide-up z-50"
-                          >
-                            <AvailabilityCalendar
-                              availability={availability}
-                              selectedDate={date}
-                              onDateSelect={handleDateSelect}
-                            />
-                          </div>
-                          <BottomSheet
-                            open={showCalendar}
-                            onClose={() => setShowCalendar(false)}
-                            title="Selecionar data"
-                            subtitle="Toque num dia para ver os melhores preços"
-                          >
-                            <AvailabilityCalendar
-                              availability={availability}
-                              selectedDate={date}
-                              onDateSelect={handleDateSelect}
-                            />
-                          </BottomSheet>
-                        </>,
+                      {showCalendar && hasRouteSelected && mounted && !isMobile && createPortal(
+                        <div
+                          data-calendar-root
+                          className="fixed left-0 w-[320px] animate-slide-up z-50"
+                        >
+                          <AvailabilityCalendar
+                            availability={availability}
+                            selectedDate={date}
+                            onDateSelect={handleDateSelect}
+                          />
+                        </div>,
+                        document.body
+                      )}
+                      {showCalendar && hasRouteSelected && mounted && isMobile && createPortal(
+                        <BottomSheet
+                          open={showCalendar}
+                          onClose={() => setShowCalendar(false)}
+                          title="Selecionar data"
+                          subtitle="Toque num dia para ver os melhores preços"
+                        >
+                          <AvailabilityCalendar
+                            availability={availability}
+                            selectedDate={date}
+                            onDateSelect={handleDateSelect}
+                          />
+                        </BottomSheet>,
                         document.body
                       )}
                     </div>

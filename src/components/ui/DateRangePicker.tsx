@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { formatCurrency, DateAvailability } from "@/lib/mock-data";
-import CalendarGrid, { CalendarDay, TODAY_STR } from "./CalendarGrid";
+import CalendarGrid, { CalendarDay } from "./CalendarGrid";
 
 interface DateRangePickerProps {
   availability: DateAvailability[];
