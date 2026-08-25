@@ -12,11 +12,11 @@ import {
   getAvailabilityForRoute,
   Flight,
 } from "@/lib/mock-data";
+import { formatTime, formatDate } from "@/lib/format";
 import { useBooking } from "@/lib/booking-context";
 import AvailabilityCalendar from "@/components/ui/AvailabilityCalendar";
 import { SkeletonFlight } from "@/components/ui/Skeleton";
 import CollapsibleFilter from "@/components/ui/CollapsibleFilter";
-import CustomSelect from "@/components/ui/CustomSelect";
 import BottomSheet from "@/components/ui/BottomSheet";
 import {
   Plane,
@@ -34,6 +34,11 @@ import {
   Moon,
   Sunset,
   Clock,
+  ArrowUpDown,
+  CircleDot,
+  Circle,
+  LuggageIcon,
+  HandMetal,
 } from "lucide-react";
 
 type SortBy = "price" | "duration" | "departure";
@@ -41,7 +46,7 @@ type SortBy = "price" | "duration" | "departure";
 function SearchContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { setFlight, setPassengerCount } = useBooking();
+  const { setFlight, confirmFlight, setPassengerCount } = useBooking();
 
   const initialOrigin = searchParams.get("origin") || "";
   const initialDestination = searchParams.get("destination") || "";
@@ -57,10 +62,13 @@ function SearchContent() {
   const adults = Number.isNaN(initialAdults) ? initialPassengers : initialAdults;
   const children = Number.isNaN(initialChildren) ? 0 : initialChildren;
   const [sortBy, setSortBy] = useState<SortBy>("price");
-  const [maxPrice, setMaxPrice] = useState(200000);
+  const [maxPrice, setMaxPrice] = useState(3000000);
   const [selectedClass, setSelectedClass] = useState<string>("all");
   const [selectedAirlines, setSelectedAirlines] = useState<string[]>([]);
   const [selectedTimeOfDay, setSelectedTimeOfDay] = useState<string[]>([]);
+  const [stops, setStops] = useState<string>("all");
+  const [baggage, setBaggage] = useState<string>("all");
+  const [priceRange, setPriceRange] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
 
@@ -72,6 +80,16 @@ function SearchContent() {
   const availability = useMemo(() => {
     if (!origin || !destination) return [];
     return getAvailabilityForRoute(origin, destination);
+  }, [origin, destination]);
+
+  const availableAirlines = useMemo(() => {
+    if (!origin || !destination) return airlines;
+    const airlineIds = new Set(
+      flights
+        .filter((f) => f.origin === origin && f.destination === destination)
+        .map((f) => f.airlineId)
+    );
+    return airlines.filter((a) => airlineIds.has(a.id));
   }, [origin, destination]);
 
   const filteredFlights = useMemo(() => {
@@ -94,6 +112,18 @@ function SearchContent() {
             : "night";
         if (!selectedTimeOfDay.includes(timeSlot)) return false;
       }
+      // Stops filter
+      if (stops === "direct" && f.stops !== 0) return false;
+      if (stops === "1" && f.stops !== 1) return false;
+      if (stops === "2+" && f.stops < 2) return false;
+      // Baggage filter
+      if (baggage === "with" && !f.hasCheckedBaggage) return false;
+      if (baggage === "without" && f.hasCheckedBaggage) return false;
+      // Price range filter
+      if (priceRange === "100" && f.price > 100000) return false;
+      if (priceRange === "200" && (f.price < 100000 || f.price > 200000)) return false;
+      if (priceRange === "500" && (f.price < 200000 || f.price > 500000)) return false;
+      if (priceRange === "500+" && f.price < 500000) return false;
       return true;
     });
 
@@ -111,25 +141,13 @@ function SearchContent() {
     });
 
     return result;
-  }, [origin, destination, selectedDate, sortBy, maxPrice, selectedClass, selectedAirlines, selectedTimeOfDay]);
+  }, [origin, destination, selectedDate, sortBy, maxPrice, selectedClass, selectedAirlines, selectedTimeOfDay, stops, baggage, priceRange]);
 
   const handleSelectFlight = (flight: Flight) => {
     setPassengerCount(passengers);
     setFlight(flight);
+    confirmFlight();
     router.push(`/booking/seats?flightId=${flight.id}`);
-  };
-
-  const formatTime = (dateStr: string) => {
-    const d = new Date(dateStr);
-    return d.toLocaleTimeString("pt-AO", { hour: "2-digit", minute: "2-digit" });
-  };
-
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr + "T12:00:00").toLocaleDateString("pt-AO", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-    });
   };
 
   const getOriginCity = () => airports.find((a) => a.code === origin)?.city || "Todos";
@@ -153,56 +171,86 @@ function SearchContent() {
     selectedAirlines.length +
     selectedTimeOfDay.length +
     (selectedClass !== "all" ? 1 : 0) +
-    (maxPrice < 200000 ? 1 : 0);
+    (maxPrice < 3000000 ? 1 : 0) +
+    (stops !== "all" ? 1 : 0) +
+    (baggage !== "all" ? 1 : 0) +
+    (priceRange !== "all" ? 1 : 0);
 
   const clearFilters = () => {
     setSelectedDate(null);
     setSelectedClass("all");
-    setMaxPrice(200000);
+    setMaxPrice(3000000);
     setSortBy("price");
     setSelectedAirlines([]);
     setSelectedTimeOfDay([]);
+    setStops("all");
+    setBaggage("all");
+    setPriceRange("all");
   };
 
   // Filter controls shared between the desktop sidebar and the mobile bottom sheet
   const filtersBody = (
     <>
-      <CollapsibleFilter title="Ordenar por" defaultOpen={true}>
-        <CustomSelect
-          value={sortBy}
-          onChange={(nextSort) => setSortBy(nextSort as SortBy)}
-          ariaLabel="Ordenar voos por"
-          options={[
-            { value: "price", label: "Menor Preço" },
-            { value: "duration", label: "Mais Rápido" },
-            { value: "departure", label: "Partida" },
-          ]}
-        />
+      <CollapsibleFilter
+        title="Escalas"
+        icon={<CircleDot className="w-4 h-4 text-[#f97316]" />}
+        defaultOpen={true}
+        badge={stops !== "all" ? stops === "direct" ? "Direto" : stops === "1" ? "1" : "2+" : undefined}
+      >
+        <div className="flex gap-2">
+          {[
+            { id: "all", label: "Todas" },
+            { id: "direct", label: "Direto" },
+            { id: "1", label: "1 escala" },
+            { id: "2+", label: "2+ escalas" },
+          ].map((option) => (
+            <button
+              key={option.id}
+              onClick={() => setStops(option.id)}
+              className={`flex-1 px-3 py-2.5 rounded-xl text-xs font-semibold border transition-all min-h-[40px] ${
+                stops === option.id
+                  ? "bg-[#0a1628] border-[#0a1628] text-white"
+                  : "bg-white border-gray-200 text-gray-600 hover:border-[#f97316]"
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
       </CollapsibleFilter>
 
       <CollapsibleFilter
-        title="Preço"
+        title="Faixa de Preço"
+        icon={<span className="text-sm font-bold text-[#f97316]">Kz</span>}
         defaultOpen={true}
-        badge={maxPrice < 200000 ? formatCurrency(maxPrice) : undefined}
+        badge={priceRange !== "all" ? priceRange === "100" ? "Até 100K" : priceRange === "200" ? "100-200K" : priceRange === "500" ? "200-500K" : "500K+" : undefined}
       >
-        <input
-          type="range"
-          min="20000"
-          max="200000"
-          step="5000"
-          value={maxPrice}
-          onChange={(e) => setMaxPrice(Number(e.target.value))}
-          className="w-full accent-[#f97316]"
-        />
-        <div className="flex justify-between text-xs text-gray-400 mt-1">
-          <span>20.000 Kz</span>
-          <span>{formatCurrency(maxPrice)}</span>
-          <span>200.000 Kz</span>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { id: "all", label: "Qualquer" },
+            { id: "100", label: "Até 100.000 Kz" },
+            { id: "200", label: "100K - 200.000 Kz" },
+            { id: "500", label: "200K - 500.000 Kz" },
+            { id: "500+", label: "Acima de 500K" },
+          ].map((option) => (
+            <button
+              key={option.id}
+              onClick={() => setPriceRange(option.id)}
+              className={`px-3 py-2.5 rounded-xl text-xs font-semibold border transition-all min-h-[40px] ${
+                priceRange === option.id
+                  ? "bg-[#0a1628] border-[#0a1628] text-white"
+                  : "bg-white border-gray-200 text-gray-600 hover:border-[#f97316]"
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
         </div>
       </CollapsibleFilter>
 
       <CollapsibleFilter
         title="Classe"
+        icon={<ArrowUpDown className="w-4 h-4 text-[#f97316]" />}
         defaultOpen={true}
         badge={selectedClass !== "all" ? selectedClass === "economy" ? "Eco" : selectedClass === "business" ? "Bus" : "1ª" : undefined}
       >
@@ -229,7 +277,7 @@ function SearchContent() {
         badge={selectedAirlines.length > 0 ? `${selectedAirlines.length}` : undefined}
       >
         <div className="space-y-1">
-          {airlines.map((airline) => (
+          {availableAirlines.map((airline) => (
             <label
               key={airline.id}
               className="flex items-center gap-3 cursor-pointer group select-none py-1.5 min-h-[44px]"
@@ -266,11 +314,11 @@ function SearchContent() {
       </CollapsibleFilter>
 
       <CollapsibleFilter
-        title="Hora de Partida"
+        title="Horário de Partida"
         defaultOpen={false}
         badge={selectedTimeOfDay.length > 0 ? `${selectedTimeOfDay.length}` : undefined}
       >
-        <div className="grid grid-cols-2 gap-2">
+        <div className="flex gap-2 flex-wrap">
           {[
             { id: "morning", label: "Manhã", icon: Sun, time: "06h - 12h" },
             { id: "afternoon", label: "Tarde", icon: Sunset, time: "12h - 18h" },
@@ -280,17 +328,42 @@ function SearchContent() {
             <button
               key={slot.id}
               onClick={() => toggleTimeOfDay(slot.id)}
-              className={`flex flex-col items-center gap-1 p-2.5 min-h-[64px] rounded-xl border text-xs transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-2.5 min-h-[40px] rounded-xl border text-xs font-medium transition-all ${
                 selectedTimeOfDay.includes(slot.id)
                   ? "bg-[#0a1628] border-[#0a1628] text-white"
                   : "bg-white border-gray-200 text-gray-600 hover:border-[#f97316]"
               }`}
             >
-              <slot.icon className="w-4 h-4" />
-              <span className="font-semibold">{slot.label}</span>
-              <span className={`text-[10px] ${
-                selectedTimeOfDay.includes(slot.id) ? "text-gray-300" : "text-gray-400"
-              }`}>{slot.time}</span>
+              <slot.icon className="w-3.5 h-3.5" />
+              {slot.label}
+            </button>
+          ))}
+        </div>
+      </CollapsibleFilter>
+
+      <CollapsibleFilter
+        title="Bagagem"
+        icon={<LuggageIcon className="w-4 h-4 text-[#f97316]" />}
+        defaultOpen={false}
+        badge={baggage !== "all" ? baggage === "with" ? "Com despacho" : "Só mão" : undefined}
+      >
+        <div className="flex gap-2">
+          {[
+            { id: "all", label: "Todas", icon: Luggage },
+            { id: "with", label: "Com bagagem", icon: Luggage },
+            { id: "without", label: "Só mão", icon: HandMetal },
+          ].map((option) => (
+            <button
+              key={option.id}
+              onClick={() => setBaggage(option.id)}
+              className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 min-h-[40px] rounded-xl text-xs font-semibold border transition-all ${
+                baggage === option.id
+                  ? "bg-[#0a1628] border-[#0a1628] text-white"
+                  : "bg-white border-gray-200 text-gray-600 hover:border-[#f97316]"
+              }`}
+            >
+              <option.icon className="w-3.5 h-3.5" />
+              {option.label}
             </button>
           ))}
         </div>
@@ -449,6 +522,31 @@ function SearchContent() {
               </div>
             )}
 
+            {/* Sort chips */}
+            <div className="mb-4 flex items-center gap-2">
+              <span className="text-xs text-gray-500 font-medium">Ordenar:</span>
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+                {[
+                  { id: "price", label: "Menor Preço", icon: "💰" },
+                  { id: "duration", label: "Mais Rápido", icon: "⚡" },
+                  { id: "departure", label: "Partida", icon: "🕐" },
+                ].map((option) => (
+                  <button
+                    key={option.id}
+                    onClick={() => setSortBy(option.id as SortBy)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors shrink-0 ${
+                      sortBy === option.id
+                        ? "bg-[#f97316] text-white"
+                        : "bg-white border border-gray-200 text-gray-600 hover:border-[#f97316]"
+                    }`}
+                  >
+                    <span>{option.icon}</span>
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Flight cards */}
             <div className="space-y-4">
               {isLoading ? (
@@ -470,7 +568,7 @@ function SearchContent() {
                     onClick={() => {
                       setSelectedDate(null);
                       setSelectedClass("all");
-                      setMaxPrice(200000);
+                      setMaxPrice(3000000);
                     }}
                     className="text-sm font-semibold text-[#f97316] hover:text-[#ea580c]"
                   >

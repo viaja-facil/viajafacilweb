@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, Suspense } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
+import QRCode from "qrcode";
 import { useRouter, useSearchParams } from "next/navigation";
 import { formatCurrency, getAirlineById, getAirportByCode } from "@/lib/mock-data";
 import { useBooking, PaymentMethod } from "@/lib/booking-context";
@@ -17,7 +18,6 @@ import {
   Check,
   Shield,
   AlertCircle,
-  QrCode,
   Copy,
   CheckCircle2,
   Smartphone,
@@ -54,6 +54,11 @@ function CheckoutContent() {
   const [paymentGenerated, setPaymentGenerated] = useState(false);
   const [reference, setReference] = useState("");
   const [copied, setCopied] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [attemptedGenerate, setAttemptedGenerate] = useState(false);
+  const nameRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const docRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const phoneRef = useRef<HTMLInputElement | null>(null);
   const [biStatus, setBiStatus] = useState<
     Record<number, { status: "loading" | "found" | "manual"; message?: string }>
   >({});
@@ -70,6 +75,23 @@ function CheckoutContent() {
     const rand = Math.floor(Math.random() * 900000 + 100000);
     return `VJ${datePart}${rand}`;
   };
+
+  // Generate real QR code when reference payment is ready
+  useEffect(() => {
+    if (paymentGenerated && paymentMethod === "referencia" && reference) {
+      const payload = JSON.stringify({
+        referencia: reference,
+        valor: flight ? flight.price * passengerCount : 0,
+        moeda: "AOA",
+        descricao: "Bilhete de voo ViajaFacil",
+      });
+      QRCode.toDataURL(payload, {
+        width: 256,
+        margin: 2,
+        color: { dark: "#0a1628", light: "#ffffff" },
+      }).then(setQrDataUrl);
+    }
+  }, [paymentGenerated, paymentMethod, reference, flight, passengerCount]);
 
   if (!flight || booking.seats.length === 0) {
     return (
@@ -164,7 +186,7 @@ function CheckoutContent() {
   const isPaymentValid = () => {
     if (!paymentMethod) return false;
     if (paymentMethod === "multicaixa_express") {
-      return phoneNumber.length >= 9;
+      return /^9\d{8}$/.test(phoneNumber);
     }
     return true;
   };
@@ -172,7 +194,24 @@ function CheckoutContent() {
   const isFormValid = isPassengerFormValid && isPaymentValid();
 
   const generatePayment = () => {
-    if (!isPassengerFormValid) return;
+    if (!isPassengerFormValid || !isPaymentValid()) {
+      setAttemptedGenerate(true);
+      // Focus the first invalid field
+      for (let i = 0; i < passengerForms.length; i++) {
+        if (passengerForms[i].name.trim().length <= 2) {
+          nameRefs.current[i]?.focus();
+          return;
+        }
+        if (passengerForms[i].document.trim().length <= 5) {
+          docRefs.current[i]?.focus();
+          return;
+        }
+      }
+      if (paymentMethod === "multicaixa_express" && phoneNumber.length < 9) {
+        phoneRef.current?.focus();
+      }
+      return;
+    }
 
     setIsProcessing(true);
 
@@ -183,7 +222,6 @@ function CheckoutContent() {
         setReference(ref);
       }
       setPaymentGenerated(true);
-      setPaymentMethod(paymentMethod);
       ctxSetPaymentMethod(paymentMethod!);
       setPaymentReference(paymentMethod === "referencia" ? ref : phoneNumber);
       setIsProcessing(false);
@@ -210,40 +248,6 @@ function CheckoutContent() {
     const cleaned = value.replace(/\D/g, "");
     setPhoneNumber(cleaned);
   };
-
-  // QR Code SVG generator for reference payment
-  const generateQRCode = (data: string) => {
-    // Simple visual QR-like pattern for demo
-    const size = 21;
-    const cells: boolean[][] = [];
-    for (let i = 0; i < size; i++) {
-      cells[i] = [];
-      for (let j = 0; j < size; j++) {
-        // Finder patterns (corners)
-        const isFinderArea =
-          (i < 7 && j < 7) ||
-          (i < 7 && j >= size - 7) ||
-          (i >= size - 7 && j < 7);
-
-        if (isFinderArea) {
-          const fi = i < 7 ? i : i - (size - 7);
-          const fj = j < 7 ? j : j - (size - 7);
-          const isBorder = fi === 0 || fi === 6 || fj === 0 || fj === 6;
-          const isInner = fi >= 2 && fi <= 4 && fj >= 2 && fj <= 4;
-          cells[i][j] = isBorder || isInner;
-        } else {
-          // Pseudo-random based on data string
-          const charCode = data.charCodeAt((i + j) % data.length);
-          cells[i][j] = (charCode * (i + 1) * (j + 1)) % 3 === 0;
-        }
-      }
-    }
-    return cells;
-  };
-
-  const qrCells = paymentGenerated && paymentMethod === "referencia"
-    ? generateQRCode(reference)
-    : null;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -332,6 +336,7 @@ function CheckoutContent() {
                         </label>
                         <div className="relative">
                           <input
+                            ref={(el) => { docRefs.current[index] = el; }}
                             type="text"
                             inputMode="numeric"
                             placeholder="Ex.: 000217139NE013"
@@ -340,7 +345,11 @@ function CheckoutContent() {
                             maxLength={14}
                             aria-invalid={status?.status === "manual"}
                             aria-describedby={`bi-status-${index}`}
-                            className={`w-full pl-3 pr-10 py-2.5 bg-white border-2 rounded-xl text-sm uppercase tracking-wide focus:outline-none focus:ring-2 focus:ring-[#f97316]/30 focus:border-[#f97316] transition-all ${inputBorder}`}
+                            className={`w-full pl-3 pr-10 py-2.5 bg-white border-2 rounded-xl text-sm uppercase tracking-wide focus:outline-none focus:ring-2 focus:ring-[#f97316]/30 focus:border-[#f97316] transition-all ${
+                              attemptedGenerate && passenger.document.trim().length <= 5
+                                ? "border-red-400 bg-red-50/40"
+                                : inputBorder
+                            }`}
                           />
                           {/* Interactive validation indicator */}
                           <span className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -355,6 +364,12 @@ function CheckoutContent() {
                             )}
                           </span>
                         </div>
+                        {attemptedGenerate && passenger.document.trim().length <= 5 && (
+                          <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" />
+                            Introduza o BI ou passaporte (min. 6 caracteres)
+                          </p>
+                        )}
                       </div>
 
                       {/* Validated name confirmation panel */}
@@ -388,17 +403,25 @@ function CheckoutContent() {
                             Nome Completo
                           </label>
                           <input
+                            ref={(el) => { nameRefs.current[index] = el; }}
                             type="text"
                             placeholder="Introduza o nome como está no documento"
                             value={passenger.name}
                             onChange={(e) => updatePassenger(index, "name", e.target.value)}
                             className={`w-full px-3 py-2.5 bg-white border-2 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#f97316]/30 focus:border-[#f97316] transition-all ${
-                              passenger.name.trim().length > 2
+                              attemptedGenerate && passenger.name.trim().length <= 2
+                                ? "border-red-400 bg-red-50/40"
+                                : passenger.name.trim().length > 2
                                 ? "border-green-400"
                                 : "border-amber-300"
                             }`}
                           />
-                          {passenger.name.trim().length > 2 ? (
+                          {attemptedGenerate && passenger.name.trim().length <= 2 ? (
+                            <p className="flex items-center gap-1.5 text-xs text-red-500 mt-1.5">
+                              <AlertCircle className="w-3 h-3" />
+                              Introduza o nome completo (min. 3 caracteres)
+                            </p>
+                          ) : passenger.name.trim().length > 2 ? (
                             <p className="flex items-center gap-1.5 text-xs text-green-600 mt-1.5">
                               <CheckCircle2 className="w-3.5 h-3.5" />
                               {passenger.name}
@@ -503,15 +526,26 @@ function CheckoutContent() {
                         <span className="text-sm font-bold">+244</span>
                       </div>
                       <input
+                        ref={phoneRef}
                         type="tel"
                         placeholder="9XX XXX XXX"
                         value={phoneNumber}
                         onChange={(e) => handlePhoneChange(e.target.value)}
                         maxLength={9}
-                        className="flex-1 px-4 py-3 bg-white/10 border border-white/30 rounded-xl text-sm placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50"
+                        className={`flex-1 px-4 py-3 bg-white/10 border rounded-xl text-sm placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 ${
+                          attemptedGenerate && phoneNumber.length < 9
+                            ? "border-red-400 bg-red-500/20"
+                            : "border-white/30"
+                        }`}
                       />
                     </div>
-                    {phoneNumber.length > 0 && phoneNumber.length < 9 && (
+                    {attemptedGenerate && !/^9\d{8}$/.test(phoneNumber) && (
+                      <p className="text-xs text-red-200 mt-2 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" />
+                        Número inválido. Deve começar com 9 e ter 9 dígitos
+                      </p>
+                    )}
+                    {phoneNumber.length > 0 && phoneNumber.length < 9 && !(attemptedGenerate && phoneNumber.length < 9) && (
                       <p className="text-xs text-green-200 mt-2">
                         {9 - phoneNumber.length} {9 - phoneNumber.length === 1 ? "dígito" : "dígitos"} restante(s)
                       </p>
@@ -540,10 +574,7 @@ function CheckoutContent() {
                 {paymentMethod && (
                   <button
                     onClick={generatePayment}
-                    disabled={
-                      (paymentMethod === "multicaixa_express" && phoneNumber.length < 9) ||
-                      isProcessing
-                    }
+                    disabled={isProcessing}
                     className="w-full mt-6 py-3.5 hidden md:flex bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#dc2626] disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all shadow-lg shadow-orange-500/20 disabled:shadow-none items-center justify-center gap-2"
                   >
                     {isProcessing ? (
@@ -659,27 +690,13 @@ function CheckoutContent() {
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
                     Escaneie para pagar
                   </p>
-                  {qrCells && (
+                  {qrDataUrl && (
                     <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-200">
-                      <svg
-                        viewBox={`0 0 ${qrCells.length * 4 + 2} ${qrCells.length * 4 + 2}`}
+                      <img
+                        src={qrDataUrl}
+                        alt={`QR Code para pagamento - Referência ${reference}`}
                         className="w-40 h-40"
-                      >
-                        {qrCells.map((row, i) =>
-                          row.map((cell, j) =>
-                            cell ? (
-                              <rect
-                                key={`${i}-${j}`}
-                                x={j * 4 + 1}
-                                y={i * 4 + 1}
-                                width="4"
-                                height="4"
-                                fill="#0a1628"
-                              />
-                            ) : null
-                          )
-                        )}
-                      </svg>
+                      />
                     </div>
                   )}
                   <p className="text-xs text-gray-400 mt-3">
@@ -814,7 +831,7 @@ function CheckoutContent() {
             </div>
             <button
               onClick={generatePayment}
-              disabled={!isFormValid || isProcessing}
+              disabled={isProcessing}
               className="flex-1 max-w-[200px] py-3 bg-gradient-to-r from-[#f97316] to-[#ea580c] disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all shadow-lg shadow-orange-500/20 disabled:shadow-none flex items-center justify-center gap-2"
             >
               <Lock className="w-4 h-4" />

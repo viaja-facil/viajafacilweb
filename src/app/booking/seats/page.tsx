@@ -3,6 +3,7 @@
 import { useMemo, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { flights, generateSeats, formatCurrency, getAirlineById, getAirportByCode, Seat } from "@/lib/mock-data";
+import { formatTime } from "@/lib/format";
 import { useBooking } from "@/lib/booking-context";
 import BookingStepper from "@/components/ui/BookingStepper";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
@@ -49,6 +50,7 @@ function SeatsContent() {
     [flight]
   );
   const [selectedSeats, setSelectedSeats] = useState<Seat[]>([]);
+  const [showMaxAlert, setShowMaxAlert] = useState(false);
 
   // Number of passengers declared in the search drives how many seats can be picked
   const passengerCount = booking.passengerCount > 0 ? booking.passengerCount : 1;
@@ -81,7 +83,11 @@ function SeatsContent() {
       if (exists) {
         return prev.filter((s) => s.id !== seat.id);
       }
-      if (prev.length >= passengerCount) return prev;
+      if (prev.length >= passengerCount) {
+        setShowMaxAlert(true);
+        setTimeout(() => setShowMaxAlert(false), 2000);
+        return prev;
+      }
       return [...prev, seat];
     });
   };
@@ -110,6 +116,13 @@ function SeatsContent() {
   return (
     <div className="min-h-screen bg-gray-50">
       <BookingStepper />
+
+      {/* Max seats alert */}
+      {showMaxAlert && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 bg-yellow-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-fade-in">
+          Selecionou o máximo de assentos permitidos
+        </div>
+      )}
 
       {/* Header */}
       <div className="bg-gradient-to-r from-[#0a1628] to-[#162544] text-white">
@@ -414,8 +427,4 @@ function SeatsContent() {
       </div>
     </div>
   );
-}
-
-function formatTime(dateStr: string) {
-  return new Date(dateStr).toLocaleTimeString("pt-AO", { hour: "2-digit", minute: "2-digit" });
 }
