@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, Suspense, useEffect } from "react";
+import { useState, useMemo, Suspense, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { flights, airports, airlines, getAirlineById, getAirportByCode, formatCurrency, getAvailabilityForRoute } from "@/lib/mock-data";
 import type { Flight, Airline, Airport } from "@/lib/types";
@@ -34,13 +34,16 @@ function SearchContent() {
   const adults = Number.isNaN(initialAdults) ? initialPassengers : initialAdults;
   const childrenCount = Number.isNaN(initialChildren) ? 0 : initialChildren;
   const [sortBy, setSortBy] = useState<"price" | "duration" | "departure">("price");
-  const [maxPrice, setMaxPrice] = useState(3000000);
+  const [minPrice, setMinPrice] = useState(0);
+  const [maxPrice, setMaxPrice] = useState(7000000);
+  const [debouncedMinPrice, setDebouncedMinPrice] = useState(0);
+  const [debouncedMaxPrice, setDebouncedMaxPrice] = useState(7000000);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [selectedClass, setSelectedClass] = useState<string>("all");
   const [selectedAirlines, setSelectedAirlines] = useState<string[]>([]);
   const [selectedTimeOfDay, setSelectedTimeOfDay] = useState<string[]>([]);
   const [stops, setStops] = useState<string>("all");
   const [baggage, setBaggage] = useState<string>("all");
-  const [priceRange, setPriceRange] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
 
@@ -48,6 +51,21 @@ function SearchContent() {
     const timer = setTimeout(() => setIsLoading(false), 800);
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      setDebouncedMinPrice(minPrice);
+      setDebouncedMaxPrice(maxPrice);
+    }, 300);
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [minPrice, maxPrice]);
 
   const availability = useMemo(() => {
     if (!origin || !destination) return [];
@@ -69,7 +87,8 @@ function SearchContent() {
       if (origin && f.origin !== origin) return false;
       if (destination && f.destination !== destination) return false;
       if (selectedDate && !f.departureTime.startsWith(selectedDate)) return false;
-      if (f.price > maxPrice) return false;
+      if (f.price > debouncedMaxPrice) return false;
+      if (f.price < debouncedMinPrice) return false;
       if (selectedClass !== "all" && f.class !== selectedClass) return false;
       if (selectedAirlines.length > 0 && !selectedAirlines.includes(f.airlineId)) return false;
       if (selectedTimeOfDay.length > 0) {
@@ -82,10 +101,6 @@ function SearchContent() {
       if (stops === "2+" && f.stops < 2) return false;
       if (baggage === "with" && !f.hasCheckedBaggage) return false;
       if (baggage === "without" && f.hasCheckedBaggage) return false;
-      if (priceRange === "100" && f.price > 100000) return false;
-      if (priceRange === "200" && (f.price < 100000 || f.price > 200000)) return false;
-      if (priceRange === "500" && (f.price < 200000 || f.price > 500000)) return false;
-      if (priceRange === "500+" && f.price < 500000) return false;
       return true;
     });
 
@@ -99,7 +114,7 @@ function SearchContent() {
     });
 
     return result;
-  }, [origin, destination, selectedDate, sortBy, maxPrice, selectedClass, selectedAirlines, selectedTimeOfDay, stops, baggage, priceRange]);
+  }, [origin, destination, selectedDate, sortBy, debouncedMinPrice, debouncedMaxPrice, selectedClass, selectedAirlines, selectedTimeOfDay, stops, baggage]);
 
   const handleSelectFlight = (flight: Flight) => {
     setPassengerCount(passengers);
@@ -122,21 +137,21 @@ function SearchContent() {
 
   const activeFilterCount = selectedAirlines.length + selectedTimeOfDay.length +
     (selectedClass !== "all" ? 1 : 0) + (stops !== "all" ? 1 : 0) +
-    (baggage !== "all" ? 1 : 0) + (priceRange !== "all" ? 1 : 0);
+    (baggage !== "all" ? 1 : 0) + (minPrice > 0 ? 1 : 0) + (maxPrice < 7000000 ? 1 : 0);
 
   const clearFilters = () => {
     setSelectedDate(null);
     setSelectedClass("all");
-    setMaxPrice(3000000);
+    setMinPrice(0);
+    setMaxPrice(7000000);
     setSortBy("price");
     setSelectedAirlines([]);
     setSelectedTimeOfDay([]);
     setStops("all");
     setBaggage("all");
-    setPriceRange("all");
   };
 
-  const filterProps = { stops, setStops, baggage, setBaggage, priceRange, setPriceRange, selectedClass, setSelectedClass, maxPrice, setMaxPrice, availableAirlines, selectedAirlines, toggleAirline, selectedTimeOfDay, toggleTimeOfDay, clearFilters };
+  const filterProps = { stops, setStops, baggage, setBaggage, selectedClass, setSelectedClass, minPrice, setMinPrice, maxPrice, setMaxPrice, availableAirlines, selectedAirlines, toggleAirline, selectedTimeOfDay, toggleTimeOfDay, clearFilters };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -146,7 +161,7 @@ function SearchContent() {
         <div className="lg:grid lg:grid-cols-[300px_1fr] lg:gap-6">
           {/* Desktop sidebar */}
           <aside className="hidden lg:block">
-            <div className="sticky top-24 space-y-4">
+            <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto rounded-2xl bg-white border border-gray-200/80 shadow-sm px-3 py-3 scrollbar-thin">
               <FilterPanel {...filterProps} />
             </div>
           </aside>
