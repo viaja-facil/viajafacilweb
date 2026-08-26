@@ -1,6 +1,6 @@
 "use client";
 
-import { RefObject } from "react";
+import { Ref } from "react";
 import {
   Check,
   CheckCircle2,
@@ -20,8 +20,8 @@ interface PassengerFormCardProps {
   lookupBI: (index: number, rawDoc: string) => void;
   biStatus?: BiStatus;
   attemptedGenerate: boolean;
-  nameRef?: RefObject<HTMLInputElement | null>;
-  docRef?: RefObject<HTMLInputElement | null>;
+  nameRef?: Ref<HTMLInputElement>;
+  docRef?: Ref<HTMLInputElement>;
 }
 
 export default function PassengerFormCard({
@@ -73,7 +73,10 @@ export default function PassengerFormCard({
       </div>
 
       <div>
-        <label className="text-xs font-semibold text-gray-600 mb-1 flex items-center gap-2">
+        <label
+          htmlFor={`doc-${index}`}
+          className="text-xs font-semibold text-gray-600 mb-1 flex items-center gap-2"
+        >
           Nº do BI / Passaporte
           {status?.status === "loading" && (
             <span className="inline-flex items-center gap-1 font-normal text-[#f97316]">
@@ -85,6 +88,7 @@ export default function PassengerFormCard({
         <div className="relative">
           <input
             ref={docRef}
+            id={`doc-${index}`}
             type="text"
             inputMode="numeric"
             placeholder="Ex.: 000217139NE013"
@@ -125,7 +129,7 @@ export default function PassengerFormCard({
           aria-live="polite"
           className="mt-3 bg-green-50 border-2 border-green-200 rounded-xl p-4 animate-fade-in"
         >
-          <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-green-600 mb-1">
+          <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-green-600 mb-1">
             <CheckCircle2 className="w-3.5 h-3.5" />
             Nome validado via BI
           </p>
@@ -144,11 +148,15 @@ export default function PassengerFormCard({
           aria-live="polite"
           className="mt-3 animate-fade-in"
         >
-          <label className="text-xs font-semibold text-gray-600 mb-1 block">
+          <label
+            htmlFor={`name-${index}`}
+            className="text-xs font-semibold text-gray-600 mb-1 block"
+          >
             Nome Completo
           </label>
           <input
             ref={nameRef}
+            id={`name-${index}`}
             type="text"
             placeholder="Introduza o nome como está no documento"
             value={passenger.name}

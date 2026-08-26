@@ -58,6 +58,14 @@ function CheckoutContent() {
   const nameRefs = useRef<(HTMLInputElement | null)[]>([]);
   const docRefs = useRef<(HTMLInputElement | null)[]>([]);
   const phoneRef = useRef<HTMLInputElement | null>(null);
+
+  // Callback refs (avoids reading ref.current during render)
+  const setNameRef = (index: number) => (el: HTMLInputElement | null) => {
+    nameRefs.current[index] = el;
+  };
+  const setDocRef = (index: number) => (el: HTMLInputElement | null) => {
+    docRefs.current[index] = el;
+  };
   const [biStatus, setBiStatus] = useState<
     Record<number, { status: "loading" | "found" | "manual"; message?: string }>
   >({});
@@ -236,6 +244,14 @@ function CheckoutContent() {
     }, 2000);
   };
 
+  const handleBack = () => {
+    // Warn before leaving with an unfinished payment
+    if (paymentGenerated && !window.confirm("Tem certeza que deseja sair? O pagamento em curso será perdido.")) {
+      return;
+    }
+    router.push(`/booking/seats?flightId=${flightId || flight?.id || ""}`);
+  };
+
   const handleCopyReference = () => {
     navigator.clipboard.writeText(reference);
     setCopied(true);
@@ -249,13 +265,26 @@ function CheckoutContent() {
       <div className="bg-gradient-to-r from-[#0a1628] to-[#162544] text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
           <button
-            onClick={() => router.back()}
+            onClick={handleBack}
             className="flex items-center gap-2 text-sm text-gray-400 hover:text-white mb-4 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Voltar
           </button>
           <h1 className="text-2xl font-bold">Finalizar Compra</h1>
+          <nav aria-label="Progresso da reserva" className="mt-2">
+            <ol className="flex flex-wrap items-center gap-1 text-xs text-gray-400">
+              <li>Buscar</li>
+              <li aria-hidden="true">›</li>
+              <li>Assentos</li>
+              <li aria-hidden="true">›</li>
+              <li aria-current="step" className="text-white font-semibold">
+                Checkout
+              </li>
+              <li aria-hidden="true">›</li>
+              <li>Confirmação</li>
+            </ol>
+          </nav>
           <p className="text-gray-400 text-sm mt-1">
             Preencha os dados e selecione o método de pagamento
           </p>
@@ -292,8 +321,8 @@ function CheckoutContent() {
                     lookupBI={lookupBI}
                     biStatus={biStatus[index]}
                     attemptedGenerate={attemptedGenerate}
-                    nameRef={{ current: nameRefs.current[index] }}
-                    docRef={{ current: docRefs.current[index] }}
+                    nameRef={setNameRef(index)}
+                    docRef={setDocRef(index)}
                   />
                 ))}
               </div>
