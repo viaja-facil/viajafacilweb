@@ -1,6 +1,6 @@
 "use client";
 
-import { Smartphone, Star, Download, Apple, Play } from "lucide-react";
+import { Smartphone, Star, Download, Apple, Play, Plane, MapPin, Shield, Ticket, CreditCard, Sparkles, Clock } from "lucide-react";
 import ScrollReveal from "./ScrollReveal";
 
 interface AppDownloadProps {
@@ -130,22 +130,55 @@ export default function AppDownload({ className = "" }: AppDownloadProps) {
                 </div>
               </div>
 
-              {/* Floating elements */}
-              <div className="absolute -top-4 -right-4 w-20 h-20 bg-white rounded-2xl shadow-xl flex items-center justify-center animate-bounce">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-[#f97316]">-30%</div>
-                  <div className="text-[10px] text-gray-500">OFF</div>
-                </div>
-              </div>
-
-              <div className="absolute -bottom-4 -left-4 bg-white rounded-xl shadow-xl p-3 animate-pulse">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                    <Download className="w-4 h-4 text-green-600" />
+              {/* Floating elements around the phone */}
+              <div className="absolute inset-0 pointer-events-none">
+                {/* Existing badges */}
+                <div className="absolute -top-4 -right-4 w-20 h-20 bg-white rounded-2xl shadow-xl flex items-center justify-center animate-bounce">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-[#f97316]">-30%</div>
+                    <div className="text-[10px] text-gray-500">OFF</div>
                   </div>
-                  <div>
-                    <div className="text-xs font-bold text-gray-900">50k+</div>
-                    <div className="text-[10px] text-gray-500">Downloads</div>
+                </div>
+
+                <div className="absolute -bottom-4 -left-4 bg-white rounded-xl shadow-xl p-3 animate-pulse">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                      <Download className="w-4 h-4 text-green-600" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-gray-900">50k+</div>
+                      <div className="text-[10px] text-gray-500">Downloads</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Floating travel icons */}
+                <Plane className="absolute top-[5%] left-[5%] w-6 h-6 text-[#f97316]/35 animate-float" style={{ animationDelay: "0s" }} />
+                <MapPin className="absolute top-[15%] right-[0%] w-5 h-5 text-[#f97316]/30 animate-float" style={{ animationDelay: "0.7s" }} />
+                <Ticket className="absolute bottom-[20%] right-[2%] w-5 h-5 text-blue-400/35 animate-float" style={{ animationDelay: "1.4s" }} />
+                <Sparkles className="absolute top-[45%] left-[-2%] w-4 h-4 text-yellow-400/40 animate-float" style={{ animationDelay: "0.3s" }} />
+                <Clock className="absolute bottom-[10%] left-[8%] w-5 h-5 text-purple-400/30 animate-float" style={{ animationDelay: "1.8s" }} />
+                <Shield className="absolute top-[0%] left-[35%] w-4 h-4 text-green-400/35 animate-float" style={{ animationDelay: "2.1s" }} />
+                <CreditCard className="absolute bottom-[5%] right-[25%] w-4 h-4 text-blue-400/30 animate-float" style={{ animationDelay: "1.1s" }} />
+
+                {/* Floating bubbles */}
+                <div className="absolute top-[10%] left-[20%] w-2.5 h-2.5 bg-[#f97316]/25 rounded-full animate-float" style={{ animationDelay: "0.5s" }} />
+                <div className="absolute top-[50%] right-[5%] w-3 h-3 bg-[#f97316]/20 rounded-full animate-float" style={{ animationDelay: "1.3s" }} />
+                <div className="absolute bottom-[15%] left-[0%] w-2 h-2 bg-blue-400/25 rounded-full animate-float" style={{ animationDelay: "2s" }} />
+                <div className="absolute top-[30%] left-[-1%] w-2 h-2 bg-yellow-400/25 rounded-full animate-float" style={{ animationDelay: "0.9s" }} />
+                <div className="absolute bottom-[30%] right-[8%] w-3.5 h-3.5 bg-[#f97316]/15 rounded-full animate-float" style={{ animationDelay: "1.6s" }} />
+
+                {/* Floating mini glass cards */}
+                <div className="absolute top-[8%] right-[-5%] glass-dark rounded-lg px-2.5 py-1.5 animate-float" style={{ animationDelay: "0.4s" }}>
+                  <div className="flex items-center gap-1.5">
+                    <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                    <span className="text-[9px] text-white/80 font-medium">4.8 estrelas</span>
+                  </div>
+                </div>
+                <div className="absolute bottom-[25%] left-[-6%] glass-dark rounded-lg px-2.5 py-1.5 animate-float" style={{ animationDelay: "1.7s" }}>
+                  <div className="flex items-center gap-1.5">
+                    <Shield className="w-3 h-3 text-green-400" />
+                    <span className="text-[9px] text-white/80 font-medium">100% seguro</span>
                   </div>
                 </div>
               </div>
