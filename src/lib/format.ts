@@ -20,3 +20,11 @@ export function formatDateShort(dateStr: string): string {
     month: "short",
   });
 }
+
+export function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat("pt-AO", {
+    style: "decimal",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount) + " Kz";
+}

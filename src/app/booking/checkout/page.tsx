@@ -3,20 +3,19 @@
 import { useState, useRef, useEffect, Suspense } from "react";
 import QRCode from "qrcode";
 import { useRouter, useSearchParams } from "next/navigation";
-import { formatCurrency, getAirlineById, getAirportByCode } from "@/lib/mock-data";
+import { formatCurrency, getAirlineById } from "@/lib/mock-data";
 import { useBooking, PaymentMethod } from "@/lib/booking-context";
 import BookingStepper from "@/components/ui/BookingStepper";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import PassengerFormCard from "@/components/booking/PassengerFormCard";
+import PaymentMethodSelector from "@/components/booking/PaymentMethodSelector";
+import OrderSummarySidebar from "@/components/booking/OrderSummarySidebar";
+import MobileStickyBar from "@/components/booking/MobileStickyBar";
 import {
   ArrowLeft,
-  ArrowRight,
-  Plane,
   User,
-  Phone,
-  CreditCard,
   Lock,
   Check,
-  Shield,
   AlertCircle,
   Copy,
   CheckCircle2,
@@ -243,12 +242,6 @@ function CheckoutContent() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handlePhoneChange = (value: string) => {
-    // Only allow numbers
-    const cleaned = value.replace(/\D/g, "");
-    setPhoneNumber(cleaned);
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <BookingStepper />
@@ -289,308 +282,35 @@ function CheckoutContent() {
               </div>
 
               <div className="space-y-4">
-                {passengerForms.map((passenger, index) => {
-                  const status = biStatus[index];
-                  const docFilled = passenger.document.trim().length > 0;
-                  const inputBorder =
-                    status?.status === "loading"
-                      ? "border-[#f97316] ring-2 ring-[#f97316]/20"
-                      : status?.status === "found"
-                      ? "border-green-500 bg-green-50/50"
-                      : status?.status === "manual"
-                      ? "border-amber-400 bg-amber-50/40"
-                      : docFilled
-                      ? "border-gray-300"
-                      : "border-gray-200";
-                  return (
-                    <div key={index} className="bg-gray-50 rounded-xl p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold transition-colors ${
-                          status?.status === "found"
-                            ? "bg-green-500 text-white"
-                            : "bg-[#f97316] text-white"
-                        }`}>
-                          {status?.status === "found" ? (
-                            <Check className="w-4 h-4" />
-                          ) : (
-                            index + 1
-                          )}
-                        </span>
-                        <h3 className="text-sm font-semibold text-gray-900">
-                          Passageiro {index + 1}
-                        </h3>
-                        <span className="ml-auto text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-2 py-0.5">
-                          Assento {passenger.seat}
-                        </span>
-                      </div>
-
-                      <div>
-                        <label className="text-xs font-semibold text-gray-600 mb-1 flex items-center gap-2">
-                          Nº do BI / Passaporte
-                          {status?.status === "loading" && (
-                            <span className="inline-flex items-center gap-1 font-normal text-[#f97316]">
-                              <span className="w-3 h-3 border-2 border-orange-200 border-t-[#f97316] rounded-full animate-spin" />
-                              a validar...
-                            </span>
-                          )}
-                        </label>
-                        <div className="relative">
-                          <input
-                            ref={(el) => { docRefs.current[index] = el; }}
-                            type="text"
-                            inputMode="numeric"
-                            placeholder="Ex.: 000217139NE013"
-                            value={passenger.document}
-                            onChange={(e) => handleDocumentChange(index, e.target.value)}
-                            maxLength={14}
-                            aria-invalid={status?.status === "manual"}
-                            aria-describedby={`bi-status-${index}`}
-                            className={`w-full pl-3 pr-10 py-2.5 bg-white border-2 rounded-xl text-sm uppercase tracking-wide focus:outline-none focus:ring-2 focus:ring-[#f97316]/30 focus:border-[#f97316] transition-all ${
-                              attemptedGenerate && passenger.document.trim().length <= 5
-                                ? "border-red-400 bg-red-50/40"
-                                : inputBorder
-                            }`}
-                          />
-                          {/* Interactive validation indicator */}
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2">
-                            {status?.status === "loading" && (
-                              <span className="block w-[18px] h-[18px] border-2 border-orange-200 border-t-[#f97316] rounded-full animate-spin" />
-                            )}
-                            {status?.status === "found" && (
-                              <CheckCircle2 className="w-5 h-5 text-green-600 animate-fade-in" />
-                            )}
-                            {status?.status === "manual" && (
-                              <AlertCircle className="w-5 h-5 text-amber-500 animate-fade-in" />
-                            )}
-                          </span>
-                        </div>
-                        {attemptedGenerate && passenger.document.trim().length <= 5 && (
-                          <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1">
-                            <AlertCircle className="w-3 h-3" />
-                            Introduza o BI ou passaporte (min. 6 caracteres)
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Validated name confirmation panel */}
-                      {status?.status === "found" && (
-                        <div
-                          id={`bi-status-${index}`}
-                          aria-live="polite"
-                          className="mt-3 bg-green-50 border-2 border-green-200 rounded-xl p-4 animate-fade-in"
-                        >
-                          <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-green-600 mb-1">
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                            Nome validado via BI
-                          </p>
-                          <p className="text-base font-bold text-gray-900 leading-snug">
-                            {passenger.name}
-                          </p>
-                          <p className="text-xs text-green-700 mt-2">
-                            Confirme que o nome está correto antes de pagar. É este que vai no bilhete.
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Manual entry fallback */}
-                      {status?.status === "manual" && (
-                        <div
-                          id={`bi-status-${index}`}
-                          aria-live="polite"
-                          className="mt-3 animate-fade-in"
-                        >
-                          <label className="text-xs font-semibold text-gray-600 mb-1 block">
-                            Nome Completo
-                          </label>
-                          <input
-                            ref={(el) => { nameRefs.current[index] = el; }}
-                            type="text"
-                            placeholder="Introduza o nome como está no documento"
-                            value={passenger.name}
-                            onChange={(e) => updatePassenger(index, "name", e.target.value)}
-                            className={`w-full px-3 py-2.5 bg-white border-2 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#f97316]/30 focus:border-[#f97316] transition-all ${
-                              attemptedGenerate && passenger.name.trim().length <= 2
-                                ? "border-red-400 bg-red-50/40"
-                                : passenger.name.trim().length > 2
-                                ? "border-green-400"
-                                : "border-amber-300"
-                            }`}
-                          />
-                          {attemptedGenerate && passenger.name.trim().length <= 2 ? (
-                            <p className="flex items-center gap-1.5 text-xs text-red-500 mt-1.5">
-                              <AlertCircle className="w-3 h-3" />
-                              Introduza o nome completo (min. 3 caracteres)
-                            </p>
-                          ) : passenger.name.trim().length > 2 ? (
-                            <p className="flex items-center gap-1.5 text-xs text-green-600 mt-1.5">
-                              <CheckCircle2 className="w-3.5 h-3.5" />
-                              {passenger.name}
-                            </p>
-                          ) : (
-                            status.message && (
-                              <p className="flex items-start gap-1.5 text-xs text-amber-600 mt-1.5">
-                                <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-px" />
-                                {status.message}
-                              </p>
-                            )
-                          )}
-                        </div>
-                      )}
-                     </div>
-                   );
-                 })}
-               </div>
+                {passengerForms.map((passenger, index) => (
+                  <PassengerFormCard
+                    key={index}
+                    index={index}
+                    passenger={passenger}
+                    updatePassenger={updatePassenger}
+                    handleDocumentChange={handleDocumentChange}
+                    lookupBI={lookupBI}
+                    biStatus={biStatus[index]}
+                    attemptedGenerate={attemptedGenerate}
+                    nameRef={{ current: nameRefs.current[index] }}
+                    docRef={{ current: docRefs.current[index] }}
+                  />
+                ))}
+              </div>
              </div>
 
-            {/* Payment Method Selection */}
             {!paymentGenerated && (
-              <div className="bg-white rounded-2xl border border-gray-200 p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
-                    <CreditCard className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div>
-                    <h2 className="font-bold text-gray-900">Método de Pagamento</h2>
-                    <p className="text-xs text-gray-500">Escolha como deseja pagar</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                  {/* Multicaixa Express */}
-                  <button
-                    onClick={() => setPaymentMethod("multicaixa_express")}
-                    className={`p-5 rounded-xl border-2 text-left transition-all ${
-                      paymentMethod === "multicaixa_express"
-                        ? "border-[#f97316] bg-orange-50 shadow-lg shadow-orange-500/10"
-                        : "border-gray-200 hover:border-gray-300 bg-white"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                        paymentMethod === "multicaixa_express"
-                          ? "bg-[#f97316] text-white"
-                          : "bg-gray-100 text-gray-600"
-                      }`}>
-                        <Smartphone className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <p className="font-bold text-gray-900">Multicaixa Express</p>
-                        <p className="text-xs text-gray-500">Pague pelo telemóvel</p>
-                      </div>
-                    </div>
-                    <p className="text-xs text-gray-500">
-                      Receba uma notificação no seu telemóvel para confirmar o pagamento
-                    </p>
-                  </button>
-
-                  {/* Referência Bancária */}
-                  <button
-                    onClick={() => setPaymentMethod("referencia")}
-                    className={`p-5 rounded-xl border-2 text-left transition-all ${
-                      paymentMethod === "referencia"
-                        ? "border-[#f97316] bg-orange-50 shadow-lg shadow-orange-500/10"
-                        : "border-gray-200 hover:border-gray-300 bg-white"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                        paymentMethod === "referencia"
-                          ? "bg-[#f97316] text-white"
-                          : "bg-gray-100 text-gray-600"
-                      }`}>
-                        <Hash className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <p className="font-bold text-gray-900">Referência Bancária</p>
-                        <p className="text-xs text-gray-500">Pague no ATM ou app</p>
-                      </div>
-                    </div>
-                    <p className="text-xs text-gray-500">
-                      Gere uma referência para pagamento via Multicaixa, ATM ou app bancário
-                    </p>
-                  </button>
-                </div>
-
-                {/* Multicaixa Express Phone Input */}
-                {paymentMethod === "multicaixa_express" && (
-                  <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-5 text-white animate-fade-in">
-                    <div className="flex items-center gap-3 mb-4">
-                      <Phone className="w-5 h-5" />
-                      <h3 className="font-bold">Número Multicaixa Express</h3>
-                    </div>
-                    <p className="text-sm text-green-100 mb-4">
-                      Insira o número do telemóvel registado no Multicaixa Express. Irá receber uma notificação para confirmar o pagamento.
-                    </p>
-                    <div className="flex gap-2">
-                      <div className="flex items-center bg-white/20 rounded-xl px-4 py-3">
-                        <span className="text-sm font-bold">+244</span>
-                      </div>
-                      <input
-                        ref={phoneRef}
-                        type="tel"
-                        placeholder="9XX XXX XXX"
-                        value={phoneNumber}
-                        onChange={(e) => handlePhoneChange(e.target.value)}
-                        maxLength={9}
-                        className={`flex-1 px-4 py-3 bg-white/10 border rounded-xl text-sm placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 ${
-                          attemptedGenerate && phoneNumber.length < 9
-                            ? "border-red-400 bg-red-500/20"
-                            : "border-white/30"
-                        }`}
-                      />
-                    </div>
-                    {attemptedGenerate && !/^9\d{8}$/.test(phoneNumber) && (
-                      <p className="text-xs text-red-200 mt-2 flex items-center gap-1">
-                        <AlertCircle className="w-3 h-3" />
-                        Número inválido. Deve começar com 9 e ter 9 dígitos
-                      </p>
-                    )}
-                    {phoneNumber.length > 0 && phoneNumber.length < 9 && !(attemptedGenerate && phoneNumber.length < 9) && (
-                      <p className="text-xs text-green-200 mt-2">
-                        {9 - phoneNumber.length} {9 - phoneNumber.length === 1 ? "dígito" : "dígitos"} restante(s)
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {/* Referência Info */}
-                {paymentMethod === "referencia" && (
-                  <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-5 text-white animate-fade-in">
-                    <div className="flex items-center gap-3 mb-4">
-                      <Hash className="w-5 h-5" />
-                      <h3 className="font-bold">Pagamento por Referência</h3>
-                    </div>
-                    <p className="text-sm text-blue-100 mb-2">
-                      Uma referência única será gerada para o valor de{" "}
-                      <span className="font-bold">{formatCurrency(grandTotal)}</span>.
-                    </p>
-                    <p className="text-sm text-blue-100">
-                      Pode pagar via Multicaixa (ATM), aplicação bancária ou agência.
-                    </p>
-                  </div>
-                )}
-
-                {/* Generate Payment Button */}
-                {paymentMethod && (
-                  <button
-                    onClick={generatePayment}
-                    disabled={isProcessing}
-                    className="w-full mt-6 py-3.5 hidden md:flex bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#dc2626] disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all shadow-lg shadow-orange-500/20 disabled:shadow-none items-center justify-center gap-2"
-                  >
-                    {isProcessing ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        A gerar pagamento...
-                      </>
-                    ) : (
-                      <>
-                        <Lock className="w-5 h-5" />
-                        Gerar Pagamento
-                      </>
-                    )}
-                  </button>
-                )}
-              </div>
+              <PaymentMethodSelector
+                paymentMethod={paymentMethod}
+                setPaymentMethod={setPaymentMethod}
+                phoneNumber={phoneNumber}
+                setPhoneNumber={setPhoneNumber}
+                grandTotal={grandTotal}
+                isProcessing={isProcessing}
+                attemptedGenerate={attemptedGenerate}
+                generatePayment={generatePayment}
+                phoneRef={phoneRef}
+              />
             )}
 
             {/* Payment Result - Multicaixa Express */}
@@ -736,109 +456,25 @@ function CheckoutContent() {
             )}
           </div>
 
-          {/* Summary Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl border border-gray-200 p-6 sticky top-24">
-              <h3 className="font-bold text-gray-900 mb-4">Resumo do Pedido</h3>
-
-              <div className="bg-gray-50 rounded-xl p-4 mb-4">
-                <div className="flex items-center gap-3 mb-3">
-                  <div
-                    className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold"
-                    style={{ backgroundColor: airline?.color || "#666" }}
-                  >
-                    {airline?.logo || <Plane className="w-5 h-5 text-gray-400" />}
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">{flight.flightNumber}</p>
-                    <p className="text-xs text-gray-500">{airline?.name}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="font-bold">{flight.origin}</span>
-                  <ArrowRight className="w-3 h-3 text-gray-400" />
-                  <span className="font-bold">{flight.destination}</span>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  {new Date(flight.departureTime).toLocaleDateString("pt-AO", {
-                    weekday: "long",
-                    day: "numeric",
-                    month: "long",
-                  })}
-                </p>
-              </div>
-
-              <div className="mb-4">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                  Passageiros ({passengerCount})
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {passengerForms.map((p, i) => (
-                    <span
-                      key={i}
-                      className="px-2 py-1 bg-blue-50 border border-blue-200 rounded-lg text-xs font-bold text-blue-700"
-                    >
-                      {p.seat}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="border-t border-gray-100 pt-4 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Passagem ({passengerCount}x)</span>
-                  <span className="text-gray-900">{formatCurrency(totalBasePrice)}</span>
-                </div>
-                {totalSeatPrice > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Taxa de assento</span>
-                    <span className="text-gray-900">{formatCurrency(totalSeatPrice)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between text-sm font-bold pt-2 border-t border-gray-100">
-                  <span className="text-gray-900">Total</span>
-                  <span className="text-[#f97316]">{formatCurrency(grandTotal)}</span>
-                </div>
-              </div>
-
-              {paymentGenerated && (
-                <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-xl">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-green-600" />
-                    <span className="text-xs font-semibold text-green-700">
-                      Pagamento {paymentMethod === "multicaixa_express" ? "Multicaixa Express" : "por Referência"} selecionado
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex items-center gap-2 mt-4 text-xs text-gray-400 justify-center">
-                <Shield className="w-3 h-3" />
-                <span>Compra 100% segura e garantida</span>
-              </div>
-            </div>
-          </div>
+          <OrderSummarySidebar
+            flight={flight}
+            airline={airline}
+            booking={{ seats: booking.seats }}
+            passengerCount={passengerCount}
+            grandTotal={grandTotal}
+            paymentGenerated={paymentGenerated}
+            paymentMethod={paymentMethod}
+          />
         </div>
       </div>
 
-      {/* Mobile sticky price bar */}
       {!paymentGenerated && (
-        <div className="md:hidden fixed bottom-14 left-0 right-0 z-40 bg-white border-t border-gray-200 px-4 py-3 shadow-[0_-2px_10px_rgba(0,0,0,0.06)]">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-xs text-gray-500">Total</p>
-              <p className="text-xl font-bold text-[#f97316]">{formatCurrency(grandTotal)}</p>
-            </div>
-            <button
-              onClick={generatePayment}
-              disabled={isProcessing}
-              className="flex-1 max-w-[200px] py-3 bg-gradient-to-r from-[#f97316] to-[#ea580c] disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all shadow-lg shadow-orange-500/20 disabled:shadow-none flex items-center justify-center gap-2"
-            >
-              <Lock className="w-4 h-4" />
-              Pagar
-            </button>
-          </div>
-        </div>
+        <MobileStickyBar
+          grandTotal={grandTotal}
+          isFormValid={isFormValid}
+          isProcessing={isProcessing}
+          handlePayment={generatePayment}
+        />
       )}
     </div>
   );
