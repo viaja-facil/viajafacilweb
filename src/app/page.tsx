@@ -144,12 +144,12 @@ export default function HomePage() {
 
       <Testimonials />
 
+      {/* App Download */}
+      <AppDownload />
+
       <FaqSection />
 
       <FinalCTA />
-
-      {/* App Download */}
-      <AppDownload />
     </div>
   );
 }
