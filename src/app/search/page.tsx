@@ -152,9 +152,9 @@ function SearchContent() {
           </aside>
 
           {/* Main content */}
-          <div>
+          <div className="min-w-0">
             {/* Mobile filter bar */}
-            <div className="lg:hidden sticky top-16 z-30 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between -mx-4">
+            <div className="lg:hidden sticky top-16 z-30 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
               <button onClick={() => setShowFilters(true)} className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-xl text-sm font-semibold">
                 <SlidersHorizontal className="w-4 h-4" />
                 Filtrar

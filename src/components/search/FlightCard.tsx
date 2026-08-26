@@ -31,7 +31,7 @@ export default function FlightCard({
   return (
     <div
       onClick={() => onSelect(flight)}
-      className="bg-white rounded-2xl border border-gray-200 hover:border-[#f97316] hover:shadow-lg hover:shadow-orange-500/10 transition-all group cursor-pointer active:scale-[0.99]"
+      className="w-full bg-white rounded-2xl border border-gray-200 hover:border-[#f97316] hover:shadow-lg hover:shadow-orange-500/10 transition-all group cursor-pointer active:scale-[0.99] overflow-hidden"
     >
       <div className="p-5">
         <div className="flex items-center gap-2 mb-3">
@@ -60,8 +60,8 @@ export default function FlightCard({
           </span>
         </div>
 
-        <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-          <div className="flex items-center gap-3 lg:w-44">
+        <div className="flex flex-col lg:flex-row lg:items-center gap-4 min-w-0">
+          <div className="flex items-center gap-3 lg:w-44 shrink-0 min-w-0">
             <div
               className="w-11 h-11 rounded-xl flex items-center justify-center text-lg font-bold text-white shrink-0"
               style={{ backgroundColor: airline?.color || "#666" }}
@@ -76,7 +76,7 @@ export default function FlightCard({
             </div>
           </div>
 
-          <div className="flex items-center gap-3 flex-1">
+          <div className="flex items-center gap-3 flex-1 min-w-0 shrink">
             <div className="text-center w-16">
               <p className="text-xl font-bold text-gray-900">
                 {formatTime(flight.departureTime)}
@@ -115,9 +115,9 @@ export default function FlightCard({
             </span>
           </div>
 
-          <div className="flex items-center gap-4 lg:flex-col lg:items-end">
-            <div className="text-right">
-              <p className="text-2xl font-bold text-[#f97316]">
+          <div className="flex items-center gap-4 lg:flex-col lg:items-end min-w-0 flex-wrap">
+            <div className="text-right min-w-0">
+              <p className="text-2xl font-bold text-[#f97316] whitespace-nowrap">
                 {formatCurrency(flight.price)}
               </p>
             </div>
@@ -126,7 +126,7 @@ export default function FlightCard({
                 e.stopPropagation();
                 onSelect(flight);
               }}
-              className="min-h-[44px] px-5 py-2.5 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#dc2626] active:from-[#dc2626] active:to-[#dc2626] text-white font-bold text-sm rounded-xl transition-all shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 flex items-center gap-2 whitespace-nowrap"
+              className="min-h-[44px] px-5 py-2.5 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#dc2626] active:from-[#dc2626] active:to-[#dc2626] text-white font-bold text-sm rounded-xl transition-all shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 flex items-center gap-2"
             >
               Selecionar
               <ArrowRight className="w-4 h-4" />
