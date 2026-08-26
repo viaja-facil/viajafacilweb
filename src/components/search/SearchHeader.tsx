@@ -1,5 +1,8 @@
 "use client";
 
+"use client";
+
+import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Calendar, MapPin, Users, X } from "lucide-react";
 import { formatDate } from "@/lib/format";
 
@@ -9,7 +12,7 @@ interface SearchHeaderProps {
   selectedDate: string | null;
   passengers: number;
   adults: number;
-  children: number;
+  childrenCount: number;
   getOriginCity: () => string;
   getDestCity: () => string;
   onBack?: () => void;
@@ -22,17 +25,19 @@ export default function SearchHeader({
   selectedDate,
   passengers,
   adults,
-  children,
+  childrenCount,
   getOriginCity,
   getDestCity,
   onBack,
   onClearDate,
 }: SearchHeaderProps) {
+  const router = useRouter();
   return (
     <div className="bg-gradient-to-r from-[#0a1628] to-[#162544] text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         <button
-          onClick={onBack}
+          onClick={onBack || (() => router.push("/"))}
+          aria-label="Voltar para a página anterior"
           className="flex items-center gap-2 text-sm text-gray-400 hover:text-white mb-4 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -61,8 +66,8 @@ export default function SearchHeader({
           <div className="flex items-center gap-2 bg-white/10 rounded-lg px-4 py-2">
             <Users className="w-4 h-4 text-[#f97316]" />
             <span>
-              {children > 0
-                ? `${adults} ${adults === 1 ? "adulto" : "adultos"} • ${children} ${children === 1 ? "criança" : "crianças"}`
+              {childrenCount > 0
+                ? `${adults} ${adults === 1 ? "adulto" : "adultos"} • ${childrenCount} ${childrenCount === 1 ? "criança" : "crianças"}`
                 : `${passengers} ${passengers === 1 ? "passageiro" : "passageiros"}`}
             </span>
           </div>

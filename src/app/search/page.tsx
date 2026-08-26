@@ -32,7 +32,7 @@ function SearchContent() {
   const [selectedDate, setSelectedDate] = useState<string | null>(initialDate || null);
   const [passengers, setPassengers] = useState(initialPassengers);
   const adults = Number.isNaN(initialAdults) ? initialPassengers : initialAdults;
-  const children = Number.isNaN(initialChildren) ? 0 : initialChildren;
+  const childrenCount = Number.isNaN(initialChildren) ? 0 : initialChildren;
   const [sortBy, setSortBy] = useState<"price" | "duration" | "departure">("price");
   const [maxPrice, setMaxPrice] = useState(3000000);
   const [selectedClass, setSelectedClass] = useState<string>("all");
@@ -140,7 +140,7 @@ function SearchContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <SearchHeader origin={origin} destination={destination} selectedDate={selectedDate} passengers={passengers} adults={adults} children={children} getOriginCity={getOriginCity} getDestCity={getDestCity} />
+      <SearchHeader origin={origin} destination={destination} selectedDate={selectedDate} passengers={passengers} adults={adults} childrenCount={childrenCount} getOriginCity={getOriginCity} getDestCity={getDestCity} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-20 lg:pb-6">
         <div className="lg:grid lg:grid-cols-[300px_1fr] lg:gap-6">
