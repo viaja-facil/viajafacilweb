@@ -29,18 +29,51 @@ export default function BottomSheet({
 
   const [dragY, setDragY] = useState(0);
   const dragStartY = useRef<number | null>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+
+    // Move focus into the dialog on open
+    const sheetEl = sheetRef.current;
+    const focusables = sheetEl?.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const firstFocusable = focusables?.[0];
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    firstFocusable?.focus();
+
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+      // Focus trap: cycle Tab within the sheet
+      if (e.key === "Tab" && sheetEl) {
+        const items = Array.from(
+          sheetEl.querySelectorAll<HTMLElement>(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          )
+        ).filter((el) => !el.hasAttribute("disabled"));
+        if (items.length === 0) return;
+        const first = items[0];
+        const last = items[items.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     };
     document.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = prevOverflow;
       document.removeEventListener("keydown", onKey);
+      previouslyFocused?.focus?.();
     };
   }, [open, onClose]);
 
@@ -54,6 +87,7 @@ export default function BottomSheet({
         aria-hidden="true"
       />
       <div
+        ref={sheetRef}
         role="dialog"
         aria-modal="true"
         aria-label={title}

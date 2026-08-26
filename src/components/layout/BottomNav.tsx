@@ -29,12 +29,13 @@ export default function BottomNav() {
             <Link
               key={item.href}
               href={item.href}
+              aria-current={active ? "page" : undefined}
               className={`flex flex-col items-center justify-center gap-0.5 w-16 h-14 transition-colors ${
                 active ? "text-[#f97316]" : "text-gray-400"
               }`}
             >
-              <item.icon className={`w-5 h-5 ${active ? "stroke-[2.5px]" : "stroke-[1.5px]"}`} />
-              <span className={`text-[10px] ${active ? "font-semibold" : "font-medium"}`}>
+              <item.icon className={`w-5 h-5 ${active ? "stroke-[2.5px]" : "stroke-[1.5px]"}`} aria-hidden="true" />
+              <span className={`text-xs ${active ? "font-semibold" : "font-medium"}`}>
                 {item.label}
               </span>
             </Link>

@@ -67,7 +67,7 @@ export default function AvailabilityCalendar({
         </span>
 
         {available && !isPast && dayInfo && (
-          <span className={`text-[10px] font-semibold leading-none mt-1.5 ${
+          <span className={`text-xs font-semibold leading-none mt-1.5 ${
             isSelected ? "text-white" : "text-[#f97316]"
           }`}>
             {formatCurrency(dayInfo.minPrice)}
@@ -105,7 +105,7 @@ export default function AvailabilityCalendar({
           <CalendarGrid
             headerExtra={
               cheapestInMonth && (
-                <p className="text-[10px] text-gray-400 mt-0.5">
+                <p className="text-xs text-gray-400 mt-0.5">
                   A partir de <span className="text-[#f97316] font-semibold">{formatCurrency(cheapestInMonth.minPrice)}</span>
                 </p>
               )
@@ -116,7 +116,7 @@ export default function AvailabilityCalendar({
       )}
 
       {/* Legend */}
-      <div className="px-4 py-2 border-t border-gray-100 flex items-center justify-center gap-3 text-[10px]">
+      <div className="px-4 py-2 border-t border-gray-100 flex items-center justify-center gap-3 text-xs">
         <div className="flex items-center gap-1">
           <div className="w-2 h-2 rounded-full bg-green-400" />
           <span className="text-gray-500">Disponível</span>

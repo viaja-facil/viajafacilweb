@@ -78,7 +78,7 @@ export default function FilterPanel({
             <button
               key={option.id}
               onClick={() => setStops(option.id)}
-              className={`flex-1 px-3 py-2.5 rounded-xl text-xs font-semibold border transition-all min-h-[40px] ${
+              className={`flex-1 px-3 py-2.5 rounded-xl text-xs font-semibold border transition-all min-h-[44px] ${
                 stops === option.id
                   ? "bg-[#0a1628] border-[#0a1628] text-white"
                   : "bg-white border-gray-200 text-gray-600 hover:border-[#f97316]"
@@ -117,7 +117,7 @@ export default function FilterPanel({
             <button
               key={option.id}
               onClick={() => setPriceRange(option.id)}
-              className={`px-3 py-2.5 rounded-xl text-xs font-semibold border transition-all min-h-[40px] ${
+              className={`px-3 py-2.5 rounded-xl text-xs font-semibold border transition-all min-h-[44px] ${
                 priceRange === option.id
                   ? "bg-[#0a1628] border-[#0a1628] text-white"
                   : "bg-white border-gray-200 text-gray-600 hover:border-[#f97316]"
@@ -148,7 +148,7 @@ export default function FilterPanel({
             <button
               key={cls}
               onClick={() => setSelectedClass(cls)}
-              className={`px-3 py-2 min-h-[36px] rounded-lg text-xs font-medium border transition-colors ${
+              className={`px-3 py-2 min-h-[44px] rounded-lg text-xs font-medium border transition-colors ${
                 selectedClass === cls
                   ? "bg-[#0a1628] border-[#0a1628] text-white"
                   : "bg-white border-gray-200 text-gray-600 hover:border-gray-300 active:border-[#f97316]"
@@ -251,7 +251,7 @@ export default function FilterPanel({
             <button
               key={slot.id}
               onClick={() => toggleTimeOfDay(slot.id)}
-              className={`flex items-center gap-1.5 px-3 py-2.5 min-h-[40px] rounded-xl border text-xs font-medium transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-2.5 min-h-[44px] rounded-xl border text-xs font-medium transition-all ${
                 selectedTimeOfDay.includes(slot.id)
                   ? "bg-[#0a1628] border-[#0a1628] text-white"
                   : "bg-white border-gray-200 text-gray-600 hover:border-[#f97316]"
@@ -285,7 +285,7 @@ export default function FilterPanel({
             <button
               key={option.id}
               onClick={() => setBaggage(option.id)}
-              className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 min-h-[40px] rounded-xl text-xs font-semibold border transition-all ${
+              className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold border transition-all ${
                 baggage === option.id
                   ? "bg-[#0a1628] border-[#0a1628] text-white"
                   : "bg-white border-gray-200 text-gray-600 hover:border-[#f97316]"

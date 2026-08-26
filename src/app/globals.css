@@ -69,6 +69,22 @@ html {
   border-radius: 4px;
 }
 
+/* Respect users who prefer reduced motion (WCAG 2.3.3) */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Animation keyframes */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
@@ -143,11 +159,6 @@ html {
 @keyframes glow {
   0%, 100% { box-shadow: 0 0 20px rgba(249, 115, 22, 0.3); }
   50% { box-shadow: 0 0 40px rgba(249, 115, 22, 0.6); }
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
 }
 
 @keyframes gradient {

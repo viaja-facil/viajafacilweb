@@ -24,7 +24,7 @@ export default function SortBar({ sortBy, setSortBy }: SortBarProps) {
           <button
             key={option.id}
             onClick={() => setSortBy(option.id)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors shrink-0 ${
+            className={`flex items-center gap-1.5 px-3 py-2 min-h-[44px] rounded-full text-xs font-semibold whitespace-nowrap transition-colors shrink-0 ${
               sortBy === option.id
                 ? "bg-[#f97316] text-white"
                 : "bg-white border border-gray-200 text-gray-600 hover:border-[#f97316]"

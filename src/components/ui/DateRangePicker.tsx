@@ -122,7 +122,7 @@ export default function DateRangePicker({
         >
           <span className="text-sm font-medium">{day}</span>
           {available && !isPast && dayInfo && (
-            <span className={`text-[10px] font-semibold leading-none mt-1.5 ${
+            <span className={`text-xs font-semibold leading-none mt-1.5 ${
               isSelected ? "text-white" : "text-[#f97316]"
             }`}>
               {formatCurrency(dayInfo.minPrice)}
@@ -140,7 +140,7 @@ export default function DateRangePicker({
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-semibold text-gray-900">Selecionar Datas</h3>
-            <p className="text-[10px] text-gray-400 mt-0.5">
+            <p className="text-xs text-gray-400 mt-0.5">
               {selectingReturn
                 ? "Agora selecione a data de volta"
                 : "Selecione a data de ida"}
@@ -148,6 +148,7 @@ export default function DateRangePicker({
           </div>
           <button
             onClick={onClose}
+            aria-label="Fechar seletor de datas"
             className="text-xs font-medium text-gray-400 hover:text-gray-600 transition-colors"
           >
             Fechar
@@ -158,7 +159,7 @@ export default function DateRangePicker({
         <div className="flex items-center gap-3 mt-2">
           <div className="flex items-center gap-1.5">
             <div className={`w-2 h-2 rounded-full ${departureDate ? "bg-[#f97316]" : "bg-gray-200"}`} />
-            <span className={`text-[11px] font-medium ${departureDate ? "text-gray-900" : "text-gray-400"}`}>
+            <span className={`text-xs font-medium ${departureDate ? "text-gray-900" : "text-gray-400"}`}>
               Ida: {departureDate
                 ? new Date(departureDate + "T12:00:00").toLocaleDateString("pt-AO", { day: "numeric", month: "short" })
                 : "—"}
@@ -167,7 +168,7 @@ export default function DateRangePicker({
           <div className="flex-1 h-px bg-gray-100" />
           <div className="flex items-center gap-1.5">
             <div className={`w-2 h-2 rounded-full ${returnDate ? "bg-[#f97316]" : "bg-gray-200"}`} />
-            <span className={`text-[11px] font-medium ${returnDate ? "text-gray-900" : "text-gray-400"}`}>
+            <span className={`text-xs font-medium ${returnDate ? "text-gray-900" : "text-gray-400"}`}>
               Volta: {returnDate
                 ? new Date(returnDate + "T12:00:00").toLocaleDateString("pt-AO", { day: "numeric", month: "short" })
                 : "—"}
@@ -206,7 +207,7 @@ export default function DateRangePicker({
                 month: "short",
               })}
             </p>
-            <p className="text-[10px] text-gray-400">
+            <p className="text-xs text-gray-400">
               {Math.ceil(
                 (new Date(returnDate).getTime() - new Date(departureDate).getTime()) /
                   (1000 * 60 * 60 * 24)
@@ -222,6 +223,7 @@ export default function DateRangePicker({
           </div>
           <button
             onClick={onClose}
+            aria-label="Confirmar datas selecionadas"
             className="min-h-[44px] px-5 bg-[#f97316] hover:bg-[#ea580c] active:bg-[#dc2626] text-white font-semibold text-sm rounded-xl transition-colors flex items-center"
           >
             Confirmar

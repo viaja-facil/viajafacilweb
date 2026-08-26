@@ -53,6 +53,9 @@ export default function Header() {
               <div className="relative">
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  aria-label={`Menu do utilizador ${user.name}`}
+                  aria-haspopup="menu"
+                  aria-expanded={userMenuOpen}
                   className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-all"
                 >
                   <div className="w-8 h-8 bg-gradient-to-br from-[#f97316] to-[#ea580c] rounded-full flex items-center justify-center text-white text-xs font-bold">
@@ -67,13 +70,18 @@ export default function Header() {
                       className="fixed inset-0 z-40"
                       onClick={() => setUserMenuOpen(false)}
                     />
-                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-50">
+                    <div
+                      role="menu"
+                      aria-label="Menu do utilizador"
+                      className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-50"
+                    >
                       <div className="px-4 py-2 border-b border-gray-100">
                         <p className="text-sm font-semibold text-gray-900">{user.name}</p>
                         <p className="text-xs text-gray-500">{user.email}</p>
                       </div>
                       <Link
                         href="/perfil"
+                        role="menuitem"
                         onClick={() => setUserMenuOpen(false)}
                         className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                       >
@@ -81,6 +89,7 @@ export default function Header() {
                         Minha Conta
                       </Link>
                       <button
+                        role="menuitem"
                         onClick={() => {
                           logout();
                           setUserMenuOpen(false);
@@ -98,7 +107,7 @@ export default function Header() {
               <div className="flex items-center gap-2">
                 <Link
                   href="/auth/login"
-                  className="hidden sm:block px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
+                  className="px-3 sm:px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
                 >
                   Entrar
                 </Link>

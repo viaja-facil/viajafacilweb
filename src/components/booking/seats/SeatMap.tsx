@@ -111,10 +111,22 @@ export default function SeatMap({
                         key={col}
                         onClick={() => handleSeatClick(seat)}
                         disabled={isOccupied}
+                        aria-label={
+                          `Assento ${seat.number}` +
+                          (isOccupied
+                            ? ", ocupado"
+                            : seat.isExtraLegroom
+                              ? ", espaço extra para pernas"
+                              : "") +
+                          (!isOccupied && seat.price > 0
+                            ? `, adicional ${formatCurrency(seat.price)}`
+                            : "")
+                        }
+                        aria-pressed={isSelected}
                         title={`${seat.number} ${isOccupied ? "(Ocupado)" : seat.isExtraLegroom ? "(Espaço Extra)" : ""} ${!isOccupied && seat.price > 0 ? `+ ${formatCurrency(seat.price)}` : ""}`}
-                        className={`w-10 h-10 shrink-0 rounded-lg text-xs font-bold transition-all flex items-center justify-center ${
+                        className={`w-11 h-11 shrink-0 rounded-lg text-xs font-bold transition-all flex items-center justify-center ${
                           isOccupied
-                            ? "bg-gray-200 text-gray-400 cursor-not-allowed border border-gray-300"
+                            ? "bg-gray-200 text-gray-500 cursor-not-allowed border border-gray-300"
                             : isSelected
                             ? "bg-blue-500 text-white border-2 border-blue-600 shadow-lg shadow-blue-500/30 scale-110"
                             : isExtraLegroom

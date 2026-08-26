@@ -47,6 +47,15 @@ export default function CustomSelect({
   useEffect(() => {
     isMobileRef.current = isMobile;
   }, [isMobile]);
+
+  // Restore focus to the trigger when the desktop popover closes
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!isOpen && !isMobileRef.current) {
+      triggerRef.current?.focus();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
   const selectedValue = value ?? internalValue;
   const selectedOption = options.find((option) => option.value === selectedValue);
 
@@ -133,6 +142,7 @@ export default function CustomSelect({
   return (
     <div ref={rootRef} className={`relative ${className}`}>
       <button
+        ref={triggerRef}
         type="button"
         aria-label={ariaLabel}
         aria-haspopup="listbox"

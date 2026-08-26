@@ -28,10 +28,21 @@ export default function FlightCard({
 }: FlightCardProps) {
   const flightDate = new Date(flight.departureTime);
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
+      e.preventDefault();
+      onSelect(flight);
+    }
+  };
+
   return (
     <div
+      role="button"
+      tabIndex={0}
+      aria-label={`Selecionar voo ${flight.flightNumber} de ${flight.origin} para ${flight.destination}, ${formatCurrency(flight.price)}`}
       onClick={() => onSelect(flight)}
-      className="w-full bg-white rounded-2xl border border-gray-200 hover:border-[#f97316] hover:shadow-lg hover:shadow-orange-500/10 transition-all group cursor-pointer active:scale-[0.99] overflow-hidden"
+      onKeyDown={handleKeyDown}
+      className="w-full bg-white rounded-2xl border border-gray-200 hover:border-[#f97316] hover:shadow-lg hover:shadow-orange-500/10 focus-visible:border-[#f97316] transition-all group cursor-pointer active:scale-[0.99] overflow-hidden"
     >
       <div className="p-5">
         <div className="flex items-center gap-2 mb-3">
@@ -88,7 +99,7 @@ export default function FlightCard({
               <div className="flex-1 h-px bg-gray-200" />
               <div className="flex flex-col items-center px-2">
                 <Plane className="w-4 h-4 text-[#f97316] -rotate-45" />
-                <p className="text-[10px] text-gray-500 mt-0.5">
+                <p className="text-xs text-gray-500 mt-0.5">
                   {flight.duration}
                 </p>
               </div>
@@ -103,15 +114,15 @@ export default function FlightCard({
             </div>
           </div>
 
-          <div className="hidden lg:flex items-center gap-2 text-gray-400">
+          <div className="flex items-center gap-2 text-gray-400">
             <span title="Wi-Fi">
-              <Wifi className="w-4 h-4" />
+              <Wifi className="w-4 h-4" aria-hidden="true" />
             </span>
             <span title="Refeição">
-              <Coffee className="w-4 h-4" />
+              <Coffee className="w-4 h-4" aria-hidden="true" />
             </span>
             <span title="Bagagem">
-              <Luggage className="w-4 h-4" />
+              <Luggage className="w-4 h-4" aria-hidden="true" />
             </span>
           </div>
 
@@ -126,6 +137,7 @@ export default function FlightCard({
                 e.stopPropagation();
                 onSelect(flight);
               }}
+              aria-label={`Selecionar voo ${flight.flightNumber} por ${formatCurrency(flight.price)}`}
               className="min-h-[44px] px-5 py-2.5 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#dc2626] active:from-[#dc2626] active:to-[#dc2626] text-white font-bold text-sm rounded-xl transition-all shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 flex items-center gap-2"
             >
               Selecionar

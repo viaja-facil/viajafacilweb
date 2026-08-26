@@ -138,7 +138,7 @@ export default function CalendarGrid({
       {/* Weekday headers */}
       <div className="grid grid-cols-7 mb-1">
         {WEEKDAYS.map((d) => (
-          <div key={d} className="py-1 text-center text-[10px] font-medium text-gray-400">
+          <div key={d} className="py-1 text-center text-xs font-medium text-gray-400">
             {d}
           </div>
         ))}

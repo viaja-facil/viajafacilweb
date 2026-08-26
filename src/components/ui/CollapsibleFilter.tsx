@@ -30,7 +30,7 @@ export default function CollapsibleFilter({
           {icon}
           <span className="text-sm font-semibold text-gray-700">{title}</span>
           {badge && (
-            <span className="px-1.5 py-0.5 bg-[#f97316] text-white text-[10px] font-bold rounded-full">
+            <span className="px-1.5 py-0.5 bg-[#f97316] text-white text-xs font-bold rounded-full">
               {badge}
             </span>
           )}

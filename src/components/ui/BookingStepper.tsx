@@ -45,7 +45,7 @@ export default function BookingStepper() {
                   {isCompleted ? <Check className="w-3.5 h-3.5" /> : i + 1}
                 </div>
                 <span
-                  className={`text-[10px] font-medium hidden sm:block ${
+                  className={`text-xs font-medium hidden sm:block ${
                     isCurrent ? "text-[#f97316]" : isCompleted ? "text-gray-700" : "text-gray-400"
                   }`}
                 >

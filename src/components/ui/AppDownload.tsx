@@ -145,7 +145,7 @@ export default function AppDownload({ className = "" }: AppDownloadProps) {
                     </div>
                     <div>
                       <div className="text-xs font-bold text-gray-900">iOS & Android</div>
-                      <div className="text-[10px] text-gray-500">Em breve</div>
+                      <div className="text-xs text-gray-500">Em breve</div>
                     </div>
                   </div>
                 </div>

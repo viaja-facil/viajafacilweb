@@ -17,7 +17,7 @@ export default function DateChips({
     <div className="mb-4 flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
       <button
         onClick={() => setSelectedDate(null)}
-        className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-colors shrink-0 ${
+        className={`px-4 py-2 min-h-[44px] rounded-full text-xs font-semibold whitespace-nowrap transition-colors shrink-0 ${
           !selectedDate
             ? "bg-[#f97316] text-white"
             : "bg-white border border-gray-200 text-gray-600 hover:border-[#f97316]"
@@ -32,7 +32,7 @@ export default function DateChips({
           <button
             key={a.date}
             onClick={() => setSelectedDate(a.date)}
-            className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-colors shrink-0 ${
+            className={`px-4 py-2 min-h-[44px] rounded-full text-xs font-semibold whitespace-nowrap transition-colors shrink-0 ${
               selectedDate === a.date
                 ? "bg-[#f97316] text-white"
                 : "bg-white border border-gray-200 text-gray-600 hover:border-[#f97316]"

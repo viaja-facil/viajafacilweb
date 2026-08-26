@@ -52,10 +52,16 @@ export default function PaymentMethodSelector({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+      <div
+        role="radiogroup"
+        aria-label="Método de Pagamento"
+        className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6"
+      >
         {/* Multicaixa Express */}
         <button
           onClick={() => setPaymentMethod("multicaixa_express")}
+          role="radio"
+          aria-checked={paymentMethod === "multicaixa_express"}
           className={`p-5 rounded-xl border-2 text-left transition-all ${
             paymentMethod === "multicaixa_express"
               ? "border-[#f97316] bg-orange-50 shadow-lg shadow-orange-500/10"
@@ -85,6 +91,8 @@ export default function PaymentMethodSelector({
         {/* Referência Bancária */}
         <button
           onClick={() => setPaymentMethod("referencia")}
+          role="radio"
+          aria-checked={paymentMethod === "referencia"}
           className={`p-5 rounded-xl border-2 text-left transition-all ${
             paymentMethod === "referencia"
               ? "border-[#f97316] bg-orange-50 shadow-lg shadow-orange-500/10"
@@ -128,8 +136,10 @@ export default function PaymentMethodSelector({
             </div>
             <input
               ref={phoneRef}
+              id="multicaixa-phone"
               type="tel"
               placeholder="9XX XXX XXX"
+              aria-label="Número de telemóvel Multicaixa Express"
               value={phoneNumber}
               onChange={(e) => handlePhoneChange(e.target.value)}
               maxLength={9}
@@ -138,10 +148,19 @@ export default function PaymentMethodSelector({
                   ? "border-red-400 bg-red-500/20"
                   : "border-white/30"
               }`}
+              aria-describedby={
+                attemptedGenerate && !/^9\d{8}$/.test(phoneNumber)
+                  ? "multicaixa-phone-error"
+                  : undefined
+              }
             />
           </div>
           {attemptedGenerate && !/^9\d{8}$/.test(phoneNumber) && (
-            <p className="text-xs text-red-200 mt-2 flex items-center gap-1">
+            <p
+              id="multicaixa-phone-error"
+              role="alert"
+              className="text-xs text-red-200 mt-2 flex items-center gap-1"
+            >
               <AlertCircle className="w-3 h-3" />
               Número inválido. Deve começar com 9 e ter 9 dígitos
             </p>
