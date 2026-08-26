@@ -26,7 +26,13 @@ export default function ParticleBackground({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    // Respect user motion preferences: render static particles only
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
     let animationFrame: number;
+    let isRunning = false;
     let particles: Array<{
       x: number;
       y: number;
@@ -56,7 +62,7 @@ export default function ParticleBackground({
       }
     };
 
-    const animate = () => {
+    const drawFrame = () => {
       ctx.clearRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
 
       particles.forEach((particle) => {
@@ -99,12 +105,56 @@ export default function ParticleBackground({
       }
 
       ctx.globalAlpha = 1;
+    };
+
+    const animate = () => {
+      drawFrame();
       animationFrame = requestAnimationFrame(animate);
+    };
+
+    const start = () => {
+      if (isRunning || prefersReducedMotion) return;
+      isRunning = true;
+      animate();
+    };
+
+    const stop = () => {
+      isRunning = false;
+      cancelAnimationFrame(animationFrame);
     };
 
     resize();
     createParticles();
-    animate();
+
+    if (prefersReducedMotion) {
+      // Static frame: no continuous animation
+      drawFrame();
+    } else {
+      start();
+
+      // Pause when the canvas scrolls out of view
+      const observer = new IntersectionObserver(([entry]) => {
+        if (entry.isIntersecting) start();
+        else stop();
+      });
+      observer.observe(canvas);
+
+      // Pause when tab is hidden
+      const handleVisibility = () => {
+        if (document.visibilityState === "visible") start();
+        else stop();
+      };
+      document.addEventListener("visibilitychange", handleVisibility);
+
+      window.addEventListener("resize", resize);
+
+      return () => {
+        observer.disconnect();
+        document.removeEventListener("visibilitychange", handleVisibility);
+        window.removeEventListener("resize", resize);
+        stop();
+      };
+    }
 
     window.addEventListener("resize", resize);
 

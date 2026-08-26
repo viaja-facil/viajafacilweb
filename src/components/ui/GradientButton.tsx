@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useState, useRef, MouseEvent } from "react";
+import { ReactNode, useRef, MouseEvent } from "react";
 
 interface GradientButtonProps {
   children: ReactNode;
@@ -21,17 +21,22 @@ export default function GradientButton({
   icon,
   iconPosition = "left",
 }: GradientButtonProps) {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [isHovered, setIsHovered] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const glowRef = useRef<HTMLDivElement>(null);
 
+  // Update the glow position directly on the DOM node to avoid
+  // re-rendering on every mousemove (60fps setState)
   const handleMouseMove = (e: MouseEvent<HTMLButtonElement>) => {
-    if (!buttonRef.current) return;
+    if (!buttonRef.current || !glowRef.current) return;
     const rect = buttonRef.current.getBoundingClientRect();
-    setMousePosition({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    });
+    glowRef.current.style.setProperty(
+      "--mouse-x",
+      `${e.clientX - rect.left}px`
+    );
+    glowRef.current.style.setProperty(
+      "--mouse-y",
+      `${e.clientY - rect.top}px`
+    );
   };
 
   const sizeClasses = {
@@ -41,7 +46,8 @@ export default function GradientButton({
   };
 
   const variantClasses = {
-    primary: "bg-gradient-to-r from-[#f97316] to-[#ea580c] text-white shadow-lg shadow-orange-500/30",
+    primary:
+      "bg-gradient-to-r from-[#f97316] to-[#ea580c] text-white shadow-lg shadow-orange-500/30 hover:shadow-xl",
     secondary: "bg-white text-gray-900 border border-gray-200",
     ghost: "bg-transparent text-gray-700 hover:bg-gray-100",
   };
@@ -49,22 +55,26 @@ export default function GradientButton({
   return (
     <button
       ref={buttonRef}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseMove={variant === "primary" ? handleMouseMove : undefined}
       onClick={onClick}
-      className={`relative overflow-hidden rounded-xl font-bold transition-all duration-300 ${sizeClasses[size]} ${variantClasses[variant]} ${
-        isHovered ? "scale-105 shadow-xl" : "shadow-lg"
+      className={`group relative overflow-hidden rounded-xl font-bold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f97316] focus-visible:ring-offset-2 ${sizeClasses[size]} ${variantClasses[variant]} ${
+        variant === "primary"
+          ? "hover:scale-[1.03] [@media(hover:none)]:hover:scale-100"
+          : ""
       } ${className}`}
     >
       {/* Mouse follow glow */}
-      <div
-        className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-300"
-        style={{
-          opacity: isHovered ? 1 : 0,
-          background: `radial-gradient(150px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(255, 255, 255, 0.3), transparent 40%)`,
-        }}
-      />
+      {variant === "primary" && (
+        <div
+          ref={glowRef}
+          aria-hidden="true"
+          className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+          style={{
+            background:
+              "radial-gradient(150px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255, 255, 255, 0.3), transparent 40%)",
+          }}
+        />
+      )}
       <div className="relative z-10 flex items-center justify-center gap-2">
         {icon && iconPosition === "left" && icon}
         <span>{children}</span>

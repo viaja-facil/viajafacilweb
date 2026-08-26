@@ -23,6 +23,27 @@ export default function ScrollReveal({
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    // If already in viewport on mount, reveal immediately (no flash).
+    // Scheduled on the next frame to avoid a synchronous cascading render.
+    const rect = el.getBoundingClientRect();
+    if (
+      rect.top < window.innerHeight &&
+      rect.bottom > 0
+    ) {
+      const frame = requestAnimationFrame(() => setIsVisible(true));
+      return () => cancelAnimationFrame(frame);
+    }
+
+    // Skip animation entirely for reduced motion users (also handled by
+    // the global prefers-reduced-motion CSS rule)
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      const frame = requestAnimationFrame(() => setIsVisible(true));
+      return () => cancelAnimationFrame(frame);
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -40,9 +61,7 @@ export default function ScrollReveal({
       }
     );
 
-    if (ref.current) {
-      observer.observe(ref.current);
-    }
+    observer.observe(el);
 
     return () => observer.disconnect();
   }, [once]);
