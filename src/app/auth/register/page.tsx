@@ -7,6 +7,12 @@ import { useAuth } from "@/lib/auth-context";
 import SocialLoginButtons from "@/components/auth/SocialLoginButtons";
 import { Plane, Mail, Lock, User, Phone, AlertCircle, ArrowRight } from "lucide-react";
 
+const passwordChecks = [
+  { label: "6+ caracteres", test: (p: string) => p.length >= 6 },
+  { label: "Maiúscula", test: (p: string) => /[A-Z]/.test(p) },
+  { label: "Número", test: (p: string) => /\d/.test(p) },
+];
+
 export default function RegisterPage() {
   const router = useRouter();
   const { login } = useAuth();
@@ -106,35 +112,71 @@ export default function RegisterPage() {
               <label className="text-sm font-semibold text-gray-700 mb-1 block">
                 Telefone
               </label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <div className="relative flex gap-2">
+                <div className="flex items-center pl-3 pr-3 py-3 bg-gray-100 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600 shrink-0">
+                  <Phone className="w-5 h-5 text-gray-400 mr-2" />
+                  +244
+                </div>
                 <input
                   type="tel"
+                  inputMode="numeric"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+244 900 000 000"
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 9))}
+                  placeholder="9XX XXX XXX"
                   required
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#f97316] focus:border-transparent"
+                  aria-label="Telefone (sem código de país)"
+                  className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#f97316] focus:border-transparent"
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-sm font-semibold text-gray-700 mb-1 block">
+              <label htmlFor="register-password" className="text-sm font-semibold text-gray-700 mb-1 block">
                 Senha
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
+                  id="register-password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
                   minLength={6}
+                  aria-describedby="password-strength"
                   className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#f97316] focus:border-transparent"
                 />
               </div>
+              {password.length > 0 && (
+                <div
+                  id="password-strength"
+                  className="flex items-center gap-2 mt-2"
+                  aria-live="polite"
+                >
+                  <div className="flex-1 flex gap-1.5">
+                    {passwordChecks.map((check) => {
+                      const passed = check.test(password);
+                      return (
+                        <div
+                          key={check.label}
+                          className={`h-1 flex-1 rounded-full transition-colors ${
+                            passed ? "bg-green-500" : "bg-gray-200"
+                          }`}
+                        />
+                      );
+                    })}
+                  </div>
+                  <span className="text-xs text-gray-500 whitespace-nowrap">
+                    {passwordChecks.filter((c) => c.test(password)).length}/
+                    {passwordChecks.length}{" "}
+                    {passwordChecks
+                      .filter((c) => !c.test(password))
+                      .map((c) => c.label)
+                      .join(", ") || "— forte"}
+                  </span>
+                </div>
+              )}
             </div>
 
             <button
@@ -155,9 +197,9 @@ export default function RegisterPage() {
 
           <p className="text-xs text-gray-400 text-center mt-4">
             Ao criar uma conta, você concorda com nossos{" "}
-            <a href="#" className="text-[#f97316] hover:underline">Termos de Uso</a>{" "}
+            <Link href="/termos" className="text-[#f97316] hover:underline">Termos de Uso</Link>{" "}
             e{" "}
-            <a href="#" className="text-[#f97316] hover:underline">Política de Privacidade</a>.
+            <Link href="/privacidade" className="text-[#f97316] hover:underline">Política de Privacidade</Link>.
           </p>
 
           <div className="mt-6 text-center">
