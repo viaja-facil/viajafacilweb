@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import { Flight, Seat } from "@/lib/mock-data";
 
 export type PaymentMethod = "multicaixa_express" | "referencia";
@@ -42,8 +48,41 @@ const initialBooking: BookingState = {
 
 const BookingContext = createContext<BookingContextType | undefined>(undefined);
 
+const BOOKING_STORAGE_KEY = "viajafacil-booking";
+
+function loadInitialBooking(): BookingState {
+  if (typeof window === "undefined") return initialBooking;
+  try {
+    const raw = window.sessionStorage.getItem(BOOKING_STORAGE_KEY);
+    if (!raw) return initialBooking;
+    const parsed = JSON.parse(raw) as BookingState;
+    return { ...initialBooking, ...parsed };
+  } catch {
+    return initialBooking;
+  }
+}
+
 export function BookingProvider({ children }: { children: ReactNode }) {
   const [booking, setBooking] = useState<BookingState>(initialBooking);
+
+  // Restore booking after mount so a page refresh doesn't lose checkout
+  // state. Scheduled on the next frame to avoid a cascading render.
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      setBooking(loadInitialBooking());
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
+  // Persist booking state to sessionStorage
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (booking.flight === null) {
+      window.sessionStorage.removeItem(BOOKING_STORAGE_KEY);
+      return;
+    }
+    window.sessionStorage.setItem(BOOKING_STORAGE_KEY, JSON.stringify(booking));
+  }, [booking]);
 
   const setFlight = (flight: Flight) => {
     setBooking((prev) => ({ ...prev, flight, step: "select" }));
