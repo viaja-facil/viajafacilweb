@@ -157,7 +157,7 @@ export default function SearchCard({
           <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4 items-end">
             {/* Origin */}
             <div className="md:col-span-3 relative">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block px-1">
+              <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1 block px-1">
                 De onde?
               </label>
               <CustomSelect
@@ -184,7 +184,7 @@ export default function SearchCard({
 
             {/* Destination */}
             <div className="md:col-span-3 relative">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block px-1">
+              <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1 block px-1">
                 Para onde?
               </label>
               <CustomSelect
@@ -212,7 +212,7 @@ export default function SearchCard({
             {/* Date with Calendar */}
             {tripType === "roundtrip" ? (
               <div className="md:col-span-4 relative">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block px-1">
+                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1 block px-1">
                   Datas
                 </label>
                 <button
@@ -225,6 +225,11 @@ export default function SearchCard({
                     }
                   }}
                   disabled={!hasRouteSelected}
+                  title={
+                    !hasRouteSelected
+                      ? "Selecione origem e destino primeiro"
+                      : undefined
+                  }
                   className={`w-full flex items-center gap-2 px-4 py-[1.1rem] border rounded-xl text-sm font-medium transition-all ${
                     !hasRouteSelected
                       ? "bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed"
@@ -269,7 +274,7 @@ export default function SearchCard({
                 {showDateRange && hasRouteSelected && mounted && !isMobile && createPortal(
                   <div
                     data-daterange-root
-                    className="fixed left-0 w-[640px] animate-slide-up z-50"
+                    className="fixed inset-x-0 mx-auto w-full max-w-[640px] px-4 sm:px-0 animate-slide-up z-50"
                   >
                     <DateRangePicker
                       availability={availability}
@@ -303,7 +308,7 @@ export default function SearchCard({
               </div>
             ) : (
               <div className="md:col-span-2 relative">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block px-1">
+                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1 block px-1">
                   Data
                 </label>
                 <button
@@ -316,6 +321,11 @@ export default function SearchCard({
                     }
                   }}
                   disabled={!hasRouteSelected}
+                  title={
+                    !hasRouteSelected
+                      ? "Selecione origem e destino primeiro"
+                      : undefined
+                  }
                   className={`w-full flex items-center gap-2 px-4 py-[1.1rem] border rounded-xl text-sm font-medium transition-all ${
                     !hasRouteSelected
                       ? "bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed"
@@ -354,7 +364,7 @@ export default function SearchCard({
                 {showCalendar && hasRouteSelected && mounted && !isMobile && createPortal(
                   <div
                     data-calendar-root
-                    className="fixed left-0 w-[320px] animate-slide-up z-50"
+                    className="fixed inset-x-0 mx-auto w-full max-w-[320px] px-4 sm:px-0 animate-slide-up z-50"
                   >
                     <AvailabilityCalendar
                       availability={availability}
@@ -384,7 +394,7 @@ export default function SearchCard({
 
             {/* Passengers: adults + children */}
             <div className="md:col-span-2">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block px-1">
+              <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1 block px-1">
                 Passageiros
               </label>
               <PassengerSelect
@@ -399,7 +409,7 @@ export default function SearchCard({
 
             {/* Search Button */}
             <div className="md:col-span-2">
-              <span className="hidden md:block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 px-1 invisible">
+              <span className="hidden md:block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1 px-1 invisible">
                 &nbsp;
               </span>
               <button

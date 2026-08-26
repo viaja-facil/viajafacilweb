@@ -2,6 +2,7 @@
 
 import { testimonials } from "@/lib/data/testimonials";
 import ScrollReveal from "@/components/ui/ScrollReveal";
+import Image from "next/image";
 import { Star, Quote } from "lucide-react";
 
 export default function Testimonials() {
@@ -31,9 +32,11 @@ export default function Testimonials() {
                   &ldquo;{t.text}&rdquo;
                 </p>
                 <div className="flex items-center gap-3">
-                  <img
+                  <Image
                     src={t.avatar}
                     alt={t.name}
+                    width={40}
+                    height={40}
                     className="w-10 h-10 rounded-full object-cover"
                   />
                   <div>

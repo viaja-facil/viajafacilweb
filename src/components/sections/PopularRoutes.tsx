@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { popularRoutes } from "@/lib/data/destinations";
+import { useSearchForm } from "@/hooks/useSearchForm";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import TiltCard from "@/components/ui/TiltCard";
 import {
@@ -13,25 +15,6 @@ import {
   Sparkles,
   CircleDot,
 } from "lucide-react";
-
-interface PopularRoute {
-  city: string;
-  country: string;
-  image: string;
-  gradient: string;
-  price: number;
-  tripType: string;
-  description: string;
-  originCode: string;
-  destCode: string;
-  duration: string;
-  stops: number;
-  tag: string;
-}
-
-interface PopularRoutesProps {
-  onBookDestination: (dest: PopularRoute) => void;
-}
 
 function RouteImage({ src, city }: { src: string; city: string }) {
   const [error, setError] = useState(false);
@@ -48,16 +31,19 @@ function RouteImage({ src, city }: { src: string; city: string }) {
   }
 
   return (
-    <img
+    <Image
       src={src}
       alt={city}
-      className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+      fill
+      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+      className="absolute inset-0 object-cover group-hover:scale-110 transition-transform duration-700"
       onError={() => setError(true)}
     />
   );
 }
 
-export default function PopularRoutes({ onBookDestination }: PopularRoutesProps) {
+export default function PopularRoutes() {
+  const { handleBookDestination } = useSearchForm();
   return (
     <section className="relative max-w-7xl mx-auto px-4 sm:px-6 py-16">
       {/* Floating decorative icons */}
@@ -83,7 +69,7 @@ export default function PopularRoutes({ onBookDestination }: PopularRoutesProps)
           <ScrollReveal key={i} delay={i * 100}>
             <TiltCard maxTilt={10}>
               <button
-                onClick={() => onBookDestination(dest)}
+                onClick={() => handleBookDestination(dest)}
                 className="group w-full bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-[#f97316] hover:shadow-xl hover:shadow-orange-500/10 transition-all duration-300 text-left active:scale-[0.98]"
               >
               {/* Image */}
@@ -95,7 +81,7 @@ export default function PopularRoutes({ onBookDestination }: PopularRoutesProps)
                 {/* Tag badge */}
                 {dest.tag && (
                   <div className="absolute top-3 left-3">
-                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${
                       dest.tag === "Promoção" ? "bg-red-500 text-white" :
                       dest.tag === "Internacional" ? "bg-blue-500 text-white" :
                       dest.tag === "Mais barata" ? "bg-emerald-500 text-white" :
@@ -108,7 +94,7 @@ export default function PopularRoutes({ onBookDestination }: PopularRoutesProps)
 
                 {/* Route badge */}
                 <div className="absolute top-3 right-3">
-                  <span className="px-2.5 py-1 bg-black/30 backdrop-blur-sm rounded-full text-[10px] font-semibold text-white">
+                  <span className="px-2.5 py-1 bg-black/30 backdrop-blur-sm rounded-full text-xs font-semibold text-white">
                     {dest.originCode} → {dest.destCode}
                   </span>
                 </div>
@@ -149,7 +135,7 @@ export default function PopularRoutes({ onBookDestination }: PopularRoutesProps)
                 {/* Price row */}
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-[10px] text-gray-400 uppercase font-semibold tracking-wider">desde</span>
+                    <span className="text-xs text-gray-400 uppercase font-semibold tracking-wider">desde</span>
                     <div className="flex items-baseline gap-1">
                       <span className="text-2xl font-extrabold text-[#f97316]">
                         {new Intl.NumberFormat("pt-AO").format(dest.price)}

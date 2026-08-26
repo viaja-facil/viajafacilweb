@@ -1,6 +1,7 @@
 "use client";
 
-import { Dispatch, SetStateAction, MutableRefObject } from "react";
+import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import {
   Plane,
   MapPin,
@@ -16,6 +17,7 @@ import {
   Luggage,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/mock-data";
+import { useSearchForm } from "@/hooks/useSearchForm";
 import ParticleBackground from "@/components/ui/ParticleBackground";
 
 interface FeaturedDestination {
@@ -66,33 +68,38 @@ const featuredDestinations: FeaturedDestination[] = [
   },
 ];
 
-interface HeroSliderProps {
-  currentSlide: number;
-  setCurrentSlide: Dispatch<SetStateAction<number>>;
-  isAutoPlaying: boolean;
-  setIsAutoPlaying: Dispatch<SetStateAction<boolean>>;
-  touchStartX: MutableRefObject<number | null>;
-  handleBookDestination: (dest: FeaturedDestination) => void;
-}
+export default function HeroSlider() {
+  const { handleBookDestination } = useSearchForm();
+  const touchStartXRef = useRef<number | null>(null);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
-export default function HeroSlider({
-  currentSlide,
-  setCurrentSlide,
-  isAutoPlaying,
-  setIsAutoPlaying,
-  touchStartX,
-  handleBookDestination,
-}: HeroSliderProps) {
+  useEffect(() => {
+    if (!isAutoPlaying) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        setCurrentSlide((prev) => (prev + 1) % featuredDestinations.length);
+      }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [isAutoPlaying]);
+
   return (
     <section
       className="relative overflow-hidden"
+      onMouseEnter={() => setIsAutoPlaying(false)}
+      onMouseLeave={() => setIsAutoPlaying(true)}
+      onFocus={() => setIsAutoPlaying(false)}
+      onBlur={() => setIsAutoPlaying(true)}
       onTouchStart={(e) => {
-        touchStartX.current = e.touches[0].clientX;
+        touchStartXRef.current = e.touches[0].clientX;
       }}
       onTouchEnd={(e) => {
-        if (touchStartX.current === null) return;
-        const deltaX = e.changedTouches[0].clientX - touchStartX.current;
-        touchStartX.current = null;
+        if (touchStartXRef.current === null) return;
+        const deltaX = e.changedTouches[0].clientX - touchStartXRef.current;
+        touchStartXRef.current = null;
         if (Math.abs(deltaX) < 50) return;
         setIsAutoPlaying(false);
         setCurrentSlide((prev) =>
@@ -103,22 +110,34 @@ export default function HeroSlider({
       }}
     >
       <ParticleBackground className="opacity-30" particleCount={50} />
-      {/* Slider Background */}
+      {/* Slider Background (only render near-active slides to avoid eager loading all images) */}
       <div className="absolute inset-0 overflow-hidden">
-        {featuredDestinations.map((dest, i) => (
-          <div
-            key={i}
-            className={`absolute inset-0 transition-opacity duration-1000 ${
-              i === currentSlide ? "opacity-100" : "opacity-0"
-            }`}
-          >
+        {featuredDestinations.map((dest, i) => {
+          const isNearActive =
+            Math.abs(i - currentSlide) <= 1 ||
+            Math.abs(i - currentSlide) === featuredDestinations.length - 1;
+          return (
             <div
-              className="absolute inset-0 bg-cover bg-center"
-              style={{ backgroundImage: `url(${dest.image})` }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-br from-[#0a1628]/90 via-[#0a1628]/80 to-[#0a1628]/70" />
-          </div>
-        ))}
+              key={i}
+              aria-hidden={i !== currentSlide}
+              className={`absolute inset-0 transition-opacity duration-1000 ${
+                i === currentSlide ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              {isNearActive && (
+                <Image
+                  src={dest.image}
+                  alt=""
+                  fill
+                  sizes="100vw"
+                  priority={i === 0}
+                  className="object-cover object-center"
+                />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-br from-[#0a1628]/90 via-[#0a1628]/80 to-[#0a1628]/70" />
+            </div>
+          );
+        })}
       </div>
 
       {/* Decorative blurs */}
@@ -148,19 +167,19 @@ export default function HeroSlider({
         <div className="absolute top-[18%] right-[5%] glass-dark rounded-xl px-3 py-2 animate-float" style={{ animationDelay: "0.8s" }}>
           <div className="flex items-center gap-2">
             <Shield className="w-4 h-4 text-green-400" />
-            <span className="text-[10px] text-white/80 font-medium">Compra Segura</span>
+            <span className="text-xs text-white/80 font-medium">Compra Segura</span>
           </div>
         </div>
         <div className="absolute bottom-[25%] left-[3%] glass-dark rounded-xl px-3 py-2 animate-float" style={{ animationDelay: "1.6s" }}>
           <div className="flex items-center gap-2">
             <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-            <span className="text-[10px] text-white/80 font-medium">4.8 Avaliação</span>
+            <span className="text-xs text-white/80 font-medium">4.8 Avaliação</span>
           </div>
         </div>
         <div className="absolute top-[35%] right-[3%] glass-dark rounded-xl px-3 py-2 animate-float" style={{ animationDelay: "2.4s" }}>
           <div className="flex items-center gap-2">
             <CreditCard className="w-4 h-4 text-blue-400" />
-            <span className="text-[10px] text-white/80 font-medium">Pagamento Fácil</span>
+            <span className="text-xs text-white/80 font-medium">Pagamento Fácil</span>
           </div>
         </div>
       </div>
@@ -207,7 +226,7 @@ export default function HeroSlider({
               <Ticket className="w-4 h-4 text-[#f97316]" />
               A partir de <span className="font-bold text-[#f97316]">{formatCurrency(featuredDestinations[currentSlide].price)}</span>
             </span>
-            <span className="px-2 py-0.5 bg-white/10 rounded-full text-[10px] md:text-xs font-semibold">
+            <span className="px-2 py-0.5 bg-white/10 rounded-full text-xs md:text-xs font-semibold">
               {featuredDestinations[currentSlide].tripType}
             </span>
           </div>
@@ -230,6 +249,7 @@ export default function HeroSlider({
               setCurrentSlide((prev) => (prev - 1 + featuredDestinations.length) % featuredDestinations.length);
               setIsAutoPlaying(false);
             }}
+            aria-label="Destino anterior"
             className="hidden md:flex w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full items-center justify-center text-white transition-colors"
           >
             <ChevronLeft className="w-5 h-5" />
@@ -239,6 +259,7 @@ export default function HeroSlider({
               setCurrentSlide((prev) => (prev + 1) % featuredDestinations.length);
               setIsAutoPlaying(false);
             }}
+            aria-label="Próximo destino"
             className="hidden md:flex w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full items-center justify-center text-white transition-colors"
           >
             <ChevronRight className="w-5 h-5" />
@@ -252,6 +273,7 @@ export default function HeroSlider({
                   setIsAutoPlaying(false);
                 }}
                 aria-label={`Ir para ${featuredDestinations[i].city}`}
+                aria-current={i === currentSlide ? "true" : undefined}
                 className={`tap-target flex items-center px-0 bg-transparent ${
                   i === currentSlide ? "w-8" : "w-3"
                 }`}
