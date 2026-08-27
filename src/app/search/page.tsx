@@ -75,6 +75,7 @@ function SearchContent() {
   const [baggage, setBaggage] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
+  const legsInitializedRef = useRef(false);
 
   // Current leg for multi-city
   const currentLeg = isMultiCity ? initialLegs[currentLegIndex] : null;
@@ -83,7 +84,8 @@ function SearchContent() {
   const effectiveDate = isMultiCity && currentLeg ? currentLeg.date : (tripType === "roundtrip" ? departureDate : selectedDate);
 
   useEffect(() => {
-    if (isMultiCity) {
+    if (isMultiCity && !legsInitializedRef.current) {
+      legsInitializedRef.current = true;
       setLegs(initialLegs);
     }
   }, [isMultiCity, initialLegs, setLegs]);
