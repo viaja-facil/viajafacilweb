@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { Calendar } from "lucide-react";
 import { formatCurrency, DateAvailability } from "@/lib/mock-data";
 import CalendarGrid, { CalendarDay } from "./CalendarGrid";
 
@@ -93,12 +94,20 @@ export default function AvailabilityCalendar({
     );
   };
 
+  const hasAnyAvailability = availability.some((a) => a.hasFlights);
+
   return (
     <div data-calendar-root className="bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden w-full" style={{ maxWidth: "90vw" }}>
       {isLoading ? (
         <div className="p-6 text-center">
           <div className="w-6 h-6 border-2 border-gray-200 border-t-[#f97316] rounded-full animate-spin mx-auto mb-2" />
           <p className="text-xs text-gray-400">Carregando...</p>
+        </div>
+      ) : !hasAnyAvailability ? (
+        <div className="p-6 text-center">
+          <Calendar className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+          <p className="text-sm font-medium text-gray-600 mb-1">Nenhum voo disponível</p>
+          <p className="text-xs text-gray-400">Não há voos para esta rota nas próximas semanas.</p>
         </div>
       ) : (
         <div className="px-4 py-3">

@@ -73,3 +73,10 @@ export interface DateAvailability {
   minPrice: number;
   flightCount: number;
 }
+
+export interface TripLeg {
+  id: string;
+  origin: string;
+  destination: string;
+  date: string | null;
+}

@@ -7,13 +7,17 @@ import {
   useEffect,
   ReactNode,
 } from "react";
-import { Flight, Seat } from "@/lib/mock-data";
+import { Flight, Seat, TripLeg } from "@/lib/mock-data";
 
 export type PaymentMethod = "multicaixa_express" | "referencia";
 
 interface BookingState {
   flight: Flight | null;
+  flights: Flight[];
+  legs: TripLeg[];
+  currentLegIndex: number;
   seats: Seat[];
+  allSeats: Seat[][];
   passengers: { name: string; document: string }[];
   passengerCount: number;
   totalPrice: number;
@@ -25,7 +29,10 @@ interface BookingState {
 interface BookingContextType {
   booking: BookingState;
   setFlight: (flight: Flight) => void;
+  addFlight: (flight: Flight) => void;
   confirmFlight: () => void;
+  nextLeg: () => void;
+  previousLeg: () => void;
   setSeats: (seats: Seat[]) => void;
   setPassengers: (passengers: { name: string; document: string }[]) => void;
   setPassengerCount: (count: number) => void;
@@ -33,11 +40,16 @@ interface BookingContextType {
   setPaymentReference: (ref: string) => void;
   goToStep: (step: BookingState["step"]) => void;
   resetBooking: () => void;
+  setLegs: (legs: TripLeg[]) => void;
 }
 
 const initialBooking: BookingState = {
   flight: null,
+  flights: [],
+  legs: [],
+  currentLegIndex: 0,
   seats: [],
+  allSeats: [],
   passengers: [],
   passengerCount: 1,
   totalPrice: 0,
@@ -65,8 +77,6 @@ function loadInitialBooking(): BookingState {
 export function BookingProvider({ children }: { children: ReactNode }) {
   const [booking, setBooking] = useState<BookingState>(initialBooking);
 
-  // Restore booking after mount so a page refresh doesn't lose checkout
-  // state. Scheduled on the next frame to avoid a cascading render.
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
       setBooking(loadInitialBooking());
@@ -74,10 +84,9 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     return () => cancelAnimationFrame(frame);
   }, []);
 
-  // Persist booking state to sessionStorage
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (booking.flight === null) {
+    if (booking.flight === null && booking.flights.length === 0) {
       window.sessionStorage.removeItem(BOOKING_STORAGE_KEY);
       return;
     }
@@ -88,18 +97,50 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     setBooking((prev) => ({ ...prev, flight, step: "select" }));
   };
 
+  const addFlight = (flight: Flight) => {
+    setBooking((prev) => {
+      const newFlights = [...prev.flights, flight];
+      const newAllSeats = [...prev.allSeats, prev.seats];
+      const newTotalPrice = newFlights.reduce((sum, f) => sum + f.price * prev.passengerCount, 0);
+      return {
+        ...prev,
+        flights: newFlights,
+        allSeats: newAllSeats,
+        seats: [],
+        totalPrice: newTotalPrice,
+        currentLegIndex: prev.currentLegIndex + 1,
+      };
+    });
+  };
+
   const confirmFlight = () => {
     setBooking((prev) => ({ ...prev, step: "seats" }));
   };
 
-  const setSeats = (seats: Seat[]) => {
-    const flightPrice = booking.flight?.price || 0;
-    const seatExtras = seats.reduce((sum, s) => sum + s.price, 0);
+  const nextLeg = () => {
     setBooking((prev) => ({
       ...prev,
-      seats,
-      totalPrice: flightPrice * seats.length + seatExtras,
+      currentLegIndex: Math.min(prev.currentLegIndex + 1, prev.flights.length),
     }));
+  };
+
+  const previousLeg = () => {
+    setBooking((prev) => ({
+      ...prev,
+      currentLegIndex: Math.max(prev.currentLegIndex - 1, 0),
+    }));
+  };
+
+  const setSeats = (seats: Seat[]) => {
+    setBooking((prev) => {
+      const flightPrice = prev.flight?.price || (prev.flights[prev.currentLegIndex]?.price || 0);
+      const seatExtras = seats.reduce((sum, s) => sum + s.price, 0);
+      return {
+        ...prev,
+        seats,
+        totalPrice: flightPrice * seats.length + seatExtras,
+      };
+    });
   };
 
   const setPassengers = (passengers: { name: string; document: string }[]) => {
@@ -136,12 +177,19 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     setBooking(initialBooking);
   };
 
+  const setLegs = (legs: TripLeg[]) => {
+    setBooking((prev) => ({ ...prev, legs }));
+  };
+
   return (
     <BookingContext.Provider
       value={{
         booking,
         setFlight,
+        addFlight,
         confirmFlight,
+        nextLeg,
+        previousLeg,
         setSeats,
         setPassengers,
         setPassengerCount,
@@ -149,6 +197,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
         setPaymentReference,
         goToStep,
         resetBooking,
+        setLegs,
       }}
     >
       {children}

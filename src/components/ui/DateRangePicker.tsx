@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useSyncExternalStore } from "react";
+import { useState, useMemo } from "react";
 import { formatCurrency, DateAvailability } from "@/lib/mock-data";
 import CalendarGrid, { CalendarDay } from "./CalendarGrid";
 
@@ -14,14 +14,11 @@ interface DateRangePickerProps {
 }
 
 function useCurrentMonth(): Date {
-  return useSyncExternalStore(
-    () => () => {},
-    () => {
-      const now = new Date();
-      return new Date(now.getFullYear(), now.getMonth(), 1);
-    },
-    () => new Date(2026, 7, 1)
-  );
+  const [month] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  });
+  return month;
 }
 
 export default function DateRangePicker({

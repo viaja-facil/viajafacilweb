@@ -3,7 +3,7 @@
 import { useState, useMemo, Suspense, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { flights, airports, airlines, getAirlineById, getAirportByCode, formatCurrency, getAvailabilityForRoute } from "@/lib/mock-data";
-import type { Flight, Airline, Airport } from "@/lib/types";
+import type { Flight, Airline, Airport, TripLeg } from "@/lib/types";
 import { formatTime, formatDate } from "@/lib/format";
 import { useBooking } from "@/lib/booking-context";
 import FlightCard from "@/components/search/FlightCard";
@@ -13,23 +13,52 @@ import DateChips from "@/components/search/DateChips";
 import FilterPanel from "@/components/search/FilterPanel";
 import { SkeletonFlight } from "@/components/ui/Skeleton";
 import BottomSheet from "@/components/ui/BottomSheet";
-import { Plane, SlidersHorizontal, ArrowLeft, X } from "lucide-react";
+import { Plane, SlidersHorizontal, ArrowLeft, X, ChevronRight, Check } from "lucide-react";
 
 function SearchContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { setFlight, confirmFlight, setPassengerCount } = useBooking();
+  const { setFlight, addFlight, confirmFlight, setPassengerCount, booking, setLegs } = useBooking();
 
-  const initialOrigin = searchParams.get("origin") || "";
-  const initialDestination = searchParams.get("destination") || "";
-  const initialDate = searchParams.get("date") || "";
+  const initialTripType = searchParams.get("tripType") || "oneway";
   const initialPassengers = parseInt(searchParams.get("passengers") || "1");
   const initialAdults = parseInt(searchParams.get("adults") || "");
   const initialChildren = parseInt(searchParams.get("children") || "");
 
+  const isMultiCity = initialTripType === "multicity";
+
+  // Parse legs from URL for multi-city
+  const initialLegs = useMemo(() => {
+    if (!isMultiCity) return [];
+    const legCount = parseInt(searchParams.get("legCount") || "0");
+    const legs: TripLeg[] = [];
+    for (let i = 0; i < legCount; i++) {
+      const origin = searchParams.get(`leg${i}.origin`) || "";
+      const destination = searchParams.get(`leg${i}.destination`) || "";
+      const date = searchParams.get(`leg${i}.date`) || "";
+      if (origin && destination) {
+        legs.push({ id: `leg-${i}`, origin, destination, date: date || null });
+      }
+    }
+    return legs;
+  }, [isMultiCity, searchParams]);
+
+  const [currentLegIndex, setCurrentLegIndex] = useState(0);
+  const [selectedFlights, setSelectedFlights] = useState<Flight[]>([]);
+
+  // Single city state
+  const initialOrigin = isMultiCity ? (initialLegs[0]?.origin || "") : (searchParams.get("origin") || "");
+  const initialDestination = isMultiCity ? (initialLegs[initialLegs.length - 1]?.destination || "") : (searchParams.get("destination") || "");
+  const initialDate = searchParams.get("date") || "";
+  const initialDepartureDate = searchParams.get("departureDate") || "";
+  const initialReturnDate = searchParams.get("returnDate") || "";
+
   const [origin, setOrigin] = useState(initialOrigin);
   const [destination, setDestination] = useState(initialDestination);
   const [selectedDate, setSelectedDate] = useState<string | null>(initialDate || null);
+  const [tripType] = useState<"oneway" | "roundtrip" | "multicity">(initialTripType as "oneway" | "roundtrip" | "multicity");
+  const [departureDate, setDepartureDate] = useState<string | null>(initialDepartureDate || null);
+  const [returnDate, setReturnDate] = useState<string | null>(initialReturnDate || null);
   const [passengers, setPassengers] = useState(initialPassengers);
   const adults = Number.isNaN(initialAdults) ? initialPassengers : initialAdults;
   const childrenCount = Number.isNaN(initialChildren) ? 0 : initialChildren;
@@ -47,10 +76,22 @@ function SearchContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
 
+  // Current leg for multi-city
+  const currentLeg = isMultiCity ? initialLegs[currentLegIndex] : null;
+  const effectiveOrigin = isMultiCity && currentLeg ? currentLeg.origin : origin;
+  const effectiveDestination = isMultiCity && currentLeg ? currentLeg.destination : destination;
+  const effectiveDate = isMultiCity && currentLeg ? currentLeg.date : (tripType === "roundtrip" ? departureDate : selectedDate);
+
+  useEffect(() => {
+    if (isMultiCity) {
+      setLegs(initialLegs);
+    }
+  }, [isMultiCity, initialLegs, setLegs]);
+
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 800);
     return () => clearTimeout(timer);
-  }, []);
+  }, [currentLegIndex]);
 
   useEffect(() => {
     if (debounceTimerRef.current) {
@@ -68,25 +109,25 @@ function SearchContent() {
   }, [minPrice, maxPrice]);
 
   const availability = useMemo(() => {
-    if (!origin || !destination) return [];
-    return getAvailabilityForRoute(origin, destination);
-  }, [origin, destination]);
+    if (!effectiveOrigin || !effectiveDestination) return [];
+    return getAvailabilityForRoute(effectiveOrigin, effectiveDestination);
+  }, [effectiveOrigin, effectiveDestination]);
 
   const availableAirlines = useMemo(() => {
-    if (!origin || !destination) return airlines;
+    if (!effectiveOrigin || !effectiveDestination) return airlines;
     const airlineIds = new Set(
       flights
-        .filter((f) => f.origin === origin && f.destination === destination)
+        .filter((f) => f.origin === effectiveOrigin && f.destination === effectiveDestination)
         .map((f) => f.airlineId)
     );
     return airlines.filter((a) => airlineIds.has(a.id));
-  }, [origin, destination]);
+  }, [effectiveOrigin, effectiveDestination]);
 
   const filteredFlights = useMemo(() => {
     const result = flights.filter((f) => {
-      if (origin && f.origin !== origin) return false;
-      if (destination && f.destination !== destination) return false;
-      if (selectedDate && !f.departureTime.startsWith(selectedDate)) return false;
+      if (effectiveOrigin && f.origin !== effectiveOrigin) return false;
+      if (effectiveDestination && f.destination !== effectiveDestination) return false;
+      if (effectiveDate && !f.departureTime.startsWith(effectiveDate)) return false;
       if (f.price > debouncedMaxPrice) return false;
       if (f.price < debouncedMinPrice) return false;
       if (selectedClass !== "all" && f.class !== selectedClass) return false;
@@ -114,18 +155,33 @@ function SearchContent() {
     });
 
     return result;
-  }, [origin, destination, selectedDate, sortBy, debouncedMinPrice, debouncedMaxPrice, selectedClass, selectedAirlines, selectedTimeOfDay, stops, baggage]);
+  }, [effectiveOrigin, effectiveDestination, effectiveDate, sortBy, debouncedMinPrice, debouncedMaxPrice, selectedClass, selectedAirlines, selectedTimeOfDay, stops, baggage]);
 
   const handleSelectFlight = (flight: Flight) => {
     setPassengerCount(passengers);
-    setFlight(flight);
-    confirmFlight();
-    router.push(`/booking/seats?flightId=${flight.id}`);
+
+    if (isMultiCity) {
+      const newSelectedFlights = [...selectedFlights, flight];
+      setSelectedFlights(newSelectedFlights);
+      addFlight(flight);
+
+      if (currentLegIndex < initialLegs.length - 1) {
+        setCurrentLegIndex(currentLegIndex + 1);
+        setIsLoading(true);
+      } else {
+        setFlight(newSelectedFlights[0]);
+        confirmFlight();
+        router.push(`/booking/seats?flightId=${flight.id}`);
+      }
+    } else {
+      setFlight(flight);
+      confirmFlight();
+      router.push(`/booking/seats?flightId=${flight.id}`);
+    }
   };
 
-  const getOriginCity = () => airports.find((a) => a.code === origin)?.city || "Todos";
-  const getDestCity = () => airports.find((a) => a.code === destination)?.city || "Todos";
-  const hasRoute = origin && destination && origin !== destination;
+  const getOriginCity = () => airports.find((a) => a.code === effectiveOrigin)?.city || "Todos";
+  const getDestCity = () => airports.find((a) => a.code === effectiveDestination)?.city || "Todos";
 
   const toggleAirline = (id: string) => {
     setSelectedAirlines((prev) => prev.includes(id) ? prev.filter((a) => a !== id) : [...prev, id]);
@@ -155,7 +211,95 @@ function SearchContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <SearchHeader origin={origin} destination={destination} selectedDate={selectedDate} passengers={passengers} adults={adults} childrenCount={childrenCount} getOriginCity={getOriginCity} getDestCity={getDestCity} />
+      {isMultiCity ? (
+        /* Multi-city header */
+        <div className="bg-gradient-to-r from-[#0a1628] to-[#162544] text-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+            <button
+              onClick={() => router.push("/")}
+              className="flex items-center gap-2 text-sm text-gray-400 hover:text-white mb-4 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Voltar
+            </button>
+
+            {/* Multi-city progress */}
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              {initialLegs.map((leg, index) => {
+                const originCity = airports.find((a) => a.code === leg.origin)?.city || leg.origin;
+                const destCity = airports.find((a) => a.code === leg.destination)?.city || leg.destination;
+                const isCompleted = index < currentLegIndex;
+                const isCurrent = index === currentLegIndex;
+                return (
+                  <div key={leg.id} className="flex items-center gap-2">
+                    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm ${
+                      isCurrent
+                        ? "bg-[#f97316] text-white"
+                        : isCompleted
+                        ? "bg-green-500/20 text-green-400"
+                        : "bg-white/10 text-gray-400"
+                    }`}>
+                      {isCompleted ? (
+                        <Check className="w-4 h-4" />
+                      ) : (
+                        <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">
+                          {index + 1}
+                        </span>
+                      )}
+                      <span className="hidden sm:inline">{originCity}</span>
+                      <span className="text-gray-400">→</span>
+                      <span className="hidden sm:inline">{destCity}</span>
+                      {isCompleted && selectedFlights[index] && (
+                        <span className="text-green-400 text-xs ml-1">
+                          {formatCurrency(selectedFlights[index].price)}
+                        </span>
+                      )}
+                    </div>
+                    {index < initialLegs.length - 1 && (
+                      <ChevronRight className="w-4 h-4 text-gray-500" />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Current leg info */}
+            <div className="flex flex-wrap items-center gap-3 text-sm">
+              <div className="flex items-center gap-2 bg-white/10 rounded-lg px-4 py-2">
+                <span className="font-semibold">
+                  Trecho {currentLegIndex + 1} de {initialLegs.length}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 bg-white/10 rounded-lg px-4 py-2">
+                <span className="font-semibold">{getOriginCity()}</span>
+                <span className="text-gray-400">→</span>
+                <span className="font-semibold">{getDestCity()}</span>
+              </div>
+              {effectiveDate && (
+                <div className="flex items-center gap-2 bg-white/10 rounded-lg px-4 py-2">
+                  <span>{formatDate(effectiveDate)}</span>
+                </div>
+              )}
+              <div className="flex items-center gap-2 bg-white/10 rounded-lg px-4 py-2">
+                <span>{passengers} {passengers === 1 ? "passageiro" : "passageiros"}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <SearchHeader
+          origin={origin}
+          destination={destination}
+          selectedDate={tripType === "roundtrip" ? departureDate : selectedDate}
+          passengers={passengers}
+          adults={adults}
+          childrenCount={childrenCount}
+          getOriginCity={() => airports.find((a) => a.code === origin)?.city || "Todos"}
+          getDestCity={() => airports.find((a) => a.code === destination)?.city || "Todos"}
+          returnDate={tripType === "roundtrip" ? returnDate : undefined}
+          tripType={tripType}
+        />
+      )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-20 lg:pb-6">
         <div className="lg:grid lg:grid-cols-[300px_1fr] lg:gap-6">
@@ -178,7 +322,11 @@ function SearchContent() {
             </div>
 
             <SortBar sortBy={sortBy} setSortBy={setSortBy} />
-            <DateChips availability={availability} selectedDate={selectedDate} setSelectedDate={setSelectedDate} />
+            <DateChips
+              availability={availability}
+              selectedDate={isMultiCity ? effectiveDate : (tripType === "roundtrip" ? departureDate : selectedDate)}
+              setSelectedDate={isMultiCity ? () => {} : (tripType === "roundtrip" ? setDepartureDate : setSelectedDate)}
+            />
 
             {/* Flight results */}
             {isLoading ? (

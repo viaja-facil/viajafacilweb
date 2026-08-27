@@ -3,7 +3,7 @@ import { SEAT_CLASSES } from "./constants";
 import { mockBookings } from "./data/bookings";
 import { flights } from "./data/flights";
 
-export type { Airport, Airline, Flight, Seat, User, Booking, DateAvailability } from "./types";
+export type { Airport, Airline, Flight, Seat, User, Booking, DateAvailability, TripLeg } from "./types";
 export { formatCurrency } from "./format";
 export { airports, getAirportByCode } from "./data/airports";
 export { airlines, getAirlineById } from "./data/airlines";
