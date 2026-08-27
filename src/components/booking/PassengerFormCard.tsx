@@ -90,7 +90,7 @@ export default function PassengerFormCard({
             ref={docRef}
             id={`doc-${index}`}
             type="text"
-            inputMode="numeric"
+            inputMode="text"
             placeholder="Ex.: 000217139NE013"
             value={passenger.document}
             onChange={(e) => handleDocumentChange(index, e.target.value)}
