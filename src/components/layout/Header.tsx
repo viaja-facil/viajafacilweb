@@ -3,44 +3,47 @@
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { useState } from "react";
-import { User, LogOut, ChevronDown, Plane, Search } from "lucide-react";
+import { User, LogOut, ChevronDown, Search } from "lucide-react";
+import Image from "next/image";
 
 export default function Header() {
   const { user, logout, isAdmin } = useAuth();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   return (
-    <header className="bg-[#0a1628] text-white sticky top-0 z-50">
+    <header className="bg-white/80 backdrop-blur-xl text-gray-900 sticky top-0 z-50 border-b border-white/20 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-9 h-9 bg-gradient-to-br from-[#f97316] to-[#ea580c] rounded-lg flex items-center justify-center shadow-lg shadow-orange-500/20 group-hover:shadow-orange-500/40 transition-shadow">
-              <Plane className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold tracking-tight">
-              Viaja<span className="text-[#f97316]">Fácil</span>
-            </span>
+          <Link href="/" className="flex items-center group">
+            <Image
+              src="/viajafacil.png"
+              alt="ViajaFácil"
+              width={180}
+              height={60}
+              className="h-12 w-auto"
+              priority
+            />
           </Link>
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-1">
             <Link
               href="/"
-              className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+              className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 rounded-lg transition-all"
             >
               Início
             </Link>
             <Link
               href="/search"
-              className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+              className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 rounded-lg transition-all"
             >
               Voos
             </Link>
             {isAdmin && (
               <Link
                 href="/admin"
-                className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+                className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 rounded-lg transition-all"
               >
                 Admin
               </Link>
@@ -56,7 +59,7 @@ export default function Header() {
                   aria-label={`Menu do utilizador ${user.name}`}
                   aria-haspopup="menu"
                   aria-expanded={userMenuOpen}
-                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 rounded-lg transition-all"
                 >
                   <div className="w-8 h-8 bg-gradient-to-br from-[#f97316] to-[#ea580c] rounded-full flex items-center justify-center text-white text-xs font-bold">
                     {user.name.charAt(0)}
@@ -107,7 +110,7 @@ export default function Header() {
               <div className="flex items-center gap-2">
                 <Link
                   href="/auth/login"
-                  className="px-3 sm:px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
+                  className="px-3 sm:px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
                 >
                   Entrar
                 </Link>
@@ -123,7 +126,7 @@ export default function Header() {
             {/* Mobile search icon */}
             <Link
               href="/search"
-              className="md:hidden p-2 text-gray-300 hover:text-white"
+              className="md:hidden p-2 text-gray-500 hover:text-gray-900"
             >
               <Search className="w-5 h-5" />
             </Link>

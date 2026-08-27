@@ -106,7 +106,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     description:
       "Plataforma líder para compra de passagens aéreas em Angola. Voos domésticos e internacionais com os melhores preços.",
     url: baseUrl,
-    logo: `${baseUrl}/logo.png`,
+    logo: `${baseUrl}/viajafacil.png`,
     image: `${baseUrl}/og-image.png`,
     telephone: "+244923456789",
     email: "info@viajafacil.app",

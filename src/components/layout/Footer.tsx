@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Plane, Phone, Mail, MapPin } from "lucide-react";
+import { Phone, Mail, MapPin } from "lucide-react";
+import Image from "next/image";
 
 export default function Footer() {
   return (
@@ -8,13 +9,14 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="col-span-1 md:col-span-2">
-            <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="w-9 h-9 bg-gradient-to-br from-[#f97316] to-[#ea580c] rounded-lg flex items-center justify-center">
-                <Plane className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-xl font-bold text-white tracking-tight">
-                Viaja<span className="text-[#f97316]">Fácil</span>
-              </span>
+            <Link href="/" className="flex items-center mb-4">
+              <Image
+                src="/viajafacil.png"
+                alt="ViajaFácil"
+                width={200}
+                height={70}
+                className="h-14 w-auto"
+              />
             </Link>
             <p className="text-sm leading-relaxed max-w-md mb-4">
               A plataforma mais fácil para comprar passagens aéreas em Angola. 
