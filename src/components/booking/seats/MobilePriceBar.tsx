@@ -36,7 +36,7 @@ export default function MobilePriceBar({
         <button
           onClick={handleContinue}
           disabled={!allSeatsSelected}
-          className="min-h-[44px] px-6 py-2.5 bg-gradient-to-r from-[#f97316] to-[#ea580c] disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all shadow-lg shadow-orange-500/20 disabled:shadow-none flex items-center justify-center gap-2"
+          className="min-h-[44px] px-6 py-2.5 bg-gradient-to-r from-[var(--action)] to-[var(--action)] disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all shadow-lg shadow-orange-500/20 disabled:shadow-none flex items-center justify-center gap-2"
         >
           Continuar
           <ArrowRight className="w-4 h-4" />

@@ -1,6 +1,7 @@
 import type { TripLeg } from "./types";
 
 export interface SearchParams {
+  flexible?: boolean;
   origin?: string;
   destination?: string;
   date?: string;
@@ -35,6 +36,7 @@ export function buildSearchParams(params: SearchParams): string {
       if (params.date) urlParams.set("date", params.date);
     }
 
+    if (params.flexible) urlParams.set("flexible", "true");
     if (params.tripType) urlParams.set("tripType", params.tripType);
   }
 
@@ -50,6 +52,7 @@ export function buildQuickBookParams(origin: string, destination: string): strin
     origin,
     destination,
     passengers: "1",
+    flexible: "true",
     tripType: "oneway",
   }).toString();
 }

@@ -2,7 +2,7 @@
 
 import { ArrowRight, Plane, Info, Zap } from "lucide-react";
 import { Flight, Seat } from "@/lib/mock-data";
-import { formatCurrency, getAirlineById, getAirportByCode } from "@/lib/mock-data";
+import { formatCurrency, getAirlineById } from "@/lib/mock-data";
 import { formatTime } from "@/lib/format";
 
 interface FlightSummarySidebarProps {
@@ -25,7 +25,7 @@ export default function FlightSummarySidebar({
   handleSeatClick,
 }: FlightSummarySidebarProps) {
   const airline = getAirlineById(flight.airlineId);
-  const totalBasePrice = flight.price * selectedSeats.length;
+  const totalBasePrice = flight.price * passengerCount;
   const totalSeatPrice = selectedSeats.reduce((sum, s) => sum + s.price, 0);
   const remainingSeats = passengerCount - selectedSeats.length;
 
@@ -88,6 +88,7 @@ export default function FlightSummarySidebar({
                     <span className="text-xs text-blue-500">+{formatCurrency(seat.price)}</span>
                   )}
                   <button
+                    aria-label={`Remover lugar ${seat.number}`}
                     onClick={() => handleSeatClick(seat)}
                     className="ml-1 text-blue-400 hover:text-blue-600"
                   >
@@ -102,7 +103,7 @@ export default function FlightSummarySidebar({
         {/* Price breakdown */}
         <div className="border-t border-gray-100 pt-4 space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="text-gray-500">Passagem ({selectedSeats.length}x)</span>
+            <span className="text-gray-500">Passagem ({passengerCount}x)</span>
             <span className="text-gray-900">{formatCurrency(totalBasePrice)}</span>
           </div>
           {totalSeatPrice > 0 && (
@@ -112,7 +113,7 @@ export default function FlightSummarySidebar({
             </div>
           )}
           <div className="flex justify-between text-sm font-bold pt-2 border-t border-gray-100">
-            <span className="text-gray-900">Total</span>
+            <span className="text-gray-900">Total deste trecho</span>
             <span className="text-[#f97316]">{formatCurrency(grandTotal)}</span>
           </div>
         </div>
@@ -120,7 +121,7 @@ export default function FlightSummarySidebar({
         <button
           onClick={handleContinue}
           disabled={!allSeatsSelected}
-          className="w-full min-h-[48px] mt-6 py-3.5 hidden lg:flex bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#dc2626] disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all shadow-lg shadow-orange-500/20 disabled:shadow-none items-center justify-center gap-2"
+          className="w-full min-h-[48px] mt-6 py-3.5 hidden lg:flex bg-gradient-to-r from-[var(--action)] to-[var(--action)] hover:from-[var(--action-hover)] hover:to-[var(--action-hover)] disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all shadow-lg shadow-orange-500/20 disabled:shadow-none items-center justify-center gap-2"
         >
           {allSeatsSelected
             ? "Continuar"
@@ -130,7 +131,7 @@ export default function FlightSummarySidebar({
 
         <div className="flex items-center gap-2 mt-4 text-xs text-gray-400 justify-center">
           <Info className="w-3 h-3" />
-          <span>Seus assentos ficam reservados por 10 minutos</span>
+          <span>Seleção de lugares simulada; sem bloqueio real</span>
         </div>
       </div>
     </div>

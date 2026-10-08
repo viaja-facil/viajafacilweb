@@ -3,8 +3,8 @@
 import { useState, useMemo, Suspense, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { flights, airports, airlines, getAirlineById, getAirportByCode, formatCurrency, getAvailabilityForRoute } from "@/lib/mock-data";
-import type { Flight, Airline, Airport, TripLeg } from "@/lib/types";
-import { formatTime, formatDate } from "@/lib/format";
+import type { Flight, TripLeg } from "@/lib/types";
+import { formatDate } from "@/lib/format";
 import { useBooking } from "@/lib/booking-context";
 import FlightCard from "@/components/search/FlightCard";
 import SearchHeader from "@/components/search/SearchHeader";
@@ -18,19 +18,31 @@ import { Plane, SlidersHorizontal, ArrowLeft, X, ChevronRight, Check } from "luc
 function SearchContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { setFlight, addFlight, confirmFlight, setPassengerCount, booking, setLegs } = useBooking();
+  const { setItinerary } = useBooking();
 
   const initialTripType = searchParams.get("tripType") || "oneway";
-  const initialPassengers = parseInt(searchParams.get("passengers") || "1");
-  const initialAdults = parseInt(searchParams.get("adults") || "");
-  const initialChildren = parseInt(searchParams.get("children") || "");
+  const parseCount = (value: string | null, fallback: number) => {
+    const parsed = Number.parseInt(value || "", 10);
+    return Number.isFinite(parsed) ? Math.min(9, Math.max(0, parsed)) : fallback;
+  };
+  const initialPassengers = Math.max(1, parseCount(searchParams.get("passengers"), 1));
+  const initialAdults = parseCount(searchParams.get("adults"), initialPassengers);
+  const initialChildren = parseCount(searchParams.get("children"), 0);
 
-  const isMultiCity = initialTripType === "multicity";
+  const isMultiCity = initialTripType === "multicity" || initialTripType === "roundtrip";
 
   // Parse legs from URL for multi-city
   const initialLegs = useMemo(() => {
+    if (initialTripType === "roundtrip") {
+      const origin = searchParams.get("origin") || "";
+      const destination = searchParams.get("destination") || "";
+      return [
+        { id: "outbound", origin, destination, date: searchParams.get("departureDate") },
+        { id: "return", origin: destination, destination: origin, date: searchParams.get("returnDate") },
+      ];
+    }
     if (!isMultiCity) return [];
-    const legCount = parseInt(searchParams.get("legCount") || "0");
+    const legCount = Math.min(6, Math.max(0, parseCount(searchParams.get("legCount"), 0)));
     const legs: TripLeg[] = [];
     for (let i = 0; i < legCount; i++) {
       const origin = searchParams.get(`leg${i}.origin`) || "";
@@ -41,8 +53,9 @@ function SearchContent() {
       }
     }
     return legs;
-  }, [isMultiCity, searchParams]);
+  }, [isMultiCity, initialTripType, searchParams]);
 
+  const [searchTime] = useState(() => Date.now());
   const [currentLegIndex, setCurrentLegIndex] = useState(0);
   const [selectedFlights, setSelectedFlights] = useState<Flight[]>([]);
 
@@ -53,13 +66,13 @@ function SearchContent() {
   const initialDepartureDate = searchParams.get("departureDate") || "";
   const initialReturnDate = searchParams.get("returnDate") || "";
 
-  const [origin, setOrigin] = useState(initialOrigin);
-  const [destination, setDestination] = useState(initialDestination);
+  const [origin] = useState(initialOrigin);
+  const [destination] = useState(initialDestination);
   const [selectedDate, setSelectedDate] = useState<string | null>(initialDate || null);
   const [tripType] = useState<"oneway" | "roundtrip" | "multicity">(initialTripType as "oneway" | "roundtrip" | "multicity");
-  const [departureDate, setDepartureDate] = useState<string | null>(initialDepartureDate || null);
-  const [returnDate, setReturnDate] = useState<string | null>(initialReturnDate || null);
-  const [passengers, setPassengers] = useState(initialPassengers);
+  const [departureDate] = useState<string | null>(initialDepartureDate || null);
+  const [returnDate] = useState<string | null>(initialReturnDate || null);
+  const [passengers] = useState(initialPassengers);
   const adults = Number.isNaN(initialAdults) ? initialPassengers : initialAdults;
   const childrenCount = Number.isNaN(initialChildren) ? 0 : initialChildren;
   const [sortBy, setSortBy] = useState<"price" | "duration" | "departure">("price");
@@ -75,20 +88,11 @@ function SearchContent() {
   const [baggage, setBaggage] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
-  const legsInitializedRef = useRef(false);
-
-  // Current leg for multi-city
+  // Current segment covers both round trips and multi-city searches.
   const currentLeg = isMultiCity ? initialLegs[currentLegIndex] : null;
-  const effectiveOrigin = isMultiCity && currentLeg ? currentLeg.origin : origin;
-  const effectiveDestination = isMultiCity && currentLeg ? currentLeg.destination : destination;
-  const effectiveDate = isMultiCity && currentLeg ? currentLeg.date : (tripType === "roundtrip" ? departureDate : selectedDate);
-
-  useEffect(() => {
-    if (isMultiCity && !legsInitializedRef.current) {
-      legsInitializedRef.current = true;
-      setLegs(initialLegs);
-    }
-  }, [isMultiCity, initialLegs, setLegs]);
+  const effectiveOrigin = currentLeg?.origin ?? origin;
+  const effectiveDestination = currentLeg?.destination ?? destination;
+  const effectiveDate = currentLeg?.date ?? selectedDate;
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 800);
@@ -127,6 +131,9 @@ function SearchContent() {
 
   const filteredFlights = useMemo(() => {
     const result = flights.filter((f) => {
+      if (f.availableSeats < passengers || new Date(`${f.departureTime}+01:00`).getTime() <= searchTime) return false;
+      const previous = selectedFlights[currentLegIndex - 1];
+      if (previous && f.departureTime <= previous.arrivalTime) return false;
       if (effectiveOrigin && f.origin !== effectiveOrigin) return false;
       if (effectiveDestination && f.destination !== effectiveDestination) return false;
       if (effectiveDate && !f.departureTime.startsWith(effectiveDate)) return false;
@@ -150,35 +157,31 @@ function SearchContent() {
     result.sort((a, b) => {
       switch (sortBy) {
         case "price": return a.price - b.price;
-        case "duration": return a.duration.localeCompare(b.duration);
+        case "duration": {
+          const durationMinutes = (duration: string) => {
+            const [, hours = "0", minutes = "0"] = duration.match(/(\d+)h\s*(\d+)/i) || [];
+            return Number(hours) * 60 + Number(minutes);
+          };
+          return durationMinutes(a.duration) - durationMinutes(b.duration);
+        }
         case "departure": return a.departureTime.localeCompare(b.departureTime);
         default: return 0;
       }
     });
 
     return result;
-  }, [effectiveOrigin, effectiveDestination, effectiveDate, sortBy, debouncedMinPrice, debouncedMaxPrice, selectedClass, selectedAirlines, selectedTimeOfDay, stops, baggage]);
+  }, [effectiveOrigin, effectiveDestination, effectiveDate, sortBy, debouncedMinPrice, debouncedMaxPrice, selectedClass, selectedAirlines, selectedTimeOfDay, stops, baggage, passengers, selectedFlights, currentLegIndex, searchTime]);
 
   const handleSelectFlight = (flight: Flight) => {
-    setPassengerCount(passengers);
-
-    if (isMultiCity) {
-      const newSelectedFlights = [...selectedFlights, flight];
-      setSelectedFlights(newSelectedFlights);
-      addFlight(flight);
-
-      if (currentLegIndex < initialLegs.length - 1) {
-        setCurrentLegIndex(currentLegIndex + 1);
-        setIsLoading(true);
-      } else {
-        setFlight(newSelectedFlights[0]);
-        confirmFlight();
-        router.push(`/booking/seats?flightId=${flight.id}`);
-      }
+    if (flight.availableSeats < passengers) return;
+    const itinerary = [...selectedFlights, flight];
+    if (isMultiCity && currentLegIndex < initialLegs.length - 1) {
+      setSelectedFlights(itinerary);
+      setCurrentLegIndex((index) => index + 1);
+      setIsLoading(true);
     } else {
-      setFlight(flight);
-      confirmFlight();
-      router.push(`/booking/seats?flightId=${flight.id}`);
+      setItinerary(itinerary, passengers);
+      router.push(`/booking/seats?flightId=${itinerary[0].id}`);
     }
   };
 
@@ -236,7 +239,7 @@ function SearchContent() {
                   <div key={leg.id} className="flex items-center gap-2">
                     <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm ${
                       isCurrent
-                        ? "bg-[#f97316] text-white"
+                        ? "bg-[var(--action)] text-white"
                         : isCompleted
                         ? "bg-green-500/20 text-green-400"
                         : "bg-white/10 text-gray-400"
@@ -269,7 +272,7 @@ function SearchContent() {
             <div className="flex flex-wrap items-center gap-3 text-sm">
               <div className="flex items-center gap-2 bg-white/10 rounded-lg px-4 py-2">
                 <span className="font-semibold">
-                  Trecho {currentLegIndex + 1} de {initialLegs.length}
+                  {initialTripType === "roundtrip" ? (currentLegIndex === 0 ? "Escolha a ida" : "Escolha o regresso") : `Trecho ${currentLegIndex + 1} de ${initialLegs.length}`}
                 </span>
               </div>
               <div className="flex items-center gap-2 bg-white/10 rounded-lg px-4 py-2">
@@ -290,8 +293,6 @@ function SearchContent() {
         </div>
       ) : (
         <SearchHeader
-          origin={origin}
-          destination={destination}
           selectedDate={tripType === "roundtrip" ? departureDate : selectedDate}
           passengers={passengers}
           adults={adults}
@@ -300,6 +301,7 @@ function SearchContent() {
           getDestCity={() => airports.find((a) => a.code === destination)?.city || "Todos"}
           returnDate={tripType === "roundtrip" ? returnDate : undefined}
           tripType={tripType}
+          flexible={searchParams.get("flexible") === "true"}
         />
       )}
 
@@ -319,16 +321,16 @@ function SearchContent() {
               <button onClick={() => setShowFilters(true)} className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-xl text-sm font-semibold">
                 <SlidersHorizontal className="w-4 h-4" />
                 Filtrar
-                {activeFilterCount > 0 && <span className="bg-[#f97316] text-white text-xs rounded-full px-2 py-0.5">{activeFilterCount}</span>}
+                {activeFilterCount > 0 && <span className="bg-[var(--action)] text-white text-xs rounded-full px-2 py-0.5">{activeFilterCount}</span>}
               </button>
             </div>
 
             <SortBar sortBy={sortBy} setSortBy={setSortBy} />
-            <DateChips
+            {!isMultiCity && <DateChips
               availability={availability}
               selectedDate={isMultiCity ? effectiveDate : (tripType === "roundtrip" ? departureDate : selectedDate)}
-              setSelectedDate={isMultiCity ? () => {} : (tripType === "roundtrip" ? setDepartureDate : setSelectedDate)}
-            />
+              setSelectedDate={setSelectedDate}
+            />}
 
             {/* Flight results */}
             {isLoading ? (
@@ -359,7 +361,7 @@ function SearchContent() {
             <button onClick={() => setShowFilters(false)} className="p-2 hover:bg-gray-100 rounded-lg"><X className="w-5 h-5" /></button>
           </div>
           <FilterPanel {...filterProps} />
-          <button onClick={() => setShowFilters(false)} className="w-full mt-4 py-3 bg-[#f97316] text-white rounded-xl font-semibold">Aplicar Filtros</button>
+          <button onClick={() => setShowFilters(false)} className="w-full mt-4 py-3 bg-[var(--action)] text-white rounded-xl font-semibold">Aplicar Filtros</button>
         </div>
       </BottomSheet>
     </div>

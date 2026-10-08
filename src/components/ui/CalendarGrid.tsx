@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useRef, ReactNode } from "react";
+import { todayInAngola } from "@/lib/search-validation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -9,7 +10,7 @@ const MONTH_NAMES = [
   "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
 ];
 
-const TODAY = new Date(2026, 7, 21);
+const TODAY = new Date(`${todayInAngola()}T12:00:00Z`);
 const toLocalDateStr = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const TODAY_STR = toLocalDateStr(TODAY);
@@ -34,7 +35,7 @@ export default function CalendarGrid({
   renderDay,
   headerExtra,
 }: CalendarGridProps) {
-  const [currentMonth, setCurrentMonth] = useState(() => initialMonth ?? new Date(2026, 7, 1));
+  const [currentMonth, setCurrentMonth] = useState(() => initialMonth ?? new Date(TODAY.getFullYear(), TODAY.getMonth(), 1));
   const touchStartX = useRef<number>(0);
   const touchStartY = useRef<number>(0);
   const isSwiping = useRef<boolean>(false);

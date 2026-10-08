@@ -137,7 +137,7 @@ export default function PassengerFormCard({
             {passenger.name}
           </p>
           <p className="text-xs text-green-700 mt-2">
-            Confirme que o nome está correto antes de pagar. É este que vai no bilhete.
+            Confirme o nome antes de continuar a simulação. Nenhum bilhete será emitido.
           </p>
         </div>
       )}

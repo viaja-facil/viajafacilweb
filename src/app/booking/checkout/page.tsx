@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useRef, useEffect, Suspense } from "react";
+import Image from "next/image";
 import QRCode from "qrcode";
 import { useRouter, useSearchParams } from "next/navigation";
 import { formatCurrency, getAirlineById } from "@/lib/mock-data";
 import { useBooking, PaymentMethod } from "@/lib/booking-context";
+import ItinerarySummary from "@/components/booking/ItinerarySummary";
 import BookingStepper from "@/components/ui/BookingStepper";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import PassengerFormCard from "@/components/booking/PassengerFormCard";
@@ -14,7 +16,6 @@ import MobileStickyBar from "@/components/booking/MobileStickyBar";
 import {
   ArrowLeft,
   User,
-  Lock,
   Check,
   AlertCircle,
   Copy,
@@ -88,9 +89,9 @@ function CheckoutContent() {
     if (paymentGenerated && paymentMethod === "referencia" && reference) {
       const payload = JSON.stringify({
         referencia: reference,
-        valor: flight ? flight.price * passengerCount : 0,
+        valor: booking.totalPrice,
         moeda: "AOA",
-        descricao: "Bilhete de voo ViajaFacil",
+        descricao: "Simulação de viagem ViajaFacil — sem pagamento",
       });
       QRCode.toDataURL(payload, {
         width: 256,
@@ -98,7 +99,7 @@ function CheckoutContent() {
         color: { dark: "#0a1628", light: "#ffffff" },
       }).then(setQrDataUrl);
     }
-  }, [paymentGenerated, paymentMethod, reference, flight, passengerCount]);
+  }, [paymentGenerated, paymentMethod, reference, booking.totalPrice]);
 
   if (!flight || booking.seats.length === 0) {
     return (
@@ -109,7 +110,7 @@ function CheckoutContent() {
           <p className="text-gray-500 mb-4">Por favor, selecione seus assentos primeiro.</p>
           <button
             onClick={() => router.push("/search")}
-            className="px-6 py-2 bg-[#f97316] text-white rounded-lg font-semibold"
+            className="px-6 py-2 bg-[var(--action)] text-white rounded-lg font-semibold"
           >
             Buscar Voos
           </button>
@@ -118,8 +119,8 @@ function CheckoutContent() {
     );
   }
 
-  const totalSeatPrice = booking.seats.reduce((sum, s) => sum + s.price, 0);
-  const totalBasePrice = flight.price * passengerCount;
+  const totalSeatPrice = (booking.allSeats.length ? booking.allSeats.flat() : booking.seats).reduce((sum, s) => sum + s.price, 0);
+  const totalBasePrice = (booking.flights.length ? booking.flights : [flight]).reduce((sum, f) => sum + f.price * passengerCount, 0);
   const grandTotal = totalBasePrice + totalSeatPrice;
 
   const updatePassenger = (index: number, field: "name" | "document", value: string) => {
@@ -128,8 +129,7 @@ function CheckoutContent() {
     );
   };
 
-  // BI lookup via internal proxy (/api/lookup-bi) — the upstream service
-  // is only contacted server-side and never exposed to the browser
+  // Identity lookup remains simulated until a verified integration is configured.
   const ANGOLAN_BI_REGEX = /^\d{9}[A-Z]{2}\d{3}$/;
 
   const lookupBI = async (index: number, rawDoc: string) => {
@@ -137,32 +137,13 @@ function CheckoutContent() {
     if (!ANGOLAN_BI_REGEX.test(doc)) return;
 
     latestBIRequest.current[index] = doc;
-    setBiStatus((prev) => ({ ...prev, [index]: { status: "loading" } }));
-    try {
-      const res = await fetch(`/api/lookup-bi?bi=${encodeURIComponent(doc)}`);
-      // Ignore the response if the user already typed/pasted a different document
-      if (latestBIRequest.current[index] !== doc) return;
-
-      const data = await res.json();
-      if (data.found && data.name) {
-        updatePassenger(index, "name", data.name);
-        setBiStatus((prev) => ({
-          ...prev,
-          [index]: { status: "found", message: data.name },
-        }));
-      } else {
-        setBiStatus((prev) => ({
-          ...prev,
-          [index]: { status: "manual", message: data.error },
-        }));
-      }
-    } catch {
-      if (latestBIRequest.current[index] !== doc) return;
-      setBiStatus((prev) => ({
-        ...prev,
-        [index]: { status: "manual", message: "Não foi possível validar o BI. Preencha o nome manualmente." },
-      }));
-    }
+    setBiStatus((prev) => ({
+      ...prev,
+      [index]: {
+        status: "manual",
+        message: "A validação automática está desativada nesta demonstração. Preencha o nome manualmente.",
+      },
+    }));
   };
 
   const handleDocumentChange = (index: number, value: string) => {
@@ -177,8 +158,8 @@ function CheckoutContent() {
     });
     if (ANGOLAN_BI_REGEX.test(cleaned)) {
       lookupBI(index, cleaned);
-    } else if (cleaned.length >= 14) {
-      // Full-length document that isn't an Angolan BI (e.g. passport)
+    } else if (cleaned.length >= 6) {
+      // Allow manual entry for passports and fictitious demo documents.
       setBiStatus((prev) => ({
         ...prev,
         [index]: { status: "manual", message: "Documento não é um BI angolano. Preencha o nome manualmente." },
@@ -246,7 +227,7 @@ function CheckoutContent() {
 
   const handleBack = () => {
     // Warn before leaving with an unfinished payment
-    if (paymentGenerated && !window.confirm("Tem certeza que deseja sair? O pagamento em curso será perdido.")) {
+    if (paymentGenerated && !window.confirm("Tem certeza que deseja sair? A simulação em curso será perdida.")) {
       return;
     }
     router.push(`/booking/seats?flightId=${flightId || flight?.id || ""}`);
@@ -261,6 +242,7 @@ function CheckoutContent() {
   return (
     <div className="min-h-screen bg-gray-50">
       <BookingStepper />
+      <div className="mx-auto max-w-7xl px-4 sm:px-6"><ItinerarySummary flights={booking.flights.length ? booking.flights : [flight]} allSeats={booking.allSeats} passengerCount={booking.passengerCount} /></div>
 
       <div className="bg-gradient-to-r from-[#0a1628] to-[#162544] text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
@@ -271,7 +253,7 @@ function CheckoutContent() {
             <ArrowLeft className="w-4 h-4" />
             Voltar
           </button>
-          <h1 className="text-2xl font-bold">Finalizar Compra</h1>
+          <h1 className="text-2xl font-bold">Checkout de demonstração</h1>
           <nav aria-label="Progresso da reserva" className="mt-2">
             <ol className="flex flex-wrap items-center gap-1 text-xs text-gray-400">
               <li>Buscar</li>
@@ -286,7 +268,7 @@ function CheckoutContent() {
             </ol>
           </nav>
           <p className="text-gray-400 text-sm mt-1">
-            Preencha os dados e selecione o método de pagamento
+            Explore o fluxo com dados fictícios. Não será feita nenhuma reserva ou cobrança.
           </p>
         </div>
       </div>
@@ -350,12 +332,12 @@ function CheckoutContent() {
                     <Smartphone className="w-8 h-8 text-green-600" />
                   </div>
                   <h3 className="text-lg font-bold text-gray-900 mb-2">
-                    Notificação Enviada!
+                    Notificação simulada
                   </h3>
                   <p className="text-sm text-gray-500">
-                    Uma notificação foi enviada para o número{" "}
+                    Esta demonstração representa uma notificação para o número{" "}
                     <span className="font-bold text-gray-900">+244 {phoneNumber}</span>.
-                    Abra o aplicativo Multicaixa Express para confirmar o pagamento.
+                    Nenhuma notificação foi enviada e nenhum pagamento será cobrado.
                   </p>
                 </div>
 
@@ -365,9 +347,9 @@ function CheckoutContent() {
                       <CheckCircle2 className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-green-800">Aguardando confirmação</p>
+                      <p className="text-sm font-semibold text-green-800">Estado simulado</p>
                       <p className="text-xs text-green-600">
-                        Verifique o seu telemóvel e confirme o pagamento de {formatCurrency(grandTotal)}
+                        Total da simulação: {formatCurrency(grandTotal)}. Não confirme no telemóvel.
                       </p>
                     </div>
                   </div>
@@ -381,12 +363,12 @@ function CheckoutContent() {
                   {isProcessing ? (
                     <>
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Confirmando...
+                      A concluir simulação...
                     </>
                   ) : (
                     <>
                       <CheckCircle2 className="w-5 h-5" />
-                      Confirmar Pagamento
+                      Simular confirmação
                     </>
                   )}
                 </button>
@@ -401,17 +383,17 @@ function CheckoutContent() {
                     <Hash className="w-8 h-8 text-blue-600" />
                   </div>
                   <h3 className="text-lg font-bold text-gray-900 mb-2">
-                    Referência Gerada!
+                    Referência de demonstração
                   </h3>
                   <p className="text-sm text-gray-500">
-                    Use esta referência para pagar em qualquer ATM Multicaixa, aplicação bancária ou agência.
+                    Esta referência é fictícia. Não a use num ATM, aplicação bancária ou agência.
                   </p>
                 </div>
 
                 {/* Reference Display */}
                 <div className="bg-gradient-to-r from-[#0a1628] to-[#162544] rounded-xl p-6 text-center mb-4">
                   <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">
-                    A sua referência
+                    Referência fictícia
                   </p>
                   <p className="text-3xl font-mono font-bold text-white tracking-widest">
                     {reference}
@@ -437,13 +419,16 @@ function CheckoutContent() {
                 {/* QR Code */}
                 <div className="bg-gray-50 rounded-xl p-6 flex flex-col items-center mb-4">
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                    Escaneie para pagar
+                    QR de demonstração · não pagar
                   </p>
                   {qrDataUrl && (
                     <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-200">
-                      <img
+                      <Image
                         src={qrDataUrl}
-                        alt={`QR Code para pagamento - Referência ${reference}`}
+                        width={160}
+                        height={160}
+                        unoptimized
+                        alt={`QR fictício de demonstração - Referência ${reference}`}
                         className="w-40 h-40"
                       />
                     </div>
@@ -455,29 +440,24 @@ function CheckoutContent() {
 
                 {/* How to pay */}
                 <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
-                  <p className="text-sm font-semibold text-blue-800 mb-2">Como pagar:</p>
-                  <ol className="text-xs text-blue-700 space-y-1 list-decimal list-inside">
-                    <li>Vá a qualquer ATM Multicaixa ou abra a aplicação bancária</li>
-                    <li>Selecione &quot;Pagamento de Serviços&quot; ou &quot;Referência&quot;</li>
-                    <li>Digite a referência: <span className="font-bold">{reference}</span></li>
-                    <li>Confirme o pagamento de <span className="font-bold">{formatCurrency(grandTotal)}</span></li>
-                  </ol>
+                  <p className="text-sm font-semibold text-blue-800 mb-1">Demonstração sem pagamento</p>
+                  <p className="text-xs text-blue-700">A referência, o QR e o valor são fictícios. Não existe ligação a bancos nem cobrança real.</p>
                 </div>
 
                 <button
                   onClick={confirmPayment}
                   disabled={isProcessing}
-                  className="w-full py-3.5 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#dc2626] disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all shadow-lg shadow-orange-500/20 disabled:shadow-none flex items-center justify-center gap-2"
+                  className="w-full py-3.5 bg-gradient-to-r from-[var(--action)] to-[var(--action)] hover:from-[var(--action-hover)] hover:to-[var(--action-hover)] disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all shadow-lg shadow-orange-500/20 disabled:shadow-none flex items-center justify-center gap-2"
                 >
                   {isProcessing ? (
                     <>
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Confirmando...
+                      A concluir simulação...
                     </>
                   ) : (
                     <>
                       <CheckCircle2 className="w-5 h-5" />
-                      Já Paguei - Confirmar
+                      Simular confirmação
                     </>
                   )}
                 </button>
@@ -488,7 +468,7 @@ function CheckoutContent() {
           <OrderSummarySidebar
             flight={flight}
             airline={airline}
-            booking={{ seats: booking.seats }}
+            booking={booking}
             passengerCount={passengerCount}
             grandTotal={grandTotal}
             paymentGenerated={paymentGenerated}
@@ -509,6 +489,11 @@ function CheckoutContent() {
   );
 }
 
+function RestoredCheckout() {
+  const { booking } = useBooking();
+  return <CheckoutContent key={`${booking.flight?.id ?? "loading"}-${booking.seats.length}`} />;
+}
+
 export default function CheckoutPage() {
   return (
     <Suspense
@@ -522,7 +507,7 @@ export default function CheckoutPage() {
       }
     >
       <ProtectedRoute>
-        <CheckoutContent />
+        <RestoredCheckout />
       </ProtectedRoute>
     </Suspense>
   );

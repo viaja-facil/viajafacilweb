@@ -7,6 +7,7 @@ export type SocialProvider = "google" | "facebook";
 
 interface AuthContextType {
   user: User | null;
+  isLoading: boolean;
   login: (email: string, password: string) => boolean;
   loginSocial: (provider: SocialProvider) => void;
   logout: () => void;
@@ -77,8 +78,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, loginSocial, logout, isAdmin: user?.role === "admin" }}>
-      {isLoaded ? children : null}
+    <AuthContext.Provider value={{ user, isLoading: !isLoaded, login, loginSocial, logout, isAdmin: user?.role === "admin" }}>
+      {children}
     </AuthContext.Provider>
   );
 }
