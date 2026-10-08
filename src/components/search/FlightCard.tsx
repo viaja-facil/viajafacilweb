@@ -28,25 +28,13 @@ export default function FlightCard({
 }: FlightCardProps) {
   const flightDate = new Date(flight.departureTime);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
-      e.preventDefault();
-      onSelect(flight);
-    }
-  };
-
   return (
     <div
-      role="button"
-      tabIndex={0}
-      aria-label={`Selecionar voo ${flight.flightNumber} de ${flight.origin} para ${flight.destination}, ${formatCurrency(flight.price)}`}
-      onClick={() => onSelect(flight)}
-      onKeyDown={handleKeyDown}
-      className="w-full bg-white rounded-2xl border border-gray-200 hover:border-[#f97316] hover:shadow-lg hover:shadow-orange-500/10 focus-visible:border-[#f97316] transition-all group cursor-pointer active:scale-[0.99] overflow-hidden"
+      className="w-full bg-white rounded-2xl border border-gray-200 hover:border-[#f97316] hover:shadow-lg hover:shadow-orange-500/10 focus-visible:border-[#f97316] transition-all group overflow-hidden"
     >
       <div className="p-5">
         <div className="flex items-center gap-2 mb-3">
-          <span className="text-xs font-bold text-gray-400">
+          <span className="text-xs font-bold text-gray-600">
             {flightDate.toLocaleDateString("pt-AO", {
               weekday: "short",
               day: "numeric",
@@ -77,7 +65,7 @@ export default function FlightCard({
               className="w-11 h-11 rounded-xl flex items-center justify-center text-lg font-bold text-white shrink-0"
               style={{ backgroundColor: airline?.color || "#666" }}
             >
-              {airline?.logo || <Plane className="w-5 h-5 text-gray-400" />}
+              {airline?.logo || <Plane className="w-5 h-5 text-gray-600" />}
             </div>
             <div className="min-w-0">
               <p className="text-sm font-semibold text-gray-900 truncate">
@@ -114,7 +102,7 @@ export default function FlightCard({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 text-gray-400">
+          <div className="flex items-center gap-2 text-gray-600">
             <span title="Wi-Fi">
               <Wifi className="w-4 h-4" aria-hidden="true" />
             </span>
@@ -138,7 +126,7 @@ export default function FlightCard({
                 onSelect(flight);
               }}
               aria-label={`Selecionar voo ${flight.flightNumber} por ${formatCurrency(flight.price)}`}
-              className="min-h-[44px] px-5 py-2.5 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#dc2626] active:from-[#dc2626] active:to-[#dc2626] text-white font-bold text-sm rounded-xl transition-all shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 flex items-center gap-2"
+              className="min-h-[44px] px-5 py-2.5 bg-gradient-to-r from-[var(--action)] to-[var(--action)] hover:from-[var(--action-hover)] hover:to-[var(--action-hover)] active:from-[#dc2626] active:to-[#dc2626] text-white font-bold text-sm rounded-xl transition-all shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 flex items-center gap-2"
             >
               Selecionar
               <ArrowRight className="w-4 h-4" />

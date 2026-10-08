@@ -48,7 +48,7 @@ export default function PaymentMethodSelector({
         </div>
         <div>
           <h2 className="font-bold text-gray-900">Método de Pagamento</h2>
-          <p className="text-xs text-gray-500">Escolha como deseja pagar</p>
+          <p className="text-xs text-gray-500">Escolha uma simulação de pagamento</p>
         </div>
       </div>
 
@@ -80,11 +80,11 @@ export default function PaymentMethodSelector({
             </div>
             <div>
               <p className="font-bold text-gray-900">Multicaixa Express</p>
-              <p className="text-xs text-gray-500">Pague pelo telemóvel</p>
+              <p className="text-xs text-gray-500">Simular Multicaixa Express</p>
             </div>
           </div>
           <p className="text-xs text-gray-500">
-            Receba uma notificação no seu telemóvel para confirmar o pagamento
+            Demonstração sem ligação ao Multicaixa e sem cobrança real.
           </p>
         </button>
 
@@ -111,11 +111,11 @@ export default function PaymentMethodSelector({
             </div>
             <div>
               <p className="font-bold text-gray-900">Referência Bancária</p>
-              <p className="text-xs text-gray-500">Pague no ATM ou app</p>
+              <p className="text-xs text-gray-500">Gerar referência de demonstração</p>
             </div>
           </div>
           <p className="text-xs text-gray-500">
-            Gere uma referência para pagamento via Multicaixa, ATM ou app bancário
+            Crie uma referência fictícia para explorar o fluxo de checkout.
           </p>
         </button>
       </div>
@@ -128,7 +128,7 @@ export default function PaymentMethodSelector({
             <h3 className="font-bold">Número Multicaixa Express</h3>
           </div>
           <p className="text-sm text-green-100 mb-4">
-            Insira o número do telemóvel registado no Multicaixa Express. Irá receber uma notificação para confirmar o pagamento.
+            Use um número fictício com 9 dígitos. Nenhuma notificação será enviada.
           </p>
           <div className="flex gap-2">
             <div className="flex items-center bg-white/20 rounded-xl px-4 py-3">
@@ -181,14 +181,14 @@ export default function PaymentMethodSelector({
         <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-5 text-white animate-fade-in">
           <div className="flex items-center gap-3 mb-4">
             <Hash className="w-5 h-5" />
-            <h3 className="font-bold">Pagamento por Referência</h3>
+            <h3 className="font-bold">Referência fictícia</h3>
           </div>
           <p className="text-sm text-blue-100 mb-2">
-            Uma referência única será gerada para o valor de{" "}
+            Uma referência fictícia será gerada para o total simulado de{" "}
             <span className="font-bold">{formatCurrency(grandTotal)}</span>.
           </p>
           <p className="text-sm text-blue-100">
-            Pode pagar via Multicaixa (ATM), aplicação bancária ou agência.
+            Não introduza esta referência em nenhum canal bancário. Não representa uma cobrança.
           </p>
         </div>
       )}
@@ -203,12 +203,12 @@ export default function PaymentMethodSelector({
           {isProcessing ? (
             <>
               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              A gerar pagamento...
+              A gerar simulação...
             </>
           ) : (
             <>
               <Lock className="w-5 h-5" />
-              Gerar Pagamento
+              Gerar simulação
             </>
           )}
         </button>

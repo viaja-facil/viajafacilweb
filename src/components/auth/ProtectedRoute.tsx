@@ -5,17 +5,17 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 
 export default function ProtectedRoute({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!user) {
-      router.replace(`/auth/login?redirect=${encodeURIComponent(pathname)}`);
+    if (!isLoading && !user) {
+      router.replace(`/auth/login?redirect=${encodeURIComponent(pathname + window.location.search)}`);
     }
-  }, [user, router, pathname]);
+  }, [user, isLoading, router, pathname]);
 
-  if (!user) {
+  if (isLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">

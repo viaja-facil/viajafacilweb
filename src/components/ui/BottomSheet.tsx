@@ -27,6 +27,9 @@ export default function BottomSheet({
     () => false
   );
 
+  const onCloseRef = useRef(onClose);
+  useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
+
   const [dragY, setDragY] = useState(0);
   const dragStartY = useRef<number | null>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -47,7 +50,7 @@ export default function BottomSheet({
 
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        onClose();
+        onCloseRef.current();
         return;
       }
       // Focus trap: cycle Tab within the sheet
@@ -75,7 +78,7 @@ export default function BottomSheet({
       document.removeEventListener("keydown", onKey);
       previouslyFocused?.focus?.();
     };
-  }, [open, onClose]);
+  }, [open, isMounted]);
 
   if (!isMounted || !open) return null;
 
@@ -119,12 +122,12 @@ export default function BottomSheet({
           <div className="flex items-start justify-between px-5 pb-3 pt-1 border-b border-gray-100 shrink-0">
             <div>
               {title && <h3 className="text-sm font-bold text-gray-900">{title}</h3>}
-              {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
+              {subtitle && <p className="text-xs text-gray-600 mt-0.5">{subtitle}</p>}
             </div>
             <button
               onClick={onClose}
               aria-label="Fechar"
-              className="tap-target -mr-2 -mt-1 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+              className="tap-target -mr-2 -mt-1 flex items-center justify-center rounded-full text-gray-600 hover:text-gray-600 hover:bg-gray-100 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>

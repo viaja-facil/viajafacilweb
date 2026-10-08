@@ -7,8 +7,6 @@ import type { TripLeg } from "@/lib/types";
 import { airports } from "@/lib/mock-data";
 
 interface SearchHeaderProps {
-  origin: string;
-  destination: string;
   selectedDate: string | null;
   passengers: number;
   adults: number;
@@ -20,11 +18,10 @@ interface SearchHeaderProps {
   returnDate?: string | null;
   tripType?: string;
   legs?: TripLeg[];
+  flexible?: boolean;
 }
 
 export default function SearchHeader({
-  origin,
-  destination,
   selectedDate,
   passengers,
   adults,
@@ -36,6 +33,7 @@ export default function SearchHeader({
   returnDate,
   tripType,
   legs,
+  flexible = false,
 }: SearchHeaderProps) {
   const router = useRouter();
 
@@ -121,6 +119,12 @@ export default function SearchHeader({
                   <X className="w-3 h-3" />
                 </button>
               )}
+            </div>
+          )}
+          {!selectedDate && flexible && (
+            <div className="flex items-center gap-2 bg-white/10 rounded-lg px-4 py-2">
+              <Calendar className="w-4 h-4 text-[#f97316]" />
+              <span>Datas flexíveis · próximos 60 dias</span>
             </div>
           )}
           <div className="flex items-center gap-2 bg-white/10 rounded-lg px-4 py-2">

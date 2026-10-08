@@ -42,7 +42,7 @@ const featuredDestinations: FeaturedDestination[] = [
     tripType: "Só Ida",
     description: "Praias paradisíacas e o bella Vista",
     originCode: "LAD",
-    destCode: "CAB",
+    destCode: "CBT",
   },
   {
     city: "Lubango",
@@ -53,7 +53,7 @@ const featuredDestinations: FeaturedDestination[] = [
     tripType: "Só Ida",
     description: "Montanhas e o Cristo Rei",
     originCode: "LAD",
-    destCode: "NOV",
+    destCode: "SDD",
   },
   {
     city: "Lisboa",

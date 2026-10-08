@@ -29,6 +29,8 @@ interface BookingState {
 interface BookingContextType {
   booking: BookingState;
   setFlight: (flight: Flight) => void;
+  setItinerary: (flights: Flight[], passengerCount: number) => void;
+  setLegSeats: (index: number, seats: Seat[]) => void;
   addFlight: (flight: Flight) => void;
   confirmFlight: () => void;
   nextLeg: () => void;
@@ -75,26 +77,40 @@ function loadInitialBooking(): BookingState {
 }
 
 export function BookingProvider({ children }: { children: ReactNode }) {
+  const [hydrated, setHydrated] = useState(false);
   const [booking, setBooking] = useState<BookingState>(initialBooking);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
       setBooking(loadInitialBooking());
+      setHydrated(true);
     });
     return () => cancelAnimationFrame(frame);
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (!hydrated || typeof window === "undefined") return;
     if (booking.flight === null && booking.flights.length === 0) {
       window.sessionStorage.removeItem(BOOKING_STORAGE_KEY);
       return;
     }
     window.sessionStorage.setItem(BOOKING_STORAGE_KEY, JSON.stringify(booking));
-  }, [booking]);
+  }, [booking, hydrated]);
 
   const setFlight = (flight: Flight) => {
     setBooking((prev) => ({ ...prev, flight, step: "select" }));
+  };
+
+  const setItinerary = (flights: Flight[], passengerCount: number) => {
+    setBooking({ ...initialBooking, flights, flight: flights[0] ?? null, passengerCount, step: "seats", totalPrice: flights.reduce((sum, flight) => sum + flight.price * passengerCount, 0) });
+  };
+
+  const setLegSeats = (index: number, seats: Seat[]) => {
+    setBooking((prev) => {
+      const allSeats = [...prev.allSeats];
+      allSeats[index] = seats;
+      return { ...prev, allSeats, seats: allSeats[0] ?? [], totalPrice: prev.flights.reduce((sum, flight) => sum + flight.price * prev.passengerCount, 0) + allSeats.flat().reduce((sum, seat) => sum + seat.price, 0) };
+    });
   };
 
   const addFlight = (flight: Flight) => {
@@ -186,6 +202,8 @@ export function BookingProvider({ children }: { children: ReactNode }) {
       value={{
         booking,
         setFlight,
+        setItinerary,
+        setLegSeats,
         addFlight,
         confirmFlight,
         nextLeg,

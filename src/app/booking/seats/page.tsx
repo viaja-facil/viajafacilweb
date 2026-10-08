@@ -6,6 +6,7 @@ import { flights, generateSeats, formatCurrency, Seat } from "@/lib/mock-data";
 import { useBooking } from "@/lib/booking-context";
 import BookingStepper from "@/components/ui/BookingStepper";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import ItinerarySummary from "@/components/booking/ItinerarySummary";
 import SeatMap from "@/components/booking/seats/SeatMap";
 import FlightSummarySidebar from "@/components/booking/seats/FlightSummarySidebar";
 import MobilePriceBar from "@/components/booking/seats/MobilePriceBar";
@@ -34,9 +35,11 @@ function SeatsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const flightId = searchParams.get("flightId") || "";
-  const { booking, setSeats } = useBooking();
+  const { booking, setLegSeats } = useBooking();
 
-  const flight = flights.find((f) => f.id === flightId) || booking.flight;
+  const [seatLegIndex, setSeatLegIndex] = useState(0);
+  const itinerary = booking.flights.length ? booking.flights : (booking.flight ? [booking.flight] : []);
+  const flight = itinerary[seatLegIndex] || flights.find((f) => f.id === flightId);
 
   const seats = useMemo(
     () => (flight ? generateSeats(flight.id, flight.class) : []),
@@ -57,7 +60,7 @@ function SeatsContent() {
           <p className="text-gray-500 mb-4">Por favor, selecione um voo primeiro.</p>
           <button
             onClick={() => router.push("/search")}
-            className="px-6 py-2 bg-[#f97316] text-white rounded-lg font-semibold"
+            className="px-6 py-2 bg-[var(--action)] text-white rounded-lg font-semibold"
           >
             Buscar Voos
           </button>
@@ -85,12 +88,18 @@ function SeatsContent() {
 
   const handleContinue = () => {
     if (!allSeatsSelected) return;
-    setSeats(selectedSeats);
-    router.push(`/booking/checkout?flightId=${flight.id}`);
+    setLegSeats(seatLegIndex, selectedSeats);
+    if (seatLegIndex < itinerary.length - 1) {
+      setSeatLegIndex((index) => index + 1);
+      setSelectedSeats([]);
+      window.scrollTo({ top: 0, behavior: "instant" });
+    } else {
+      router.push(`/booking/checkout?flightId=${itinerary[0]?.id || flight.id}`);
+    }
   };
 
   const totalSeatPrice = selectedSeats.reduce((sum, s) => sum + s.price, 0);
-  const totalBasePrice = flight.price * selectedSeats.length;
+  const totalBasePrice = flight.price * passengerCount;
   const grandTotal = totalBasePrice + totalSeatPrice;
 
   const columns =
@@ -122,7 +131,7 @@ function SeatsContent() {
 
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold">Selecione seus assentos</h1>
+              <h1 className="text-2xl font-bold">Selecione os lugares · trecho {seatLegIndex + 1} de {Math.max(1, itinerary.length)}</h1>
               <p className="text-gray-400 text-sm mt-1">
                 {flight.flightNumber} • {passengerCount}{" "}
                 {passengerCount === 1 ? "passageiro" : "passageiros"}
@@ -130,7 +139,7 @@ function SeatsContent() {
             </div>
             <div className="flex items-center gap-4">
               <div className="text-right">
-                <p className="text-xs text-gray-400">Total</p>
+                <p className="text-xs text-gray-300">Total deste trecho</p>
                 <p className="text-2xl font-bold text-[#f97316]">{formatCurrency(grandTotal)}</p>
               </div>
             </div>
@@ -139,6 +148,7 @@ function SeatsContent() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-40 lg:pb-6">
+        <ItinerarySummary flights={itinerary} allSeats={booking.allSeats} passengerCount={passengerCount} />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <SeatMap

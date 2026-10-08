@@ -5,16 +5,12 @@ import { Flight, Airline } from "@/lib/types";
 import { PaymentMethod } from "@/lib/booking-context";
 import { Plane, ArrowRight, Shield, CheckCircle2 } from "lucide-react";
 
-interface Passenger {
-  name: string;
-  document: string;
-  seat: string;
-}
-
 interface OrderSummarySidebarProps {
   flight: Flight;
   airline: Airline | null | undefined;
   booking: {
+    flights?: Flight[];
+    allSeats?: { number: string; price: number }[][];
     seats: { number: string; price: number }[];
   };
   passengerCount: number;
@@ -32,8 +28,8 @@ export default function OrderSummarySidebar({
   paymentGenerated = false,
   paymentMethod = null,
 }: OrderSummarySidebarProps) {
-  const totalSeatPrice = booking.seats.reduce((sum, s) => sum + s.price, 0);
-  const totalBasePrice = flight.price * passengerCount;
+  const totalSeatPrice = (booking.allSeats?.length ? booking.allSeats.flat() : booking.seats).reduce((sum, s) => sum + s.price, 0);
+  const totalBasePrice = (booking.flights?.length ? booking.flights : [flight]).reduce((sum, f) => sum + f.price * passengerCount, 0);
 
   return (
     <div className="lg:col-span-1">
@@ -46,7 +42,7 @@ export default function OrderSummarySidebar({
               className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold"
               style={{ backgroundColor: airline?.color || "#666" }}
             >
-              {airline?.logo || <Plane className="w-5 h-5 text-gray-400" />}
+              {airline?.logo || <Plane className="w-5 h-5 text-gray-600" />}
             </div>
             <div>
               <p className="text-sm font-semibold text-gray-900">
@@ -57,7 +53,7 @@ export default function OrderSummarySidebar({
           </div>
           <div className="flex items-center gap-2 text-sm">
             <span className="font-bold">{flight.origin}</span>
-            <ArrowRight className="w-3 h-3 text-gray-400" />
+            <ArrowRight className="w-3 h-3 text-gray-600" />
             <span className="font-bold">{flight.destination}</span>
           </div>
           <p className="text-xs text-gray-500 mt-1">
@@ -87,7 +83,7 @@ export default function OrderSummarySidebar({
 
         <div className="border-t border-gray-100 pt-4 space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="text-gray-500">Passagem ({passengerCount}x)</span>
+            <span className="text-gray-500">Passagens ({passengerCount}x · {booking.flights?.length || 1} trechos)</span>
             <span className="text-gray-900">{formatCurrency(totalBasePrice)}</span>
           </div>
           {totalSeatPrice > 0 && (
@@ -98,7 +94,7 @@ export default function OrderSummarySidebar({
           )}
           <div className="flex justify-between text-sm font-bold pt-2 border-t border-gray-100">
             <span className="text-gray-900">Total</span>
-            <span className="text-[#f97316]">{formatCurrency(grandTotal)}</span>
+            <span className="text-[var(--action)]">{formatCurrency(grandTotal)}</span>
           </div>
         </div>
 
@@ -117,9 +113,9 @@ export default function OrderSummarySidebar({
           </div>
         )}
 
-        <div className="flex items-center gap-2 mt-4 text-xs text-gray-400 justify-center">
+        <div className="flex items-center gap-2 mt-4 text-xs text-gray-600 justify-center">
           <Shield className="w-3 h-3" />
-          <span>Compra 100% segura e garantida</span>
+          <span>Pagamento de demonstração; sem cobrança real</span>
         </div>
       </div>
     </div>

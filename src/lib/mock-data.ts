@@ -1,3 +1,4 @@
+import { todayInAngola } from "./search-validation";
 import type { Seat, DateAvailability } from "./types";
 import { SEAT_CLASSES } from "./constants";
 import { mockBookings } from "./data/bookings";
@@ -43,7 +44,7 @@ const toLocalDateStr = (d: Date) =>
 
 export function getAvailabilityForRoute(origin: string, destination: string): DateAvailability[] {
   const result: DateAvailability[] = [];
-  const now = new Date(2026, 7, 21);
+  const now = new Date(`${todayInAngola()}T12:00:00Z`);
 
   for (let i = 0; i < 60; i++) {
     const date = new Date(now);
@@ -55,7 +56,8 @@ export function getAvailabilityForRoute(origin: string, destination: string): Da
         f.origin === origin &&
         f.destination === destination &&
         f.departureTime.startsWith(dateStr) &&
-        f.availableSeats > 0
+        f.availableSeats > 0 &&
+        new Date(`${f.departureTime}+01:00`).getTime() > Date.now()
     );
 
     result.push({
@@ -84,6 +86,7 @@ export function getFlightsForDate(origin: string, destination: string, date: str
       f.origin === origin &&
       f.destination === destination &&
       f.departureTime.startsWith(date) &&
-      f.availableSeats > 0
+      f.availableSeats > 0 &&
+        new Date(`${f.departureTime}+01:00`).getTime() > Date.now()
   );
 }

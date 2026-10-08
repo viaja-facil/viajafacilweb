@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useBooking } from "@/lib/booking-context";
 import { getAvailabilityForRoute } from "@/lib/mock-data";
 import { buildSearchParams, buildQuickBookParams } from "@/lib/search-params";
+import { validateSearch } from "@/lib/search-validation";
 import type { TripLeg } from "@/lib/types";
 
 let legIdCounter = 0;
@@ -20,6 +21,8 @@ export function useSearchForm() {
   const router = useRouter();
   const { setPassengerCount } = useBooking();
 
+  const [flexible, setFlexible] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
   const [date, setDate] = useState<string | null>(null);
@@ -34,9 +37,35 @@ export function useSearchForm() {
   const [showLegCalendar, setShowLegCalendar] = useState<number | null>(null);
 
   const [legs, setLegs] = useState<TripLeg[]>([
-    { id: generateLegId(), origin: "", destination: "", date: null },
-    { id: generateLegId(), origin: "", destination: "", date: null },
+    { id: "leg-1", origin: "", destination: "", date: null },
+    { id: "leg-2", origin: "", destination: "", date: null },
   ]);
+  const [restored, setRestored] = useState(false);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      try {
+        const saved = JSON.parse(sessionStorage.getItem("viajafacil-search") || "null");
+        if (saved && ["oneway", "roundtrip", "multicity"].includes(saved.tripType)) {
+          setTripType(saved.tripType);
+          setOrigin(typeof saved.origin === "string" ? saved.origin : "");
+          setDestination(typeof saved.destination === "string" ? saved.destination : "");
+          setDate(typeof saved.date === "string" ? saved.date : null);
+          setDepartureDate(typeof saved.departureDate === "string" ? saved.departureDate : null);
+          setReturnDate(typeof saved.returnDate === "string" ? saved.returnDate : null);
+          setFlexible(saved.flexible === true);
+          if (Number.isInteger(saved.adults) && saved.adults >= 1 && saved.adults <= 9) setAdults(saved.adults);
+          if (Number.isInteger(saved.children) && saved.children >= 0 && saved.children <= 8) setChildren(saved.children);
+          if (Array.isArray(saved.legs) && saved.legs.length >= 2 && saved.legs.length <= 6 && saved.legs.every((leg: TripLeg) => typeof leg.id === "string" && typeof leg.origin === "string" && typeof leg.destination === "string" && (leg.date === null || typeof leg.date === "string"))) setLegs(saved.legs);
+        }
+      } catch { /* A corrupt or unavailable draft must not prevent searching. */ }
+      setRestored(true);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
+  useEffect(() => {
+    if (!restored) return;
+    try { sessionStorage.setItem("viajafacil-search", JSON.stringify({ origin, destination, date, departureDate, returnDate, adults, children, tripType, flexible, legs })); } catch { /* Searching works without browser storage. */ }
+  }, [restored, origin, destination, date, departureDate, returnDate, adults, children, tripType, flexible, legs]);
 
   const availability = useMemo(() => {
     if (!origin || !destination) return [];
@@ -96,6 +125,9 @@ export function useSearchForm() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    const error = validateSearch({ origin, destination, date, departureDate, returnDate, tripType, flexible, legs });
+    setSearchError(error);
+    if (error) return;
     setPassengerCount(passengers);
 
     if (tripType === "multicity") {
@@ -111,7 +143,8 @@ export function useSearchForm() {
       const params = buildSearchParams({
         origin,
         destination,
-        date: date || undefined,
+        date: flexible ? undefined : date || undefined,
+        flexible: tripType === "oneway" && flexible,
         departureDate: departureDate || undefined,
         returnDate: returnDate || undefined,
         passengers,
@@ -130,6 +163,7 @@ export function useSearchForm() {
   };
 
   return {
+    flexible, setFlexible, searchError,
     origin,
     setOrigin,
     destination,

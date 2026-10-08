@@ -1,3 +1,4 @@
+import { todayInAngola } from "../search-validation";
 import type { Flight } from "../types";
 
 const toLocalDateStr = (d: Date) =>
@@ -5,19 +6,19 @@ const toLocalDateStr = (d: Date) =>
 
 function generateFlights(): Flight[] {
   const baseFlights: Omit<Flight, "id" | "departureTime" | "arrivalTime">[] = [
-    { airlineId: "taa", flightNumber: "DT 302", origin: "LAD", destination: "CAB", duration: "1h 30min", price: 48000, currency: "AOA", availableSeats: 120, totalSeats: 180, aircraft: "Boeing 737-700", stops: 0, class: "economy", hasCheckedBaggage: true },
-    { airlineId: "taa", flightNumber: "DT 304", origin: "LAD", destination: "CAB", duration: "1h 45min", price: 55000, currency: "AOA", availableSeats: 85, totalSeats: 180, aircraft: "Boeing 737-800", stops: 0, class: "economy", hasCheckedBaggage: false },
-    { airlineId: "taa", flightNumber: "DT 500", origin: "LAD", destination: "CAB", duration: "2h 00min", price: 95000, currency: "AOA", availableSeats: 20, totalSeats: 50, aircraft: "Boeing 767-300", stops: 0, class: "business", hasCheckedBaggage: true },
-    { airlineId: "taa", flightNumber: "DT 150", origin: "LAD", destination: "CAB", duration: "1h 30min", price: 150000, currency: "AOA", availableSeats: 8, totalSeats: 16, aircraft: "Bombardier CRJ-900", stops: 0, class: "first", hasCheckedBaggage: true },
-    { airlineId: "lam", flightNumber: "TM 702", origin: "CAB", destination: "LAD", duration: "1h 30min", price: 50000, currency: "AOA", availableSeats: 110, totalSeats: 180, aircraft: "Boeing 737-700", stops: 0, class: "economy", hasCheckedBaggage: true },
-    { airlineId: "rhs", flightNumber: "RH 101", origin: "LAD", destination: "NOV", duration: "1h 30min", price: 135000, currency: "AOA", availableSeats: 45, totalSeats: 120, aircraft: "Airbus A320", stops: 0, class: "economy", hasCheckedBaggage: false },
-    { airlineId: "taa", flightNumber: "DT 320", origin: "LAD", destination: "NOV", duration: "1h 30min", price: 270000, currency: "AOA", availableSeats: 15, totalSeats: 30, aircraft: "Boeing 737-800", stops: 0, class: "business", hasCheckedBaggage: true },
+    { airlineId: "taa", flightNumber: "DT 302", origin: "LAD", destination: "CBT", duration: "1h 30min", price: 48000, currency: "AOA", availableSeats: 120, totalSeats: 180, aircraft: "Boeing 737-700", stops: 0, class: "economy", hasCheckedBaggage: true },
+    { airlineId: "taa", flightNumber: "DT 304", origin: "LAD", destination: "CBT", duration: "1h 45min", price: 55000, currency: "AOA", availableSeats: 85, totalSeats: 180, aircraft: "Boeing 737-800", stops: 0, class: "economy", hasCheckedBaggage: false },
+    { airlineId: "taa", flightNumber: "DT 500", origin: "LAD", destination: "CBT", duration: "2h 00min", price: 95000, currency: "AOA", availableSeats: 20, totalSeats: 50, aircraft: "Boeing 767-300", stops: 0, class: "business", hasCheckedBaggage: true },
+    { airlineId: "taa", flightNumber: "DT 150", origin: "LAD", destination: "CBT", duration: "1h 30min", price: 150000, currency: "AOA", availableSeats: 8, totalSeats: 16, aircraft: "Bombardier CRJ-900", stops: 0, class: "first", hasCheckedBaggage: true },
+    { airlineId: "lam", flightNumber: "TM 702", origin: "CBT", destination: "LAD", duration: "1h 30min", price: 50000, currency: "AOA", availableSeats: 110, totalSeats: 180, aircraft: "Boeing 737-700", stops: 0, class: "economy", hasCheckedBaggage: true },
+    { airlineId: "rhs", flightNumber: "RH 101", origin: "LAD", destination: "SDD", duration: "1h 30min", price: 135000, currency: "AOA", availableSeats: 45, totalSeats: 120, aircraft: "Airbus A320", stops: 0, class: "economy", hasCheckedBaggage: false },
+    { airlineId: "taa", flightNumber: "DT 320", origin: "LAD", destination: "SDD", duration: "1h 30min", price: 270000, currency: "AOA", availableSeats: 15, totalSeats: 30, aircraft: "Boeing 737-800", stops: 0, class: "business", hasCheckedBaggage: true },
     { airlineId: "dac", flightNumber: "DA 205", origin: "LAD", destination: "SPP", duration: "2h 30min", price: 142000, currency: "AOA", availableSeats: 60, totalSeats: 150, aircraft: "Boeing 737 MAX", stops: 0, class: "economy", hasCheckedBaggage: false },
     { airlineId: "taa", flightNumber: "DT 410", origin: "LAD", destination: "VHC", duration: "2h 00min", price: 120000, currency: "AOA", availableSeats: 90, totalSeats: 150, aircraft: "Embraer E190", stops: 0, class: "economy", hasCheckedBaggage: true },
     { airlineId: "rhs", flightNumber: "RH 220", origin: "LAD", destination: "MEG", duration: "1h 15min", price: 52000, currency: "AOA", availableSeats: 70, totalSeats: 120, aircraft: "ATR 72-600", stops: 0, class: "economy", hasCheckedBaggage: false },
     { airlineId: "dac", flightNumber: "DA 310", origin: "LAD", destination: "UAL", duration: "1h 45min", price: 65000, currency: "AOA", availableSeats: 55, totalSeats: 120, aircraft: "Airbus A319", stops: 0, class: "economy", hasCheckedBaggage: false },
-    { airlineId: "taa", flightNumber: "DT 600", origin: "LAD", destination: "NRC", duration: "1h 45min", price: 147500, currency: "AOA", availableSeats: 40, totalSeats: 120, aircraft: "Embraer E195", stops: 0, class: "economy", hasCheckedBaggage: true },
-    { airlineId: "taa", flightNumber: "DT 602", origin: "LAD", destination: "NRC", duration: "1h 45min", price: 295000, currency: "AOA", availableSeats: 12, totalSeats: 24, aircraft: "Boeing 737-800", stops: 0, class: "business", hasCheckedBaggage: true },
+    { airlineId: "taa", flightNumber: "DT 600", origin: "LAD", destination: "MSZ", duration: "1h 45min", price: 147500, currency: "AOA", availableSeats: 40, totalSeats: 120, aircraft: "Embraer E195", stops: 0, class: "economy", hasCheckedBaggage: true },
+    { airlineId: "taa", flightNumber: "DT 602", origin: "LAD", destination: "MSZ", duration: "1h 45min", price: 295000, currency: "AOA", availableSeats: 12, totalSeats: 24, aircraft: "Boeing 737-800", stops: 0, class: "business", hasCheckedBaggage: true },
     { airlineId: "rhs", flightNumber: "RH 350", origin: "LAD", destination: "LBZ", duration: "1h 30min", price: 58000, currency: "AOA", availableSeats: 65, totalSeats: 120, aircraft: "ATR 72-600", stops: 0, class: "economy", hasCheckedBaggage: false },
     { airlineId: "tap", flightNumber: "TP 288", origin: "LAD", destination: "LIS", duration: "6h 30min", price: 750000, currency: "AOA", availableSeats: 80, totalSeats: 250, aircraft: "Airbus A330-900", stops: 0, class: "economy", hasCheckedBaggage: true },
     { airlineId: "tap", flightNumber: "TP 286", origin: "LAD", destination: "LIS", duration: "6h 30min", price: 2400000, currency: "AOA", availableSeats: 24, totalSeats: 30, aircraft: "Airbus A330-900", stops: 0, class: "business", hasCheckedBaggage: true },
@@ -31,16 +32,20 @@ function generateFlights(): Flight[] {
     { airlineId: "taa", flightNumber: "DT 794", origin: "LAD", destination: "GRU", duration: "8h 00min", price: 821000, currency: "AOA", availableSeats: 16, totalSeats: 16, aircraft: "Boeing 787-9", stops: 0, class: "business", hasCheckedBaggage: true },
   ];
 
+  // Every demo route supports a return; preserve explicitly modelled fares.
+  const returnFlights = baseFlights.filter((base) => !baseFlights.some((other) => other.origin === base.destination && other.destination === base.origin && other.class === base.class)).map((base) => ({ ...base, origin: base.destination, destination: base.origin, flightNumber: `${base.flightNumber} R` }));
+  const demoRoutes = [...baseFlights, ...returnFlights];
   const flights: Flight[] = [];
   let id = 1;
-  const now = new Date(2026, 7, 21);
+  const now = new Date(`${todayInAngola()}T12:00:00Z`);
+  now.setUTCDate(now.getUTCDate() + 1);
 
-  for (let dayOffset = 0; dayOffset < 30; dayOffset++) {
+  for (let dayOffset = 0; dayOffset < 60; dayOffset++) {
     const date = new Date(now);
-    date.setDate(date.getDate() + dayOffset);
+    date.setUTCDate(date.getUTCDate() + dayOffset);
     const dateStr = toLocalDateStr(date);
 
-    baseFlights.forEach((base, idx) => {
+    demoRoutes.forEach((base, idx) => {
       const fliesOnDay = (dayOffset + idx) % 3 !== 0;
       if (!fliesOnDay) return;
 
@@ -65,7 +70,7 @@ function generateFlights(): Flight[] {
       const seatsVariation = Math.max(0, base.availableSeats - ((dayOffset * 3 + idx * 7) % 30));
 
       flights.push({
-        id: `f${id++}`,
+        id: `f${id++}-${dateStr}`,
         ...base,
         departureTime: depTime,
         arrivalTime: arrTime,

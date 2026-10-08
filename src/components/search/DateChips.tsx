@@ -19,7 +19,7 @@ export default function DateChips({
         onClick={() => setSelectedDate(null)}
         className={`px-4 py-2 min-h-[44px] rounded-full text-xs font-semibold whitespace-nowrap transition-colors shrink-0 ${
           !selectedDate
-            ? "bg-[#f97316] text-white"
+            ? "bg-[var(--action)] text-white"
             : "bg-white border border-gray-200 text-gray-600 hover:border-[#f97316]"
         }`}
       >
@@ -34,7 +34,7 @@ export default function DateChips({
             onClick={() => setSelectedDate(a.date)}
             className={`px-4 py-2 min-h-[44px] rounded-full text-xs font-semibold whitespace-nowrap transition-colors shrink-0 ${
               selectedDate === a.date
-                ? "bg-[#f97316] text-white"
+                ? "bg-[var(--action)] text-white"
                 : "bg-white border border-gray-200 text-gray-600 hover:border-[#f97316]"
             }`}
           >

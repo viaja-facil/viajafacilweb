@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Minus, Plus, Users } from "lucide-react";
 import { useMediaQuery } from "@/lib/use-media-query";
@@ -14,9 +14,11 @@ interface PassengerSelectProps {
 
 const MAX_ADULTS = 9;
 const MAX_CHILDREN = 8;
+const MAX_PASSENGERS = 9;
 
 export default function PassengerSelect({ adults, childrenCount, onChange }: PassengerSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const listboxId = useId();
   const isMobile = useMediaQuery("(max-width: 767px)");
@@ -42,9 +44,9 @@ export default function PassengerSelect({ adults, childrenCount, onChange }: Pas
 
   const update = (field: "adults" | "childrenCount", delta: -1 | 1) => {
     if (field === "adults") {
-      onChange({ adults: Math.min(MAX_ADULTS, Math.max(1, adults + delta)), childrenCount });
+      onChange({ adults: Math.min(MAX_PASSENGERS - childrenCount, Math.max(1, adults + delta)), childrenCount });
     } else {
-      onChange({ adults, childrenCount: Math.min(MAX_CHILDREN, Math.max(0, childrenCount + delta)) });
+      onChange({ adults, childrenCount: Math.min(MAX_PASSENGERS - adults, Math.max(0, childrenCount + delta)) });
     }
   };
 
@@ -59,7 +61,7 @@ export default function PassengerSelect({ adults, childrenCount, onChange }: Pas
     <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
       <div className="min-w-0">
         <p className="text-sm font-semibold text-gray-900">{label}</p>
-        <p className="text-xs text-gray-400">{hint}</p>
+        <p className="text-xs text-gray-600">{hint}</p>
       </div>
       <div className="flex items-center gap-3 shrink-0">
         <button
@@ -77,7 +79,7 @@ export default function PassengerSelect({ adults, childrenCount, onChange }: Pas
         <button
           type="button"
           aria-label={`Adicionar ${label.toLowerCase()}`}
-          disabled={count >= max}
+          disabled={count >= max || total >= MAX_PASSENGERS}
           onClick={() => update(field, 1)}
           className="tap-target flex items-center justify-center w-9 h-9 rounded-full border border-gray-200 text-gray-600 transition-colors hover:border-[#f97316] hover:text-[#f97316] disabled:opacity-40 disabled:hover:border-gray-200 disabled:hover:text-gray-600"
         >
@@ -90,7 +92,8 @@ export default function PassengerSelect({ adults, childrenCount, onChange }: Pas
   const panel = (id?: string) => (
     <div
       id={id}
-      role="listbox"
+      role={id ? "dialog" : "group"}
+      onKeyDown={(e) => { if (e.key === "Escape") { setIsOpen(false); triggerRef.current?.focus(); } }}
       aria-label="Passageiros"
       className={
         id
@@ -98,12 +101,13 @@ export default function PassengerSelect({ adults, childrenCount, onChange }: Pas
           : ""
       }
     >
+      <p className="mb-2 text-xs text-slate-600">Até 9 passageiros nesta demonstração. Bebés ainda não estão incluídos.</p>
       {renderRow("adults", "Adultos", "12+ anos", adults, 1, MAX_ADULTS)}
       {renderRow("childrenCount", "Crianças", "2 - 11 anos", childrenCount, 0, MAX_CHILDREN)}
       <button
         type="button"
-        onClick={() => setIsOpen(false)}
-        className="mt-3 w-full min-h-[44px] rounded-xl bg-[#f97316] hover:bg-[#ea580c] active:bg-[#dc2626] text-white font-semibold text-sm transition-colors"
+        onClick={() => { setIsOpen(false); triggerRef.current?.focus(); }}
+        className="mt-3 w-full min-h-[44px] rounded-xl bg-[var(--action)] hover:bg-[var(--action-hover)] active:bg-[#dc2626] text-white font-semibold text-sm transition-colors"
       >
         Confirmar
       </button>
@@ -114,8 +118,9 @@ export default function PassengerSelect({ adults, childrenCount, onChange }: Pas
     <div ref={rootRef} className="relative">
       <button
         type="button"
-        aria-label="Passageiros"
-        aria-haspopup="listbox"
+        ref={triggerRef}
+        aria-label={`Passageiros: ${summary}`}
+        aria-haspopup="dialog"
         aria-expanded={isOpen}
         aria-controls={listboxId}
         onClick={() => setIsOpen((open) => !open)}
@@ -124,11 +129,11 @@ export default function PassengerSelect({ adults, childrenCount, onChange }: Pas
         }}
         className="w-full flex items-center gap-3 px-4 py-[1.1rem] rounded-xl border border-gray-200 bg-gray-50 text-left text-sm font-medium text-gray-900 shadow-sm transition-all hover:border-orange-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-[#f97316] focus:border-transparent"
       >
-        <Users className="h-5 w-5 shrink-0 text-gray-400" />
+        <Users className="h-5 w-5 shrink-0 text-gray-600" />
         <span className="min-w-0 flex-1 truncate">
           {summary}
           {childrenCount > 0 && (
-            <span className="block text-xs font-normal text-gray-400 truncate">
+            <span className="block text-xs font-normal text-gray-600 truncate">
               {adults} {adults === 1 ? "adulto" : "adultos"} • {childrenCount}{" "}
               {childrenCount === 1 ? "criança" : "crianças"}
             </span>

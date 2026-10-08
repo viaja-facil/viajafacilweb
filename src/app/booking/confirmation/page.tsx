@@ -4,6 +4,7 @@ import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { formatCurrency, getAirlineById, getAirportByCode } from "@/lib/mock-data";
 import { useBooking } from "@/lib/booking-context";
+import ItinerarySummary from "@/components/booking/ItinerarySummary";
 import BookingStepper from "@/components/ui/BookingStepper";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import {
@@ -12,9 +13,7 @@ import {
   Plane,
   ArrowRight,
   Share2,
-  MapPin,
   Calendar,
-  Clock,
   Users,
   Smartphone,
   Hash,
@@ -51,8 +50,8 @@ function ConfirmationContent() {
 
   if (!flight) return null;
 
-  const totalSeatPrice = booking.seats.reduce((sum, s) => sum + s.price, 0);
-  const totalBasePrice = flight.price * booking.seats.length;
+  const totalSeatPrice = (booking.allSeats.length ? booking.allSeats.flat() : booking.seats).reduce((sum, s) => sum + s.price, 0);
+  const totalBasePrice = (booking.flights.length ? booking.flights : [flight]).reduce((sum, f) => sum + f.price * booking.passengerCount, 0);
   const grandTotal = totalBasePrice + totalSeatPrice;
 
   const handleNewBooking = () => {
@@ -63,6 +62,7 @@ function ConfirmationContent() {
   return (
     <div className="min-h-screen bg-gray-50">
       <BookingStepper />
+      <div className="mx-auto max-w-7xl px-4 sm:px-6"><ItinerarySummary flights={booking.flights.length ? booking.flights : [flight]} allSeats={booking.allSeats} passengerCount={booking.passengerCount} /></div>
 
       {/* Success Header */}
       <div className="bg-gradient-to-br from-green-500 to-green-600 text-white">
@@ -70,9 +70,9 @@ function ConfirmationContent() {
           <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
             <Check className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-3xl font-bold mb-2">Reserva Confirmada!</h1>
+          <h1 className="text-3xl font-bold mb-2">Simulação concluída</h1>
           <p className="text-green-100 text-lg">
-            Seu voo foi reservado com sucesso. Boa viagem!
+            O percurso de reserva foi simulado. Nenhum voo foi reservado e não houve cobrança.
           </p>
         </div>
       </div>
@@ -84,14 +84,14 @@ function ConfirmationContent() {
           <div className="bg-gray-50 px-6 py-4 border-b border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wider">Código da Reserva</p>
+                <p className="text-xs text-gray-500 uppercase tracking-wider">Código de simulação</p>
                 <p className="text-xl font-mono font-bold text-gray-900">{bookingId}</p>
               </div>
               <div className="text-right">
                 <p className="text-xs text-gray-500">Status</p>
                 <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-semibold">
                   <Check className="w-3 h-3" />
-                  Confirmada
+                  Demonstração
                 </span>
               </div>
             </div>
@@ -182,7 +182,7 @@ function ConfirmationContent() {
                     className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-[#f97316] text-white rounded-lg flex items-center justify-center text-sm font-bold">
+                      <div className="w-8 h-8 bg-[var(--action)] text-white rounded-lg flex items-center justify-center text-sm font-bold">
                         {i + 1}
                       </div>
                       <div>
@@ -199,7 +199,7 @@ function ConfirmationContent() {
             {/* Total */}
             <div className="bg-orange-50 rounded-xl p-4 mb-6">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-semibold text-gray-700">Total Pago</span>
+                <span className="text-sm font-semibold text-gray-700">Total da simulação</span>
                 <span className="text-2xl font-bold text-[#f97316]">{formatCurrency(grandTotal)}</span>
               </div>
             </div>
@@ -217,28 +217,28 @@ function ConfirmationContent() {
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-green-800">
-                      Pago via {booking.paymentMethod === "multicaixa_express" ? "Multicaixa Express" : "Referência Bancária"}
+                      Pagamento simulado · {booking.paymentMethod === "multicaixa_express" ? "Multicaixa Express" : "Referência bancária"}
                     </p>
-                    <p className="text-xs text-green-600">
+                    <p className="text-xs text-green-700">
                       {booking.paymentMethod === "multicaixa_express"
-                        ? `Número: +244 ${booking.paymentReference}`
-                        : `Referência: ${booking.paymentReference}`}
+                        ? `Número fictício: +244 ${booking.paymentReference}`
+                        : `Referência fictícia: ${booking.paymentReference}`}
                     </p>
                   </div>
-                  <CheckCircle2 className="w-5 h-5 text-green-500 ml-auto" />
+                  <CheckCircle2 className="w-5 h-5 text-green-500 ml-auto" aria-hidden="true" />
                 </div>
               </div>
             )}
 
             {/* Actions */}
             <div className="flex flex-col sm:flex-row gap-3">
-              <button className="flex-1 py-3 bg-[#f97316] hover:bg-[#ea580c] text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2">
+              <button disabled title="Bilhete não emitido nesta demonstração" className="flex-1 py-3 bg-gray-200 text-gray-500 font-bold rounded-xl flex items-center justify-center gap-2 cursor-not-allowed">
                 <Download className="w-5 h-5" />
-                Baixar Bilhete
+                Bilhete não emitido
               </button>
-              <button className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-colors flex items-center justify-center gap-2">
+              <button disabled title="Partilha indisponível nesta demonstração" className="flex-1 py-3 bg-gray-100 text-gray-500 font-bold rounded-xl flex items-center justify-center gap-2 cursor-not-allowed">
                 <Share2 className="w-5 h-5" />
-                Partilhar
+                Partilha indisponível
               </button>
             </div>
           </div>
@@ -246,12 +246,8 @@ function ConfirmationContent() {
 
         {/* Info */}
         <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-800">
-          <p className="font-semibold mb-1">Próximos passos:</p>
-          <ul className="space-y-1 text-blue-700">
-            <li>• Você receberá um e-mail de confirmação em breve</li>
-            <li>• Apresente o código <strong>{bookingId}</strong> no balcão do aeroporto</li>
-            <li>• Check-in disponível 24 horas antes do voo</li>
-          </ul>
+          <p className="font-semibold mb-1">Sobre esta demonstração</p>
+          <p className="text-blue-700">O código <strong>{bookingId}</strong> serve apenas para identificar esta simulação. Não será enviado e-mail, bilhete ou pedido de check-in.</p>
         </div>
 
         {/* New booking */}

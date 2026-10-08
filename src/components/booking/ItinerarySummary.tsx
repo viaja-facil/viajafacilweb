@@ -1,0 +1,5 @@
+import type { Flight, Seat } from "@/lib/types";
+import { formatCurrency } from "@/lib/format";
+export default function ItinerarySummary({ flights, allSeats, passengerCount }: { flights: Flight[]; allSeats: Seat[][]; passengerCount: number }) {
+  return <section className="my-5 rounded-xl border border-slate-200 bg-white p-4" aria-label="Resumo de todos os trechos"><h2 className="mb-3 font-bold text-slate-900">A sua viagem · {flights.length} {flights.length === 1 ? "trecho" : "trechos"}</h2><ol className="space-y-3">{flights.map((flight, index) => <li key={flight.id} className="text-sm text-slate-700"><p className="font-semibold">{index + 1}. {flight.origin} → {flight.destination} · {flight.departureTime.slice(0, 10)}</p><p>{flight.flightNumber} · {formatCurrency(flight.price * passengerCount)} para {passengerCount} {passengerCount === 1 ? "passageiro" : "passageiros"}</p><p>Lugares: {allSeats[index]?.map((seat) => seat.number).join(", ") || "por selecionar"}</p></li>)}</ol></section>;
+}

@@ -50,6 +50,7 @@ export default function MultiCityLegRow({
   );
   const isMobile = useMediaQuery("(max-width: 767px)");
   const dateButtonRef = useRef<HTMLButtonElement>(null);
+  const [calendarTop, setCalendarTop] = useState(0);
   const [isFocused, setIsFocused] = useState(false);
 
   const formatDateDisplay = (dateStr: string) => {
@@ -108,6 +109,7 @@ export default function MultiCityLegRow({
             type="button"
             onClick={() => {
               if (hasRoute) {
+                setCalendarTop(dateButtonRef.current?.getBoundingClientRect().bottom ?? 0);
                 setShowCalendar(showCalendar === index ? null : index);
               }
             }}
@@ -158,7 +160,7 @@ export default function MultiCityLegRow({
           {showCalendar === index && hasRoute && mounted && !isMobile && createPortal(
             <div
               className="fixed inset-x-0 mx-auto w-full max-w-[320px] px-4 sm:px-0 animate-slide-up z-50"
-              style={{ top: dateButtonRef.current ? dateButtonRef.current.getBoundingClientRect().bottom + 8 : 0 }}
+              style={{ top: calendarTop + 8 }}
             >
               <AvailabilityCalendar
                 availability={availability}
