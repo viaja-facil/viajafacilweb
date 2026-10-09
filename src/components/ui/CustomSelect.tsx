@@ -1,6 +1,13 @@
 "use client";
 
-import { KeyboardEvent, ReactNode, useEffect, useId, useRef, useState } from "react";
+import {
+  KeyboardEvent,
+  ReactNode,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
 import { Check, ChevronDown } from "lucide-react";
 import { useMediaQuery } from "@/lib/use-media-query";
@@ -38,7 +45,9 @@ export default function CustomSelect({
   buttonClassName = "",
 }: CustomSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [internalValue, setInternalValue] = useState(defaultValue ?? options[0]?.value ?? "");
+  const [internalValue, setInternalValue] = useState(
+    defaultValue ?? options[0]?.value ?? "",
+  );
   const rootRef = useRef<HTMLDivElement>(null);
   const listboxId = useId();
   const isMobile = useMediaQuery("(max-width: 767px)");
@@ -48,16 +57,22 @@ export default function CustomSelect({
     isMobileRef.current = isMobile;
   }, [isMobile]);
 
-  // Restore focus to the trigger when the desktop popover closes
   const triggerRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
-    if (!isOpen && !isMobileRef.current) {
-      triggerRef.current?.focus();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (!isOpen) return;
+    const escape = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", escape);
+    return () => document.removeEventListener("keydown", escape);
   }, [isOpen]);
   const selectedValue = value ?? internalValue;
-  const selectedOption = options.find((option) => option.value === selectedValue);
+  const selectedOption = options.find(
+    (option) => option.value === selectedValue,
+  );
 
   useEffect(() => {
     const closeOnOutsidePointer = (event: PointerEvent) => {
@@ -68,13 +83,15 @@ export default function CustomSelect({
     };
 
     document.addEventListener("pointerdown", closeOnOutsidePointer);
-    return () => document.removeEventListener("pointerdown", closeOnOutsidePointer);
+    return () =>
+      document.removeEventListener("pointerdown", closeOnOutsidePointer);
   }, []);
 
   const selectOption = (nextValue: string) => {
     if (value === undefined) setInternalValue(nextValue);
     onChange?.(nextValue);
     setIsOpen(false);
+    triggerRef.current?.focus();
   };
 
   const renderOptions = (optionPadding = "py-2.5") =>
@@ -88,6 +105,28 @@ export default function CustomSelect({
           role="option"
           aria-selected={isSelected}
           onClick={() => selectOption(option.value)}
+          onKeyDown={(event) => {
+            const buttons = Array.from(
+              event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>(
+                '[role="option"]',
+              ) || [],
+            );
+            const index = buttons.indexOf(event.currentTarget);
+            const next =
+              event.key === "ArrowDown"
+                ? Math.min(index + 1, buttons.length - 1)
+                : event.key === "ArrowUp"
+                  ? Math.max(index - 1, 0)
+                  : event.key === "Home"
+                    ? 0
+                    : event.key === "End"
+                      ? buttons.length - 1
+                      : -1;
+            if (next >= 0) {
+              event.preventDefault();
+              buttons[next]?.focus();
+            }
+          }}
           className={`flex w-full min-h-[44px] items-center gap-3 rounded-lg px-3 ${optionPadding} text-left text-sm transition-colors active:bg-orange-100 ${
             isSelected
               ? "bg-orange-50 font-semibold text-[#ea580c]"
@@ -102,7 +141,9 @@ export default function CustomSelect({
               </span>
             )}
           </span>
-          {isSelected && <Check aria-hidden="true" className="h-4 w-4 shrink-0" />}
+          {isSelected && (
+            <Check aria-hidden="true" className="h-4 w-4 shrink-0" />
+          )}
         </button>
       );
     });
@@ -121,21 +162,31 @@ export default function CustomSelect({
       return;
     }
 
-    const currentIndex = Math.max(0, options.findIndex((option) => option.value === selectedValue));
+    const currentIndex = options.findIndex(
+      (option) => option.value === selectedValue,
+    );
     const nextIndex =
       event.key === "ArrowDown"
         ? Math.min(currentIndex + 1, options.length - 1)
         : event.key === "ArrowUp"
-        ? Math.max(currentIndex - 1, 0)
-        : event.key === "Home"
-        ? 0
-        : event.key === "End"
-        ? options.length - 1
-        : -1;
+          ? Math.max(currentIndex - 1, 0)
+          : event.key === "Home"
+            ? 0
+            : event.key === "End"
+              ? options.length - 1
+              : -1;
 
     if (nextIndex >= 0 && options[nextIndex]) {
       event.preventDefault();
-      selectOption(options[nextIndex].value);
+      setIsOpen(true);
+      if (!isMobile)
+        requestAnimationFrame(() => {
+          const buttons =
+            rootRef.current?.querySelectorAll<HTMLButtonElement>(
+              '[role="option"]',
+            );
+          buttons?.[nextIndex]?.focus();
+        });
     }
   };
 
@@ -153,8 +204,12 @@ export default function CustomSelect({
         onKeyDown={handleKeyDown}
         className={`w-full flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-left text-sm font-medium text-gray-900 shadow-sm transition-all hover:border-orange-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-[#f97316] focus:border-transparent disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400 ${buttonClassName}`}
       >
-        {leadingIcon && <span className="shrink-0 text-gray-400">{leadingIcon}</span>}
-        <span className={`min-w-0 flex-1 truncate ${selectedOption ? "" : "text-gray-400"}`}>
+        {leadingIcon && (
+          <span className="shrink-0 text-gray-400">{leadingIcon}</span>
+        )}
+        <span
+          className={`min-w-0 flex-1 truncate ${selectedOption ? "" : "text-gray-400"}`}
+        >
           {selectedOption?.label ?? placeholder}
         </span>
         <ChevronDown
@@ -180,14 +235,18 @@ export default function CustomSelect({
                 {renderOptions("py-3")}
               </div>
             </BottomSheet>,
-            document.body
+            document.body,
           )
         ) : (
           <div
             id={listboxId}
             role="listbox"
             aria-label={ariaLabel ?? placeholder}
-            className="absolute z-50 mt-2 max-h-64 w-full overflow-y-auto rounded-xl border border-gray-100 bg-white p-1.5 shadow-xl shadow-slate-900/10 animate-fade-in"
+            onBlur={(event) => {
+              if (!rootRef.current?.contains(event.relatedTarget))
+                setIsOpen(false);
+            }}
+            className="absolute z-50 mt-2 max-h-64 w-full min-w-[240px] overflow-y-auto rounded-xl border border-gray-100 bg-white p-1.5 shadow-xl shadow-slate-900/10 animate-fade-in"
           >
             {renderOptions()}
           </div>

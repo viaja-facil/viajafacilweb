@@ -16,11 +16,11 @@ function createEmptyLeg(): TripLeg {
   return { id: generateLegId(), origin: "", destination: "", date: null };
 }
 
-export function useSearchForm() {
+export function useSearchForm(initial: { origin?: string; tripType?: "oneway" | "roundtrip" | "multicity" } = {}) {
   const router = useRouter();
   const { setPassengerCount } = useBooking();
 
-  const [origin, setOrigin] = useState("");
+  const [origin, setOrigin] = useState(initial.origin || "");
   const [destination, setDestination] = useState("");
   const [date, setDate] = useState<string | null>(null);
   const [departureDate, setDepartureDate] = useState<string | null>(null);
@@ -28,7 +28,7 @@ export function useSearchForm() {
   const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
   const passengers = adults + children;
-  const [tripType, setTripType] = useState<"oneway" | "roundtrip" | "multicity">("oneway");
+  const [tripType, setTripType] = useState<"oneway" | "roundtrip" | "multicity">(initial.tripType || "oneway");
   const [showCalendar, setShowCalendar] = useState(false);
   const [showDateRange, setShowDateRange] = useState(false);
   const [showLegCalendar, setShowLegCalendar] = useState<number | null>(null);

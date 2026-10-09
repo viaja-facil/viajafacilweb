@@ -1,119 +1,226 @@
-import { airports, airlines } from "@/lib/mock-data";
-import HeroSlider from "@/components/sections/HeroSlider";
-import HomeSearch from "@/components/sections/HomeSearch";
-import PopularRoutes from "@/components/sections/PopularRoutes";
-import Testimonials from "@/components/sections/Testimonials";
-import FaqSection from "@/components/sections/FaqSection";
-import FinalCTA from "@/components/sections/FinalCTA";
-import ScrollReveal from "@/components/ui/ScrollReveal";
-import AnimatedCounter from "@/components/ui/AnimatedCounter";
-import AppDownload from "@/components/ui/AppDownload";
-import AnswerBlock from "@/components/seo/AnswerBlock";
-import { Star, CreditCard, ShieldCheck, Zap } from "lucide-react";
+import Image from "next/image";
+import HorizonteSearch from "@/components/sections/HorizonteSearch";
+import HorizonteSocial from "@/components/sections/HorizonteSocial";
+import HorizonteDestinations from "@/components/sections/HorizonteDestinations";
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen">
-      <HeroSlider />
-
-      <HomeSearch />
-
-      {/* Quick stats */}
-      <section className="bg-gradient-to-b from-white to-gray-50 border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
-          <ScrollReveal>
-            <div className="grid grid-cols-2 gap-y-8 sm:flex sm:flex-wrap sm:justify-center sm:gap-8 md:gap-16 text-center">
-              <div className="group">
-                <div className="text-4xl font-bold text-gray-900 mb-1">
-                  <AnimatedCounter end={airports.length} suffix="+" />
-                </div>
-                <div className="text-sm text-gray-500 group-hover:text-[#f97316] transition-colors">Destinos</div>
-              </div>
-              <div className="hidden sm:block w-px bg-gray-200" />
-              <div className="group">
-                <div className="text-4xl font-bold text-gray-900 mb-1">
-                  <AnimatedCounter end={airlines.length} />
-                </div>
-                <div className="text-sm text-gray-500 group-hover:text-[#f97316] transition-colors">Companhias</div>
-              </div>
-              <div className="hidden sm:block w-px bg-gray-200" />
-              <div className="group">
-                <div className="text-4xl font-bold text-gray-900 mb-1">
-                  <AnimatedCounter end={50} suffix="k+" />
-                </div>
-                <div className="text-sm text-gray-500 group-hover:text-[#f97316] transition-colors">Viajantes</div>
-              </div>
-              <div className="hidden sm:block w-px bg-gray-200" />
-              <div className="group">
-                <div className="text-4xl font-bold text-gray-900 flex items-center gap-1 justify-center mb-1">
-                  <AnimatedCounter end={4} />
-                  <span className="text-2xl">.</span>
-                  <AnimatedCounter end={8} />
-                  <Star className="w-6 h-6 fill-yellow-400 text-yellow-400 group-hover:scale-110 transition-transform" />
-                </div>
-                <div className="text-sm text-gray-500 group-hover:text-[#f97316] transition-colors">Avaliação</div>
-              </div>
+    <>
+      <section aria-labelledby="hero-heading" className="hero shell">
+        <div className="hero-photo">
+          <Image
+            alt="Estrada sinuosa da Serra da Leba, entre as montanhas de Angola"
+            preload
+            sizes="(max-width: 1488px) 100vw, 1440px"
+            height={683}
+            src="/home/leba.jpg"
+            width={1024}
+          />
+          <div className="photo-shade"></div>
+          <div className="photo-tag">
+            <svg className="icon" aria-hidden="true">
+              <use href="#i-pin"></use>
+            </svg>
+            <div>
+              <strong>Há tanto por descobrir.</strong>
+              <span>Serra da Leba · Angola</span>
             </div>
-          </ScrollReveal>
-        </div>
-      </section>
-
-      {/* Answer Block - SEO + GEO */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
-        <AnswerBlock
-          title="Como Comprar Passagens Aéreas em Angola"
-          answer="ViajaFácil é a plataforma mais fácil para comprar passagens aéreas em Angola. Em poucos cliques, você compara preços de TAAG, TAP e Emirates, escolhe o melhor voo e reserva com confirmação instantânea. Preços a partir de 48.000 Kz para voos domésticos."
-          stats={[
-            { value: "10.000+", label: "Viajantes atendidos" },
-            { value: "6", label: "Companhias aéreas" },
-            { value: "16", label: "Aeroportos" },
-            { value: "15%", label: "Economia média" },
-          ]}
-        />
-      </section>
-
-      <PopularRoutes />
-
-      {/* Features */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
-        <ScrollReveal>
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 bg-[#f97316]/10 rounded-full px-4 py-2 mb-4">
-              <span className="text-sm font-semibold text-[#f97316]">Por que nós?</span>
-            </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-              Por que escolher a ViajaFácil?
-            </h2>
-            <p className="text-gray-500">A maneira mais inteligente de viajar</p>
           </div>
-        </ScrollReveal>
-        <div className="-mx-4 px-4 sm:mx-0 sm:px-0 flex gap-4 sm:gap-8 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-px-4 sm:grid sm:grid-cols-3 sm:snap-none sm:overflow-visible">
-          {[
-            { icon: CreditCard, title: "Melhores Preços", desc: "Comparamos preços de todas as companhias para encontrar a melhor opção para o seu bolso." },
-            { icon: ShieldCheck, title: "Compra Segura", desc: "Seus dados estão protegidos com criptografia de ponta. Compre com confiança total." },
-            { icon: Zap, title: "Reserva Instantânea", desc: "Confirmação imediata do seu voo. Sem filas, sem burocracia, sem complicação." },
-          ].map((feature, i) => (
-            <ScrollReveal key={i} delay={i * 100}>
-              <div className="w-[280px] sm:w-auto shrink-0 snap-start bg-white rounded-2xl p-8 border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
-                <div className="w-12 h-12 rounded-xl bg-[#f97316]/10 flex items-center justify-center mb-5">
-                  <feature.icon className="w-6 h-6 text-[#f97316]" aria-hidden="true" />
-                </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">{feature.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{feature.desc}</p>
+          <span className="photo-number">01 / ANGOLA</span>
+        </div>
+        <div className="hero-copy">
+          <span className="eyebrow">A VIAGEM COMEÇA PERTO DE SI</span>
+          <h1 id="hero-heading">
+            Há um mundo
+            <br />
+            <span>à sua espera.</span>
+          </h1>
+          <p>
+            Das paisagens de Angola aos seus próximos reencontros.
+            <br /> Encontre o voo que o leva até lá.
+          </p>
+        </div>
+        <HorizonteSearch />
+      </section>
+      <div className="reassurance shell">
+        <span>
+          <svg className="icon" aria-hidden="true">
+            <use href="#i-pin"></use>
+          </svg>{" "}
+          Feito para quem parte de Angola
+        </span>
+        <span>
+          <svg className="icon" aria-hidden="true">
+            <use href="#i-search"></use>
+          </svg>{" "}
+          Compare antes de escolher
+        </span>
+        <span>
+          <svg className="icon" aria-hidden="true">
+            <use href="#i-heart"></use>
+          </svg>{" "}
+          Viaje do seu jeito
+        </span>
+      </div>
+      <HorizonteDestinations />
+      <section
+        aria-labelledby="benefits-heading"
+        className="benefits-section"
+        id="vantagens"
+      >
+        <div className="shell benefits-layout">
+          <div className="benefits-intro">
+            <span className="eyebrow">MENOS COMPLICAÇÕES. MAIS VIAGEM.</span>
+            <h2 id="benefits-heading">
+              Viajar começa
+              <br />
+              por uma boa escolha.
+            </h2>
+            <p>O que importa para si, no centro da experiência.</p>
+            <a className="text-link" href="#pesquisa">
+              Planear a minha viagem
+            </a>
+          </div>
+          <div className="benefits-grid">
+            <article>
+              <div className="benefit-icon">
+                <svg className="icon" aria-hidden="true">
+                  <use href="#i-search"></use>
+                </svg>
               </div>
-            </ScrollReveal>
-          ))}
+              <h3>Encontre o seu voo</h3>
+              <p>
+                Escolha o destino, as datas e quem vai consigo. O primeiro passo
+                fica simples.
+              </p>
+            </article>
+            <article>
+              <div className="benefit-icon">
+                <svg className="icon" aria-hidden="true">
+                  <use href="#i-pin"></use>
+                </svg>
+              </div>
+              <h3>Angola como ponto de partida</h3>
+              <p>
+                Uma experiência em português, com destinos nacionais e
+                internacionais.
+              </p>
+            </article>
+            <article>
+              <div className="benefit-icon">
+                <svg className="icon" aria-hidden="true">
+                  <use href="#i-calendar"></use>
+                </svg>
+              </div>
+              <h3>Planos à sua medida</h3>
+              <p>
+                Só ida, ida e volta ou vários destinos. Prepare a viagem que faz
+                sentido para si.
+              </p>
+            </article>
+            <article>
+              <div className="benefit-icon">
+                <svg className="icon" aria-hidden="true">
+                  <use href="#i-heart"></use>
+                </svg>
+              </div>
+              <h3>Inspiração para ir mais longe</h3>
+              <p>
+                Do mar às montanhas, descubra um bom motivo para fazer as malas.
+              </p>
+            </article>
+          </div>
         </div>
       </section>
-
-      <Testimonials />
-
-      {/* App Download */}
-      <AppDownload />
-
-      <FaqSection />
-
-      <FinalCTA />
-    </div>
+      <section
+        aria-labelledby="faq-heading"
+        className="faq-section shell"
+        id="ajuda"
+      >
+        <div className="faq-intro">
+          <span className="eyebrow">ANTES DE FAZER AS MALAS</span>
+          <h2 id="faq-heading">
+            Vamos esclarecer
+            <br />
+            as suas dúvidas.
+          </h2>
+          <p>Um pouco de informação para começar com confiança.</p>
+          <div className="help-box">
+            <svg className="icon" aria-hidden="true">
+              <use href="#i-chat"></use>
+            </svg>
+            <div>
+              <strong>Precisa de mais informações?</strong>
+              <a href="/sobre">Visitar a ajuda da ViajaFácil</a>
+            </div>
+          </div>
+        </div>
+        <div className="faq-list">
+          <details open>
+            <summary>
+              Como começo a procurar um voo?<span className="faq-plus"></span>
+            </summary>
+            <p>
+              Selecione a origem, o destino, as datas e o número de passageiros.
+              Pode também escolher um dos destinos em destaque para preencher a
+              pesquisa.
+            </p>
+          </details>
+          <details>
+            <summary>
+              Posso pesquisar viagens só de ida?
+              <span className="faq-plus"></span>
+            </summary>
+            <p>
+              Sim. Escolha «Só ida» no formulário. Para visitar mais de um
+              destino, escolha «Multi-cidade» e indique os dois percursos.
+            </p>
+          </details>
+          <details>
+            <summary>
+              Como acompanho a minha reserva?<span className="faq-plus"></span>
+            </summary>
+            <p>
+              Entre na sua conta e aceda a Minhas Reservas para consultar os
+              detalhes e o estado da viagem.
+            </p>
+          </details>
+          <details>
+            <summary>
+              As imagens e os destinos são ofertas disponíveis?
+              <span className="faq-plus"></span>
+            </summary>
+            <p>
+              Os destinos servem de inspiração. Confirme a disponibilidade, os
+              horários, as tarifas e as condições nos resultados da pesquisa.
+            </p>
+          </details>
+          <details>
+            <summary>
+              Onde confirmo bagagem, alterações e reembolsos?
+              <span className="faq-plus"></span>
+            </summary>
+            <p>
+              Estas condições dependem da companhia e da tarifa escolhida.
+              Confirme-as antes de concluir qualquer reserva na plataforma
+              atual.
+            </p>
+          </details>
+        </div>
+      </section>
+      <HorizonteSocial />
+      <section className="closing shell">
+        <div>
+          <span className="eyebrow">A PRÓXIMA HISTÓRIA É SUA</span>
+          <h2>Há um mundo à sua espera.</h2>
+        </div>
+        <a className="button light-button" href="#pesquisa">
+          <svg className="icon" aria-hidden="true">
+            <use href="#i-search"></use>
+          </svg>
+          Encontrar o meu destino
+        </a>
+      </section>
+    </>
   );
 }

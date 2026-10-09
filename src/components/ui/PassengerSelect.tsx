@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Minus, Plus, Users } from "lucide-react";
 import { useMediaQuery } from "@/lib/use-media-query";
@@ -15,9 +15,14 @@ interface PassengerSelectProps {
 const MAX_ADULTS = 9;
 const MAX_CHILDREN = 8;
 
-export default function PassengerSelect({ adults, childrenCount, onChange }: PassengerSelectProps) {
+export default function PassengerSelect({
+  adults,
+  childrenCount,
+  onChange,
+}: PassengerSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const listboxId = useId();
   const isMobile = useMediaQuery("(max-width: 767px)");
   const isMobileRef = useRef(isMobile);
@@ -36,15 +41,34 @@ export default function PassengerSelect({ adults, childrenCount, onChange }: Pas
         setIsOpen(false);
       }
     };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", escape);
     document.addEventListener("pointerdown", closeOnOutsidePointer);
-    return () => document.removeEventListener("pointerdown", closeOnOutsidePointer);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsidePointer);
+      document.removeEventListener("keydown", escape);
+    };
   }, [isOpen]);
 
   const update = (field: "adults" | "childrenCount", delta: -1 | 1) => {
     if (field === "adults") {
-      onChange({ adults: Math.min(MAX_ADULTS, Math.max(1, adults + delta)), childrenCount });
+      onChange({
+        adults: Math.min(MAX_ADULTS, Math.max(1, adults + delta)),
+        childrenCount,
+      });
     } else {
-      onChange({ adults, childrenCount: Math.min(MAX_CHILDREN, Math.max(0, childrenCount + delta)) });
+      onChange({
+        adults,
+        childrenCount: Math.min(
+          MAX_CHILDREN,
+          Math.max(0, childrenCount + delta),
+        ),
+      });
     }
   };
 
@@ -54,7 +78,7 @@ export default function PassengerSelect({ adults, childrenCount, onChange }: Pas
     hint: string,
     count: number,
     min: number,
-    max: number
+    max: number,
   ) => (
     <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
       <div className="min-w-0">
@@ -71,7 +95,10 @@ export default function PassengerSelect({ adults, childrenCount, onChange }: Pas
         >
           <Minus className="w-4 h-4" />
         </button>
-        <span aria-live="polite" className="w-6 text-center text-sm font-bold text-gray-900">
+        <span
+          aria-live="polite"
+          className="w-6 text-center text-sm font-bold text-gray-900"
+        >
           {count}
         </span>
         <button
@@ -99,10 +126,20 @@ export default function PassengerSelect({ adults, childrenCount, onChange }: Pas
       }
     >
       {renderRow("adults", "Adultos", "12+ anos", adults, 1, MAX_ADULTS)}
-      {renderRow("childrenCount", "Crianças", "2 - 11 anos", childrenCount, 0, MAX_CHILDREN)}
+      {renderRow(
+        "childrenCount",
+        "Crianças",
+        "2 - 11 anos",
+        childrenCount,
+        0,
+        MAX_CHILDREN,
+      )}
       <button
         type="button"
-        onClick={() => setIsOpen(false)}
+        onClick={() => {
+          setIsOpen(false);
+          triggerRef.current?.focus();
+        }}
         className="mt-3 w-full min-h-[44px] rounded-xl bg-[#f97316] hover:bg-[#ea580c] active:bg-[#dc2626] text-white font-semibold text-sm transition-colors"
       >
         Confirmar
@@ -114,13 +151,17 @@ export default function PassengerSelect({ adults, childrenCount, onChange }: Pas
     <div ref={rootRef} className="relative">
       <button
         type="button"
+        ref={triggerRef}
         aria-label="Passageiros"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         aria-controls={listboxId}
         onClick={() => setIsOpen((open) => !open)}
         onKeyDown={(event) => {
-          if (event.key === "Escape") setIsOpen(false);
+          if (event.key === "Escape") {
+            setIsOpen(false);
+            triggerRef.current?.focus();
+          }
         }}
         className="w-full flex items-center gap-3 px-4 py-[1.1rem] rounded-xl border border-gray-200 bg-gray-50 text-left text-sm font-medium text-gray-900 shadow-sm transition-all hover:border-orange-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-[#f97316] focus:border-transparent"
       >
@@ -137,21 +178,19 @@ export default function PassengerSelect({ adults, childrenCount, onChange }: Pas
       </button>
 
       {isOpen &&
-        (isMobile ? (
-          createPortal(
-            <BottomSheet
-              open={isOpen}
-              onClose={() => setIsOpen(false)}
-              title="Passageiros"
-              subtitle="Selecione adultos e crianças"
-            >
-              {panel()}
-            </BottomSheet>,
-            document.body
-          )
-        ) : (
-          panel(listboxId)
-        ))}
+        (isMobile
+          ? createPortal(
+              <BottomSheet
+                open={isOpen}
+                onClose={() => setIsOpen(false)}
+                title="Passageiros"
+                subtitle="Selecione adultos e crianças"
+              >
+                {panel()}
+              </BottomSheet>,
+              document.body,
+            )
+          : panel(listboxId))}
     </div>
   );
 }
