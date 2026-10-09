@@ -1,6 +1,7 @@
 "use client";
 import { useState, createContext, useContext, type ReactNode } from "react";
 import Image from "next/image";
+import { Phone } from "lucide-react";
 import { useSearchForm } from "@/hooks/useSearchForm";
 import { DM_Sans, DM_Serif_Display, Manrope } from "next/font/google";
 import { useAuth } from "@/lib/auth-context";
@@ -178,12 +179,18 @@ export default function HorizonteShell({ children }: { children: ReactNode }) {
             </div>
             <div className="footer-links footer-contact">
               <strong>Fale connosco</strong>
-              <a href="tel:+244928243835">+244 928 243 835</a>
+              <a href="tel:+244928243835">
+                <Phone size={18} aria-hidden="true" />
+                +244 928 243 835
+              </a>
               <a
                 href="https://wa.me/244928243835"
                 target="_blank"
                 rel="noopener noreferrer"
               >
+                <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+                  <path d="M20.52 3.48A11.91 11.91 0 0 0 12.04 0C5.46 0 .1 5.35.1 11.94c0 2.1.55 4.15 1.6 5.96L0 24l6.26-1.64a11.9 11.9 0 0 0 5.77 1.47h.01c6.58 0 11.94-5.35 11.94-11.94 0-3.19-1.24-6.18-3.46-8.41ZM12.04 21.8a9.9 9.9 0 0 1-5.04-1.38l-.36-.21-3.72.97.99-3.63-.24-.37a9.88 9.88 0 0 1-1.51-5.24c0-5.47 4.45-9.91 9.92-9.91a9.83 9.83 0 0 1 7.01 2.9 9.85 9.85 0 0 1 2.9 7.02c0 5.46-4.45 9.91-9.95 9.85Zm5.44-7.42c-.3-.15-1.77-.87-2.04-.97-.28-.1-.48-.15-.68.15-.2.3-.77.97-.95 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.49-.89-.8-1.49-1.79-1.67-2.09-.17-.3-.02-.46.13-.61.14-.13.3-.35.45-.52.15-.18.2-.3.3-.5.1-.2.05-.38-.03-.53-.07-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.5h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.49s1.07 2.89 1.22 3.09c.15.2 2.1 3.2 5.08 4.49.71.31 1.27.49 1.7.63.71.23 1.36.2 1.87.12.57-.08 1.77-.72 2.02-1.42.25-.7.25-1.29.18-1.42-.08-.12-.28-.2-.58-.35Z" />
+                </svg>
                 WhatsApp
               </a>
               <a
@@ -191,6 +198,11 @@ export default function HorizonteShell({ children }: { children: ReactNode }) {
                 target="_blank"
                 rel="noopener noreferrer"
               >
+                <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <rect x="3" y="3" width="18" height="18" rx="5" />
+                  <circle cx="12" cy="12" r="4" />
+                  <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+                </svg>
                 Instagram
               </a>
               <a
@@ -198,6 +210,9 @@ export default function HorizonteShell({ children }: { children: ReactNode }) {
                 target="_blank"
                 rel="noopener noreferrer"
               >
+                <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+                  <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 1 1-2.89-2.89c.3 0 .59.05.86.13V9.4a6.34 6.34 0 1 0 5.48 6.27V8.68a8.2 8.2 0 0 0 4.79 1.54V6.77c-.35 0-.69-.03-1.02-.08Z" />
+                </svg>
                 TikTok
               </a>
             </div>

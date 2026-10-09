@@ -2354,3 +2354,14 @@ html:has(.horizonte-home)::-webkit-scrollbar {
     min-height: 44px;
   }
 }
+
+.horizonte-home .footer-contact a {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+.horizonte-home .footer-contact a svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
