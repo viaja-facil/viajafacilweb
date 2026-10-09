@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useState } from "react";
 import { User, LogOut, ChevronDown, Search } from "lucide-react";
@@ -8,6 +9,7 @@ import Image from "next/image";
 
 export default function Header() {
   const { user, logout, isAdmin } = useAuth();
+  const isHome = usePathname() === "/";
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   return (
@@ -27,7 +29,9 @@ export default function Header() {
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav
+            className={`${isHome ? "hidden lg:flex" : "hidden md:flex"} items-center gap-1`}
+          >
             <Link
               href="/"
               className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 rounded-lg transition-all"
@@ -35,11 +39,25 @@ export default function Header() {
               Início
             </Link>
             <Link
-              href="/search"
+              href={isHome ? "#pesquisa" : "/search"}
               className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 rounded-lg transition-all"
             >
               Voos
             </Link>
+            {isHome &&
+              [
+                ["#destinos", "Destinos"],
+                ["#vantagens", "Porquê ViajaFácil?"],
+                ["#ajuda", "Ajuda"],
+              ].map(([href, label]) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className="px-3 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 rounded-lg"
+                >
+                  {label}
+                </Link>
+              ))}
             {isAdmin && (
               <Link
                 href="/admin"
@@ -64,7 +82,9 @@ export default function Header() {
                   <div className="w-8 h-8 bg-gradient-to-br from-[#f97316] to-[#ea580c] rounded-full flex items-center justify-center text-white text-xs font-bold">
                     {user.name.charAt(0)}
                   </div>
-                  <span className="hidden sm:block">{user.name.split(" ")[0]}</span>
+                  <span className="hidden sm:block">
+                    {user.name.split(" ")[0]}
+                  </span>
                   <ChevronDown className="w-4 h-4" />
                 </button>
                 {userMenuOpen && (
@@ -79,7 +99,9 @@ export default function Header() {
                       className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-50"
                     >
                       <div className="px-4 py-2 border-b border-gray-100">
-                        <p className="text-sm font-semibold text-gray-900">{user.name}</p>
+                        <p className="text-sm font-semibold text-gray-900">
+                          {user.name}
+                        </p>
                         <p className="text-xs text-gray-500">{user.email}</p>
                       </div>
                       <Link
@@ -125,8 +147,9 @@ export default function Header() {
 
             {/* Mobile search icon */}
             <Link
-              href="/search"
-              className="md:hidden p-2 text-gray-500 hover:text-gray-900"
+              href={isHome ? "#pesquisa" : "/search"}
+              aria-label="Pesquisar voos"
+              className={`${isHome ? "lg:hidden" : "md:hidden"} p-3 text-gray-500 hover:text-gray-900`}
             >
               <Search className="w-5 h-5" />
             </Link>
