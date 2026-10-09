@@ -8,6 +8,8 @@ A homepage em `/` porta a composição e os estilos do [exemplo 2 aprovado](http
 
 O rodapé inclui os contactos oficiais fornecidos: telefone `+244 928 243 835`, WhatsApp, Instagram `@viajafacilapp` e TikTok `@viajafacil.app`. Telefone usa `tel:`; WhatsApp usa `wa.me` com o indicativo de Angola.
 
+A grelha inclui seis destinos: Benguela, Lubango, Lisboa, Dubai, Joanesburgo e São Paulo. Os novos cartões reutilizam os destinos existentes e preenchem os códigos DXB/JNB/GRU na pesquisa. A imagem de Joanesburgo foi corrigida para uma vista da cidade de [Steffen Lemmerzahl no Unsplash](https://unsplash.com/photos/city-skyline-during-sunset-with-cloudy-sky-iAsUCcNUpGI).
+
 ## Validação
 
 - `npm run build`: passou, incluindo TypeScript e geração das páginas.

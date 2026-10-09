@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Image from "next/image";
+import { popularRoutes } from "@/lib/data/destinations";
 import { useHorizonteForm } from "@/components/layout/HorizonteShell";
 export default function HorizonteDestinations() {
   const [filter, setFilter] = useState("all");
@@ -166,6 +167,52 @@ export default function HorizonteDestinations() {
             </div>
           </div>
         </article>
+        {popularRoutes
+          .filter((destination) => ["DXB", "JNB", "GRU"].includes(destination.destCode))
+          .map((destination) => (
+            <article
+              key={destination.destCode}
+              className="destination-card"
+              data-category="international"
+              hidden={filter !== "all" && filter !== "international"}
+            >
+              <div className="destination-image">
+                <Image
+                  alt={`Vista de ${destination.city}`}
+                  height={400}
+                  loading="lazy"
+                  sizes="(max-width: 650px) 100vw, 33vw"
+                  src={
+                    destination.destCode === "JNB"
+                      ? "https://images.unsplash.com/photo-1604348489791-f95132c5d8c0?auto=format&fit=crop&w=1200&q=80"
+                      : destination.image
+                  }
+                  width={600}
+                />
+                <span className="image-pill">Cidade e cultura</span>
+                <span className="destination-country">{destination.country.toUpperCase()}</span>
+              </div>
+              <div className="destination-content">
+                <div className="destination-title">
+                  <h3>{destination.city}</h3>
+                  <svg className="icon" aria-hidden="true">
+                    <use href="#i-pin"></use>
+                  </svg>
+                </div>
+                <p>{destination.description}</p>
+                <div className="destination-bottom">
+                  <span>Saída de Luanda</span>
+                  <button
+                    className="destination-choose"
+                    data-destination={destination.city}
+                    onClick={() => choose(destination.destCode, destination.city)}
+                  >
+                    Escolher destino
+                  </button>
+                </div>
+              </div>
+            </article>
+          ))}
       </div>
       <p
         aria-live="polite"
