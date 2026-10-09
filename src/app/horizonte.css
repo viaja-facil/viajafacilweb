@@ -2343,3 +2343,14 @@ html:has(.horizonte-home)::-webkit-scrollbar {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+@media (max-width: 650px) {
+  .horizonte-home .footer-contact {
+    grid-column: 1 / -1;
+  }
+  .horizonte-home .footer-contact a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}

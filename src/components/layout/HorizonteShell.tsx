@@ -176,13 +176,30 @@ export default function HorizonteShell({ children }: { children: ReactNode }) {
               <a href="/termos">Termos de uso</a>
               <a href="/privacidade">Privacidade</a>
             </div>
-            <div className="footer-location">
-              <svg className="icon" aria-hidden="true">
-                <use href="#i-pin"></use>
-              </svg>
-              <strong>Luanda, Angola</strong>
-              <span>Português · Kwanza (Kz)</span>
-              <a href="/perfil">A minha conta</a>
+            <div className="footer-links footer-contact">
+              <strong>Fale connosco</strong>
+              <a href="tel:+244928243835">+244 928 243 835</a>
+              <a
+                href="https://wa.me/244928243835"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                WhatsApp
+              </a>
+              <a
+                href="https://www.instagram.com/viajafacilapp/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Instagram
+              </a>
+              <a
+                href="https://www.tiktok.com/@viajafacil.app"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                TikTok
+              </a>
             </div>
           </div>
           <div className="footer-bottom">

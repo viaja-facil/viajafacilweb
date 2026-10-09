@@ -6,6 +6,8 @@ A homepage em `/` porta a composição e os estilos do [exemplo 2 aprovado](http
 
 `HorizonteSearch` usa o estado compartilhado de `useSearchForm`, `PassengerSelect`, `BookingProvider` e `buildSearchParams`. Começa em ida/volta com origem Luanda. Origem, destino e classe usam `CustomSelect`; as datas usam `DateSelect`, com calendário próprio em português, mínimo de partida e validação de regresso. Todos abrem painéis no desktop e `BottomSheet` no mobile, seguindo o seletor de passageiros. A validação do formulário também é própria, sem mensagens nativas do navegador. Os seletores suportam teclado, Escape e retorno do foco; o calendário permite navegar entre dias com as setas. Preserva adultos/crianças e suporta até seis voos em multicidade. A classe escolhida inicializa o filtro existente nos resultados. Os cartões preenchem o formulário e focam o destino, como na referência.
 
+O rodapé inclui os contactos oficiais fornecidos: telefone `+244 928 243 835`, WhatsApp, Instagram `@viajafacilapp` e TikTok `@viajafacil.app`. Telefone usa `tel:`; WhatsApp usa `wa.me` com o indicativo de Angola.
+
 ## Validação
 
 - `npm run build`: passou, incluindo TypeScript e geração das páginas.
