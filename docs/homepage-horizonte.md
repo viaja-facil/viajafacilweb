@@ -33,3 +33,12 @@ As fotografias são as mesmas da proposta visual aprovada. A disponibilização 
 - `public/home/lisboa.jpg`: fotografia [Unsplash](https://images.unsplash.com/photo-1585208798174-6cedd86e019a), já referenciada pelos dados do projeto.
 
 O logo usa o asset existente `public/viajafacil.png`. O PR não publica nem altera o domínio oficial.
+
+## Redes sociais
+
+`HorizonteSocial` mostra três publicações reais do Instagram da marca, selecionadas em 9/10/2026, com miniaturas locais para evitar URLs temporários e scripts de terceiros. Os cartões abrem a publicação original; os atalhos levam ao Instagram e TikTok. A curadoria é manual: atualizar `posts` no componente e as imagens em `public/home/social/` para trocar destaques. Não existe feed automático, métricas inventadas ou reprodução de vídeos.
+
+Fontes das imagens e datas:
+- https://www.instagram.com/viajafacilapp/p/DeNLSbpRWGX/ — 7/10/2026.
+- https://www.instagram.com/viajafacilapp/p/Dd_-Ln4DN3Y/ — 2/10/2026.
+- https://www.instagram.com/viajafacilapp/p/Dd9VBYQjMqe/ — 1/10/2026.

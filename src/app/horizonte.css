@@ -2365,3 +2365,23 @@ html:has(.horizonte-home)::-webkit-scrollbar {
   height: 18px;
   flex-shrink: 0;
 }
+
+.horizonte-home .social-section { padding-block: 48px 64px; }
+.horizonte-home .social-section h2 { max-width: 760px; }
+.horizonte-home .social-grid { display: grid; grid-template-columns: 1fr; gap: 28px; }
+.horizonte-home .social-card { min-width: 0; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: #fff; }
+.horizonte-home .social-post-link { display: block; height: 100%; }
+.horizonte-home .social-image { aspect-ratio: 4 / 5; overflow: hidden; background: #eef4f4; }
+.horizonte-home .social-image img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.horizonte-home .social-copy { padding: 22px 20px; }
+.horizonte-home .social-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 12px; }
+.horizonte-home .social-meta span, .horizonte-home .social-read, .horizonte-home .social-follow a { display: inline-flex; align-items: center; gap: 8px; }
+.horizonte-home .social-meta svg, .horizonte-home .social-follow svg { width: 18px; height: 18px; flex-shrink: 0; }
+.horizonte-home .social-copy h3 { font-family: var(--font-manrope), sans-serif; font-size: 18px; line-height: 1.45; margin-block: 14px 16px; }
+.horizonte-home .social-read { font-size: 13px; font-weight: 700; color: var(--orange-dark); }
+.horizonte-home .social-post-link:hover .social-read { text-decoration: underline; text-underline-offset: 4px; }
+.horizonte-home .social-post-link:focus-visible { outline: 3px solid var(--orange); outline-offset: -3px; border-radius: 14px; }
+.horizonte-home .social-follow { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 22px; margin-top: 28px; font-size: 13px; color: var(--muted); }
+.horizonte-home .social-follow a { min-height: 44px; font-weight: 600; color: var(--ink); }
+@media (min-width: 651px) { .horizonte-home .social-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 650px) { .horizonte-home .social-section { padding-block: 16px 40px; } .horizonte-home .social-follow > span { flex-basis: 100%; text-align: center; } }

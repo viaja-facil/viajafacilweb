@@ -1,5 +1,6 @@
 import Image from "next/image";
 import HorizonteSearch from "@/components/sections/HorizonteSearch";
+import HorizonteSocial from "@/components/sections/HorizonteSocial";
 import HorizonteDestinations from "@/components/sections/HorizonteDestinations";
 
 export default function HomePage() {
@@ -207,6 +208,7 @@ export default function HomePage() {
           </details>
         </div>
       </section>
+      <HorizonteSocial />
       <section className="closing shell">
         <div>
           <span className="eyebrow">A PRÓXIMA HISTÓRIA É SUA</span>
