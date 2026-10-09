@@ -1,6 +1,12 @@
 "use client";
 
-import { ReactNode, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import {
+  ReactNode,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
@@ -24,12 +30,17 @@ export default function BottomSheet({
   const isMounted = useSyncExternalStore(
     () => () => {},
     () => true,
-    () => false
+    () => false,
   );
 
   const [dragY, setDragY] = useState(0);
   const dragStartY = useRef<number | null>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
+
+  const closeRef = useRef(onClose);
+  useEffect(() => {
+    closeRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (!open) return;
@@ -39,7 +50,7 @@ export default function BottomSheet({
     // Move focus into the dialog on open
     const sheetEl = sheetRef.current;
     const focusables = sheetEl?.querySelectorAll<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
     );
     const firstFocusable = focusables?.[0];
     const previouslyFocused = document.activeElement as HTMLElement | null;
@@ -47,15 +58,15 @@ export default function BottomSheet({
 
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        onClose();
+        closeRef.current();
         return;
       }
       // Focus trap: cycle Tab within the sheet
       if (e.key === "Tab" && sheetEl) {
         const items = Array.from(
           sheetEl.querySelectorAll<HTMLElement>(
-            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-          )
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+          ),
         ).filter((el) => !el.hasAttribute("disabled"));
         if (items.length === 0) return;
         const first = items[0];
@@ -75,7 +86,7 @@ export default function BottomSheet({
       document.removeEventListener("keydown", onKey);
       previouslyFocused?.focus?.();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!isMounted || !open) return null;
 
@@ -91,7 +102,11 @@ export default function BottomSheet({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        style={dragY > 0 ? { transform: `translateY(${dragY}px)`, transition: "none" } : undefined}
+        style={
+          dragY > 0
+            ? { transform: `translateY(${dragY}px)`, transition: "none" }
+            : undefined
+        }
         onTouchStart={(e) => {
           if ((e.target as HTMLElement).closest("[data-sheet-scroll]")) return;
           dragStartY.current = e.touches[0].clientY;
@@ -118,8 +133,12 @@ export default function BottomSheet({
         {(title || subtitle) && (
           <div className="flex items-start justify-between px-5 pb-3 pt-1 border-b border-gray-100 shrink-0">
             <div>
-              {title && <h3 className="text-sm font-bold text-gray-900">{title}</h3>}
-              {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
+              {title && (
+                <h3 className="text-sm font-bold text-gray-900">{title}</h3>
+              )}
+              {subtitle && (
+                <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>
+              )}
             </div>
             <button
               onClick={onClose}
@@ -145,6 +164,6 @@ export default function BottomSheet({
         )}
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

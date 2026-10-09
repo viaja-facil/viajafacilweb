@@ -4,7 +4,7 @@ A homepage em `/` porta a composição e os estilos do [exemplo 2 aprovado](http
 
 `HorizonteShell` aplica o cabeçalho/rodapé apenas à homepage. `horizonte.css` contém os estilos originais dentro de `.horizonte-home`, incluindo os breakpoints. As outras rotas mantêm o layout anterior. As fontes são servidas por `next/font` e as fotografias por `next/image`.
 
-`HorizonteSearch` usa o estado compartilhado de `useSearchForm`, `PassengerSelect`, `BookingProvider` e `buildSearchParams`. Começa em ida/volta com origem Luanda. As datas usam os inputs nativos do exemplo, com campos obrigatórios, mínimo de partida e validação de regresso. Preserva adultos/crianças e suporta até seis voos em multicidade. A classe escolhida inicializa o filtro existente nos resultados. Os cartões preenchem o formulário e focam o destino, como na referência.
+`HorizonteSearch` usa o estado compartilhado de `useSearchForm`, `PassengerSelect`, `BookingProvider` e `buildSearchParams`. Começa em ida/volta com origem Luanda. Origem, destino e classe usam `CustomSelect`; as datas usam `DateSelect`, com calendário próprio em português, mínimo de partida e validação de regresso. Todos abrem painéis no desktop e `BottomSheet` no mobile, seguindo o seletor de passageiros. A validação do formulário também é própria, sem mensagens nativas do navegador. Os seletores suportam teclado, Escape e retorno do foco; o calendário permite navegar entre dias com as setas. Preserva adultos/crianças e suporta até seis voos em multicidade. A classe escolhida inicializa o filtro existente nos resultados. Os cartões preenchem o formulário e focam o destino, como na referência.
 
 ## Validação
 
@@ -14,7 +14,8 @@ A homepage em `/` porta a composição e os estilos do [exemplo 2 aprovado](http
 - Comparação visual da implementação e do exemplo no browser: cabeçalho, hero, formulário, destinos, vantagens, FAQ, CTA e rodapé.
 - Browser: filtro internacional e cartão Lisboa a preencher a pesquisa; envio de ida/volta em 10–17 de novembro de 2026, com classe Executiva, para `/search` com parâmetros completos e filtro Business ativo.
 - Browser mobile: menu e envio multicidade Luanda–Lisboa–Dubai, com as datas de cada percurso nos resultados.
-- Layout mobile a 390 px: sem overflow horizontal.
+- Controlos personalizados: seleção de aeroportos/classe, calendário por teclado, Escape com retorno do foco e ausência de selects/inputs de data nativos na pesquisa.
+- Mobile a 390 px: folhas inferiores de destino, classe, datas e passageiros; alteração de contagem preserva foco. Sem overflow horizontal.
 - Lint global na primeira validação: 3 erros existentes em `MultiCityLegRow.tsx` (leitura de ref durante render), além de avisos anteriores. Esse ficheiro não foi alterado.
 
 ## Revisão antes de produção

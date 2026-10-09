@@ -15,7 +15,7 @@ export default function HorizonteDestinations() {
       .getElementById("pesquisa")
       ?.scrollIntoView({ behavior: "smooth", block: "center" });
     document
-      .querySelector<HTMLSelectElement>('select[aria-label="Destino"]')
+      .querySelector<HTMLButtonElement>('button[aria-label="Destino"]')
       ?.focus({ preventScroll: true });
   };
   return (

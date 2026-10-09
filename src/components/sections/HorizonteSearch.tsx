@@ -5,6 +5,8 @@ import { airports } from "@/lib/mock-data";
 import { buildSearchParams } from "@/lib/search-params";
 import { useBooking } from "@/lib/booking-context";
 import { useHorizonteForm } from "@/components/layout/HorizonteShell";
+import CustomSelect from "@/components/ui/CustomSelect";
+import DateSelect from "@/components/ui/DateSelect";
 import PassengerSelect from "@/components/ui/PassengerSelect";
 
 function Icon({ name }: { name: string }) {
@@ -21,39 +23,63 @@ export default function HorizonteSearch() {
   const router = useRouter();
   const { setPassengerCount } = useBooking();
   const today = new Date().toLocaleDateString("en-CA");
-  const airportOptions = airports.map((a) => (
-    <option key={a.code} value={a.code}>
-      {a.city}
-    </option>
-  ));
+  const airportOptions = airports.map((a) => ({
+    value: a.code,
+    label: a.city,
+    description: `${a.code} · ${a.name}`,
+  }));
+  const selectDeparture = (date: string) => {
+    (f.tripType === "roundtrip" ? f.setDepartureDate : f.setDate)(date);
+    if (f.returnDate && f.returnDate < date) f.setReturnDate(null);
+    setError("");
+  };
+  const selectLegDate = (index: number, date: string) => {
+    f.setLegs((prev) =>
+      prev.map((leg, i) =>
+        i === index
+          ? { ...leg, date }
+          : i > index && leg.date && leg.date < date
+            ? { ...leg, date: null }
+            : leg,
+      ),
+    );
+    setError("");
+  };
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const values = new FormData(event.currentTarget);
-    const departureDate = String(values.get("departureDate") || "");
-    const returnDate = String(values.get("returnDate") || "");
-    const date = String(values.get("date") || "");
-    const legs = f.legs.map((leg, index) => ({
-      ...leg,
-      date: String(values.get(`legDate-${index}`) || ""),
-    }));
-    const allLegsValid = legs.every(
-      (leg) =>
-        leg.origin &&
-        leg.destination &&
-        leg.origin !== leg.destination &&
-        leg.date,
-    );
-    if (f.tripType === "multicity" ? !allLegsValid : !f.hasRouteSelected) {
+    const departureDate = f.departureDate || "";
+    const returnDate = f.returnDate || "";
+    const date = f.date || "";
+    const legs = f.legs;
+    if (
+      f.tripType === "multicity"
+        ? !legs.every(
+            (leg) =>
+              leg.origin && leg.destination && leg.origin !== leg.destination,
+          )
+        : !f.hasRouteSelected
+    ) {
       setError("Escolha origens e destinos diferentes para cada voo.");
       return;
     }
     if (
-      f.tripType === "roundtrip" &&
-      departureDate &&
-      returnDate &&
-      returnDate < departureDate
+      f.tripType === "multicity"
+        ? legs.some(
+            (leg, index) =>
+              !leg.date ||
+              leg.date < today ||
+              (index > 0 && leg.date < (legs[index - 1].date || today)),
+          )
+        : f.tripType === "roundtrip"
+          ? !departureDate ||
+            !returnDate ||
+            departureDate < today ||
+            returnDate < departureDate
+          : !date || date < today
     ) {
-      setError("A data de regresso deve ser igual ou posterior à partida.");
+      setError(
+        "Escolha as datas da viagem. O regresso e os voos seguintes devem ocorrer após a partida ou no mesmo dia.",
+      );
       return;
     }
     setError("");
@@ -79,28 +105,22 @@ export default function HorizonteSearch() {
     const isOrigin = field === "origin";
     const value = legIndex === undefined ? f[field] : f.legs[legIndex][field];
     return (
-      <label className="field">
+      <div className="field field-control">
         <span>{isOrigin ? "De onde?" : "Para onde?"}</span>
-        <div className="input-row">
-          <Icon name={isOrigin ? "plane" : "pin"} />
-          <select
-            aria-label={`${isOrigin ? "Origem" : "Destino"}${legIndex === undefined ? "" : ` do voo ${legIndex + 1}`}`}
-            required
-            value={value}
-            onChange={(e) => {
-              if (legIndex !== undefined)
-                f.updateLeg(legIndex, field, e.target.value);
-              else (isOrigin ? f.setOrigin : f.setDestination)(e.target.value);
-              setError("");
-            }}
-          >
-            <option value="">
-              {isOrigin ? "Escolher origem" : "Escolher destino"}
-            </option>
-            {airportOptions}
-          </select>
-        </div>
-      </label>
+        <CustomSelect
+          value={value}
+          options={airportOptions}
+          placeholder={isOrigin ? "Escolher origem" : "Escolher destino"}
+          ariaLabel={`${isOrigin ? "Origem" : "Destino"}${legIndex === undefined ? "" : ` do voo ${legIndex + 1}`}`}
+          leadingIcon={<Icon name={isOrigin ? "plane" : "pin"} />}
+          buttonClassName="home-control"
+          onChange={(next) => {
+            if (legIndex !== undefined) f.updateLeg(legIndex, field, next);
+            else (isOrigin ? f.setOrigin : f.setDestination)(next);
+            setError("");
+          }}
+        />
+      </div>
     );
   };
   const passengers = (
@@ -122,6 +142,7 @@ export default function HorizonteSearch() {
       className="search-card"
       aria-label="Pesquisa de voos"
       onSubmit={submit}
+      noValidate
     >
       <div className="search-top">
         <fieldset className="trip-types">
@@ -148,15 +169,19 @@ export default function HorizonteSearch() {
             </label>
           ))}
         </fieldset>
-        <label className="cabin-select">
-          <span className="sr-only">Classe de viagem</span>
-          <select value={cabin} onChange={(e) => setCabin(e.target.value)}>
-            <option value="economy">Económica</option>
-            <option value="business">Executiva</option>
-            <option value="first">Primeira classe</option>
-          </select>
-          <Icon name="chevron" />
-        </label>
+        <div className="cabin-select field-control">
+          <CustomSelect
+            ariaLabel="Classe de viagem"
+            value={cabin}
+            onChange={setCabin}
+            buttonClassName="home-control"
+            options={[
+              { value: "economy", label: "Económica" },
+              { value: "business", label: "Executiva" },
+              { value: "first", label: "Primeira classe" },
+            ]}
+          />
+        </div>
       </div>
       {f.tripType === "multicity" ? (
         <>
@@ -167,20 +192,15 @@ export default function HorizonteSearch() {
               </span>
               {location("origin", index)}
               {location("destination", index)}
-              <label className="field">
+              <div className="field date-field field-control">
                 <span>Partida</span>
-                <input
-                  type="date"
-                  required
+                <DateSelect
+                  ariaLabel={`Data do voo ${index + 1}`}
+                  value={leg.date}
                   min={index > 0 ? f.legs[index - 1].date || today : today}
-                  name={`legDate-${index}`}
-                  aria-label={`Data do voo ${index + 1}`}
-                  value={leg.date || ""}
-                  onInput={(e) =>
-                    f.handleLegDateSelect(index, e.currentTarget.value)
-                  }
+                  onChange={(date) => selectLegDate(index, date)}
                 />
-              </label>
+              </div>
               {f.legs.length > 2 && (
                 <button
                   className="destination-choose"
@@ -225,43 +245,28 @@ export default function HorizonteSearch() {
             </button>
             {location("destination")}
           </div>
-          <label className="field date-field">
+          <div className="field date-field field-control">
             <span>Partida</span>
-            <div className="input-row">
-              <Icon name="calendar" />
-              <input
-                type="date"
-                required
-                min={today}
-                name={f.tripType === "roundtrip" ? "departureDate" : "date"}
-                aria-label="Data de partida"
-                value={
-                  (f.tripType === "roundtrip" ? f.departureDate : f.date) || ""
-                }
-                onInput={(e) =>
-                  (f.tripType === "roundtrip" ? f.setDepartureDate : f.setDate)(
-                    e.currentTarget.value,
-                  )
-                }
+            <DateSelect
+              ariaLabel="Data de partida"
+              value={f.tripType === "roundtrip" ? f.departureDate : f.date}
+              min={today}
+              onChange={selectDeparture}
+            />
+          </div>
+          {f.tripType === "roundtrip" && (
+            <div className="field date-field field-control">
+              <span>Regresso</span>
+              <DateSelect
+                ariaLabel="Data de regresso"
+                value={f.returnDate}
+                min={f.departureDate || today}
+                onChange={(date) => {
+                  f.setReturnDate(date);
+                  setError("");
+                }}
               />
             </div>
-          </label>
-          {f.tripType === "roundtrip" && (
-            <label className="field date-field">
-              <span>Regresso</span>
-              <div className="input-row">
-                <Icon name="calendar" />
-                <input
-                  type="date"
-                  required
-                  min={f.departureDate || today}
-                  name="returnDate"
-                  aria-label="Data de regresso"
-                  value={f.returnDate || ""}
-                  onInput={(e) => f.setReturnDate(e.currentTarget.value)}
-                />
-              </div>
-            </label>
           )}
           {passengers}
           <button className="button search-button" type="submit">
@@ -270,7 +275,11 @@ export default function HorizonteSearch() {
           </button>
         </div>
       )}
-      {error && <p role="alert">{error}</p>}
+      {error && (
+        <p className="search-error" role="alert">
+          {error}
+        </p>
+      )}
       <div className="search-bottom">
         <span>
           <Icon name="check" />

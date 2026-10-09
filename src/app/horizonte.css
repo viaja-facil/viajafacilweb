@@ -2169,31 +2169,177 @@
 .horizonte-home .search-button {
   width: 100%;
 }
-.horizonte-home .date-field button {
-  border: 0;
-  background: transparent;
-  text-align: left;
-  padding: 0;
-  font-size: 14px;
-  min-height: 23px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.horizonte-home .date-popover {
-  position: absolute;
-  top: calc(100% + 10px);
-  right: 0;
-  width: min(640px, calc(100vw - 64px));
-  z-index: 10;
-}
-.horizonte-home .date-popover.single {
-  width: 320px;
-}
-.horizonte-home .multi-leg .field select {
-  min-height: 23px;
-}
-
 html:has(.horizonte-home)::-webkit-scrollbar {
   width: 0;
+}
+
+/* All homepage fields share the passenger control's trigger and panel styling. */
+.horizonte-home .field-control {
+  min-width: 0;
+}
+.horizonte-home .field-control > div {
+  width: 100%;
+}
+.horizonte-home .field-control > div > .home-control {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  color: var(--ink);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  min-height: 23px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.6;
+}
+.horizonte-home .field-control > div > .home-control svg {
+  width: 17px;
+  height: 17px;
+  color: #829194;
+}
+.horizonte-home .field-control > div > .home-control:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 4px;
+}
+.horizonte-home .field-control [role="listbox"] {
+  right: 0;
+}
+.horizonte-home .cabin-select {
+  min-width: 150px;
+}
+.horizonte-home .search-error {
+  margin-top: 12px;
+  font-size: 14px;
+  color: #a3310c;
+}
+.horizonte-home .trip-types input {
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  border: 1px solid #829194;
+  border-radius: 50%;
+  background: #fff;
+  flex-shrink: 0;
+}
+.horizonte-home .trip-types input:checked {
+  border: 4px solid #d8540c;
+}
+.date-select {
+  position: relative;
+}
+.date-select-popover {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  z-index: 50;
+  width: 320px;
+  max-width: calc(100vw - 32px);
+  padding: 16px;
+  border: 1px solid #e5e9e9;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 16px 40px #153b4720;
+  color: #153b47;
+  font-family: var(--font-dm-sans), Arial, sans-serif;
+}
+.date-select-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5e9e9;
+  margin-bottom: 12px;
+}
+.date-select-title button,
+.date-select-month button {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+.date-select-month {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.date-select-month p {
+  margin: 0;
+  text-transform: capitalize;
+  font-size: 14px;
+  font-weight: 600;
+  color: #153b47;
+}
+.date-select-month button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.date-select-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+.date-select-grid span {
+  text-align: center;
+  font-size: 12px;
+  color: #657275;
+  padding: 6px 0;
+}
+.date-select-grid button {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: white;
+  border-radius: 8px;
+  min-height: 40px;
+  color: #153b47;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.date-select-grid button:hover:not(:disabled),
+.date-select-month button:hover:not(:disabled) {
+  background: #fff2e9;
+}
+.date-select-grid button[aria-pressed="true"] {
+  background: #f97316;
+  color: white;
+}
+.date-select-grid button:disabled {
+  color: #c4ced1;
+  cursor: not-allowed;
+}
+.date-select-hint {
+  font-size: 12px;
+  color: #657275;
+  margin: 12px 0 0;
+}
+.date-select-calendar button:focus-visible {
+  outline: 2px solid #f97316;
+  outline-offset: 2px;
+}
+@media (max-width: 767px) {
+  .date-select-grid button {
+    min-height: 44px;
+  }
+}
+.horizonte-home .date-select > .home-control > span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
