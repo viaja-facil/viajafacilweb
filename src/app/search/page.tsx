@@ -68,7 +68,10 @@ function SearchContent() {
   const [debouncedMinPrice, setDebouncedMinPrice] = useState(0);
   const [debouncedMaxPrice, setDebouncedMaxPrice] = useState(7000000);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const [selectedClass, setSelectedClass] = useState<string>("all");
+  const [selectedClass, setSelectedClass] = useState<string>(() => {
+    const cabin = searchParams.get("cabin");
+    return cabin && ["economy", "business", "first"].includes(cabin) ? cabin : "all";
+  });
   const [selectedAirlines, setSelectedAirlines] = useState<string[]>([]);
   const [selectedTimeOfDay, setSelectedTimeOfDay] = useState<string[]>([]);
   const [stops, setStops] = useState<string>("all");

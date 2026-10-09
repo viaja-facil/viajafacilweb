@@ -1,21 +1,25 @@
 # Homepage Horizonte
 
-A homepage em `/` adapta o modelo 2 aprovado à aplicação Next.js. O formulário continua a usar `HomeSearch`, `SearchCard` e `useSearchForm`; os cartões usam `handleBookDestination` e os códigos de rota existentes. Autenticação, área administrativa, resultados, checkout e navegação inferior mantêm os seus fluxos.
+A homepage em `/` porta a composição e os estilos do [exemplo 2 aprovado](https://viajafacil-nova-home.nsilva1999.chatgpt.site/exemplo-2/) para React/Next.js. Mantém o cabeçalho com sublinhado em Voos, hero panorâmico, tipografia DM Sans/DM Serif Display/Manrope, formulário com rádios, campos e botão a toda a largura, cartões sem moldura, quatro vantagens, FAQ, CTA escuro e rodapé. A barra de comparação dos modelos e os avisos exclusivos do protótipo foram removidos.
 
-A nova composição inclui hero panorâmico, DM Serif Display servida por `next/font`, pesquisa sobreposta, destinos filtráveis, vantagens, FAQ nativa com `details` e chamada para pesquisa. Os estilos estão isolados em `home.module.css`. Não introduz dependências nem apresenta preços ou métricas estáticas na homepage.
+`HorizonteShell` aplica o cabeçalho/rodapé apenas à homepage. `horizonte.css` contém os estilos originais dentro de `.horizonte-home`, incluindo os breakpoints. As outras rotas mantêm o layout anterior. As fontes são servidas por `next/font` e as fotografias por `next/image`.
+
+`HorizonteSearch` usa o estado compartilhado de `useSearchForm`, `PassengerSelect`, `BookingProvider` e `buildSearchParams`. Começa em ida/volta com origem Luanda. As datas usam os inputs nativos do exemplo, com campos obrigatórios, mínimo de partida e validação de regresso. Preserva adultos/crianças e suporta até seis voos em multicidade. A classe escolhida inicializa o filtro existente nos resultados. Os cartões preenchem o formulário e focam o destino, como na referência.
 
 ## Validação
 
-- `npm run build`: passou, incluindo TypeScript e geração das 23 páginas.
-- ESLint dos três ficheiros TypeScript alterados: passou.
+- `npm run build`: passou, incluindo TypeScript e geração das páginas.
+- ESLint dos componentes novos/alterados: passou sem erros.
 - `git diff --check`: passou.
-- Browser: origem/destino, calendário só ida e envio para `/search` com os parâmetros selecionados; filtro internacional; cartão Lisboa; abertura da FAQ; calendário mobile ida/volta; adição de trecho multicidade.
-- Layout mobile a 390 px: sem overflow horizontal. Fotografias carregadas.
-- Lint global: 3 erros existentes em `MultiCityLegRow.tsx` (leitura de ref durante render), além dos avisos anteriores. Esse ficheiro não foi alterado.
+- Comparação visual da implementação e do exemplo no browser: cabeçalho, hero, formulário, destinos, vantagens, FAQ, CTA e rodapé.
+- Browser: filtro internacional e cartão Lisboa a preencher a pesquisa; envio de ida/volta em 10–17 de novembro de 2026, com classe Executiva, para `/search` com parâmetros completos e filtro Business ativo.
+- Browser mobile: menu e envio multicidade Luanda–Lisboa–Dubai, com as datas de cada percurso nos resultados.
+- Layout mobile a 390 px: sem overflow horizontal.
+- Lint global na primeira validação: 3 erros existentes em `MultiCityLegRow.tsx` (leitura de ref durante render), além de avisos anteriores. Esse ficheiro não foi alterado.
 
-## Limitações existentes e revisão antes de produção
+## Revisão antes de produção
 
-O repositório continua a utilizar dados mock de voos e aeroportos. Na validação em outubro, a disponibilidade só ida apresentada era de agosto/setembro de 2026 e não havia datas disponíveis no calendário ida/volta de outubro. Esta alteração não implementa integração de inventário nem pagamentos reais.
+O repositório continua a utilizar dados mock de voos e aeroportos, com disponibilidade de agosto/setembro de 2026. Pesquisas para datas atuais podem não devolver voos. Esta alteração não implementa integração de inventário nem pagamentos reais.
 
 As fotografias são as mesmas da proposta visual aprovada. A disponibilização pública requer confirmação dos direitos de utilização comercial ou substituição por fotografias próprias/licenciadas:
 
@@ -23,4 +27,4 @@ As fotografias são as mesmas da proposta visual aprovada. A disponibilização 
 - `public/home/benguela.jpg`: referência editorial [Alma de Viajante](https://www.almadeviajante.com/).
 - `public/home/lisboa.jpg`: fotografia [Unsplash](https://images.unsplash.com/photo-1585208798174-6cedd86e019a), já referenciada pelos dados do projeto.
 
-O logo usa o asset existente `public/viajafacil.png`. A refatoração é entregue em PR para revisão; não publica nem altera o domínio oficial.
+O logo usa o asset existente `public/viajafacil.png`. O PR não publica nem altera o domínio oficial.
