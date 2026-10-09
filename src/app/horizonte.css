@@ -2385,3 +2385,26 @@ html:has(.horizonte-home)::-webkit-scrollbar {
 .horizonte-home .social-follow a { min-height: 44px; font-weight: 600; color: var(--ink); }
 @media (min-width: 651px) { .horizonte-home .social-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 650px) { .horizonte-home .social-section { padding-block: 16px 40px; } .horizonte-home .social-follow > span { flex-basis: 100%; text-align: center; } }
+
+.horizonte-home .social-grid {
+  display: flex;
+  overflow-x: auto;
+  gap: 24px;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  scrollbar-color: #b7c7cc transparent;
+  padding: 3px 3px 14px;
+  overscroll-behavior-x: contain;
+}
+.horizonte-home .social-card { flex: 0 0 calc((100% - 48px) / 2.5); scroll-snap-align: start; }
+.horizonte-home .social-controls { display: flex; gap: 10px; flex-shrink: 0; }
+.horizonte-home .social-controls button { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 50%; color: var(--ink); background: #fff; cursor: pointer; }
+.horizonte-home .social-controls button:hover:not(:disabled) { background: #fff1e7; border-color: var(--orange); }
+.horizonte-home .social-controls button:disabled { opacity: .35; cursor: default; }
+.horizonte-home .social-controls button:focus-visible, .horizonte-home .social-grid:focus-visible { outline: 2px solid var(--orange); outline-offset: 3px; }
+.horizonte-home .closing .button.light-button:hover,
+.horizonte-home .closing .button.light-button:focus-visible { background: #fff1e7; color: #153b47; }
+@media (max-width: 650px) {
+  .horizonte-home .social-section .section-heading { align-items: flex-start; gap: 20px; }
+  .horizonte-home .social-card { flex-basis: 88%; }
+}

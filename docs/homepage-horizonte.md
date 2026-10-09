@@ -42,3 +42,5 @@ Fontes das imagens e datas:
 - https://www.instagram.com/viajafacilapp/p/DeNLSbpRWGX/ — 7/10/2026.
 - https://www.instagram.com/viajafacilapp/p/Dd_-Ln4DN3Y/ — 2/10/2026.
 - https://www.instagram.com/viajafacilapp/p/Dd9VBYQjMqe/ — 1/10/2026.
+
+As publicações são apresentadas em carrossel horizontal com setas, scroll-snap, teclado e suporte a movimentos reduzidos. O formato de dados distingue Instagram/TikTok; a inclusão de vídeos reais do TikTok aguarda links individuais, porque o perfil não carrega no navegador disponível. Hover/foco do CTA final usam fundo claro e texto escuro com regras específicas para impedir sobreposição das cores do botão principal. O envio desta alteração à PR foi autorizado; não foi realizado deployment.
